@@ -1,6 +1,6 @@
 # Dein erster Fahrtest in Berlin
 
-Dieser Prototyp sammelt **Verdachtsstellen**. Er bestimmt weder eine Bodenwellenhöhe noch, ob der Straßenbelag rechtswidrig oder gefährlich ist. Die Erkennungsparameter sind Ausgangswerte; sie wurden noch nicht auf einem Fairphone 4 mit deiner Valkental-Halterung und deinem Trekking N8 erprobt.
+Dieser Prototyp sammelt **Verdachtsstellen**. Er bestimmt weder eine Bodenwellenhöhe noch, ob der Straßenbelag rechtswidrig oder gefährlich ist. Die Erkennungsparameter sind Ausgangswerte; die bisherigen Rückmeldungen vom Fairphone 4 sind positiv, eine systematische Kalibrierung mit deiner Valkental-Halterung und deinem Trekking N8 steht noch aus.
 
 ## Installation
 
@@ -25,7 +25,15 @@ Notiere die bekannten Stellen vorab oder markiere sie nach dem Anhalten. Fahre d
 - Läuft die Aufzeichnung auch mit ausgeschaltetem Display? Werden nach erneutem Öffnen neue Fundstellen angezeigt?
 - Folgt **Mein Standort** deiner Position? Erscheint die gefahrene Strecke als türkise Linie, auch nach dem Ausschalten und erneuten Öffnen des Displays? GPS-Lücken sollen ohne Verbindungslinie bleiben.
 
-Die App erkennt die Sensorantwort von Fahrrad und Halterung. Sie kann Wurzeln, Bodenwellen und schiefe Platten noch nicht automatisch unterscheiden. Die Kategorie trägst du selbst nach der Fahrt ein. Langsam überfahrene, flache oder längere Unebenheiten können unerkannt bleiben. Die Abklingzeit von 1,5 Sekunden vermeidet Mehrfachtreffer, kann aber nahe beieinanderliegende Schäden zusammenfassen. Bei kontinuierlich holpriger Fahrbahn steigt die Erkennungsschwelle.
+Die App erkennt die Sensorantwort von Fahrrad und Halterung. Sie kann Wurzeln, Bodenwellen und schiefe Platten noch nicht automatisch unterscheiden. Die Kategorie trägst du selbst nach der Fahrt ein. Langsam überfahrene, flache oder längere Unebenheiten können unerkannt bleiben. Die Abklingzeit von 1,5 Sekunden vermeidet Mehrfachtreffer, kann aber nahe beieinanderliegende Schäden zusammenfassen. Die Schwelle bleibt auf deinem eingestellten Wert; sie steigt nicht automatisch mit holpriger Fahrbahn.
+
+## Empfindlichkeit ausprobieren
+
+Tippe an der Karte auf **Empfindlichkeit einstellen**. Der Standard ist **40 m/s²**. Der Schieberegler reicht von 5 bis 100 m/s²; nach rechts sinkt die Schwelle und es entstehen mehr Treffer. **Standard wiederherstellen** setzt 40 m/s² zurück. Die Einstellung bleibt nach dem Schließen der App erhalten und gilt bei laufender Aufzeichnung sofort. Ein gerade noch nicht abgeschlossener Treffer wird bei einer Änderung verworfen, damit alte und neue Einstellungen nicht vermischt werden.
+
+Halte zum Verstellen sicher an. Vergleiche dieselbe Strecke mit wenigen unterschiedlichen Einstellungen und notiere Fehlalarme, verpasste Stellen und die verwendete Schwelle. Die Messdetails jeder Fundstelle zeigen Spitzenwert und damalige Auslöseschwelle. Das sind Smartphone-Reaktionen, keine Zentimeterangaben oder gesetzlichen Grenzwerte.
+
+Neue automatische Fundstellen berücksichtigen die GPS-Fahrtrichtung, Geschwindigkeit und den Zeitabstand zum stärksten Sensorstoß. Die Karte zeigt die daraus geschätzte Ereignisposition; die Messdetails enthalten auch den ursprünglichen GPS-Punkt und die Verschiebung. Bei 6 m/s und einer drei Sekunden alten Position wird beispielsweise 18 m in Fahrtrichtung korrigiert. Wenn eine GPS-Messung erst nach dem Ereignis kam, wird rückwärts gerechnet. In Kurven und bei Geschwindigkeitsänderungen kann die Schätzung danebenliegen; auch Reifen, Fahrrad und Halterung können die Sensorantwort verzögern. Die angegebene GPS-Genauigkeit beschreibt die ursprüngliche Messung. Alte Fundstellen bleiben unverändert.
 
 ## Prüfen und exportieren
 
@@ -43,10 +51,12 @@ Die Fahrtspur bleibt nach Fahrtende erhalten. Eine neue bestätigte Fahrt ersetz
 
 ## Nach diesem ersten Versuch
 
-### Update von 0.2.0 auf 0.2.1
+### Update auf 0.2.2
 
 Installiere die neue APK über die vorhandene Version, damit deine gespeicherten Einträge erhalten bleiben. Prüfe danach draußen **Mein Standort** und die Meterangabe. Tippe auf **Fahrt starten**: Ein Startstatus soll sofort erscheinen, dann die große Karte. Beim Stehen kann die Fahrt bereits laufen, während die automatische Stoßerkennung noch auf Fahrgeschwindigkeit wartet. Manuelle Markierungen sind bei ausreichender aktueller Position möglich.
 
 Falls der Start weiter scheitert, notiere den genauen Text direkt unter dem Startknopf oder im Fehlerdialog. Diese Rückmeldung hilft, die Ursache auf dem Fairphone zu bestimmen. Bitte keine Deinstallation als ersten Diagnoseversuch durchführen, da sie lokale Fundstellen und die Fahrtspur löschen würde.
 
 Für die nächste Entwicklungsrunde brauchen wir vor allem konkrete Fehlalarme und verpasste Stellen aus normalen Fahrten. Die Erschütterungswerte dienen dem Vergleich unter ähnlichen Bedingungen. Eine Zentimeterangabe würde zusätzliche Referenzmessungen und ein validiertes Modell für Reifen, Fahrrad und Befestigung voraussetzen; allein aus Beschleunigung und GPS-Geschwindigkeit ist sie nicht zuverlässig ableitbar.
+
+Weitere Informationen zur möglichen Höhenmessung stehen in [HOEHENMESSUNG.md](HOEHENMESSUNG.md).

@@ -7,7 +7,7 @@ public final class FindingCsv {
     private FindingCsv() {}
 
     public static String exportReviewed(List<Finding> findings) {
-        StringBuilder csv = new StringBuilder("time_utc,latitude,longitude,gps_accuracy_m,gps_fix_age_ms,speed_kmh,peak_vertical_acceleration_m_s2,threshold_m_s2,source,category,note,reviewed,detector_version\r\n");
+        StringBuilder csv = new StringBuilder("time_utc,latitude,longitude,gps_accuracy_m,gps_fix_age_ms,speed_kmh,peak_vertical_acceleration_m_s2,threshold_m_s2,source,category,note,reviewed,detector_version,gps_latitude,gps_longitude,bearing_deg,position_distance_m,position_method\r\n");
         for (Finding f : findings) {
             if (!f.reviewed()) continue;
             csv.append(Instant.ofEpochMilli(f.timeMillis())).append(',')
@@ -17,7 +17,10 @@ public final class FindingCsv {
                     .append(f.peak() == null ? "" : f.peak()).append(',')
                     .append(f.threshold() == null ? "" : f.threshold()).append(',')
                     .append(cell(f.source())).append(',').append(cell(f.category())).append(',')
-                    .append(cell(f.note())).append(",true,").append(BumpDetector.VERSION).append("\r\n");
+                    .append(cell(f.note())).append(",true,").append(cell(f.detectorVersion())).append(',')
+                    .append(f.position().gpsLatitude()).append(',').append(f.position().gpsLongitude()).append(',')
+                    .append(f.position().bearing() == null ? "" : f.position().bearing()).append(',')
+                    .append(f.position().distanceMeters()).append(',').append(cell(f.position().method())).append("\r\n");
         }
         return csv.toString();
     }

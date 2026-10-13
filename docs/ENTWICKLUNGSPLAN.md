@@ -20,7 +20,11 @@ Implementiert sind:
 - lokale Spur der zuletzt gestarteten Fahrt, inklusive Darstellung ohne Verbindungslinien über GPS-Lücken;
 - CSV-Export ausschließlich freigegebener Einträge über die Android-Dateiauswahl.
 
-Automatische Aufzeichnung setzt GPS-Fix-Alter ≤ 5 s, Genauigkeitsangabe ≤ 25 m und Geschwindigkeit von 1,4 bis 20 m/s voraus. Ist eine Geschwindigkeitsgenauigkeit vorhanden, darf sie höchstens 1,5 m/s betragen. Die vertikale Sensorreaktion muss eine adaptive Schwelle von mindestens 3 m/s² überschreiten. Das sind technische Ausgangswerte, keine rechtlichen Grenzwerte. Ein Treffer sammelt die Spitzenreaktion über 250 ms; der gespeicherte Ereigniszeitpunkt liegt am Ende dieses Fensters. Der GPS-Fix kann einige Sekunden vor dem Ereignis liegen, wodurch zusätzlich zur GPS-Genauigkeit eine Verschiebung entlang der Strecke entstehen kann.
+Automatische Aufzeichnung setzt GPS-Fix-Alter ≤ 5 s, Genauigkeitsangabe ≤ 25 m und Geschwindigkeit von 1,4 bis 20 m/s voraus. Ist eine Geschwindigkeitsgenauigkeit vorhanden, darf sie höchstens 1,5 m/s betragen. Der Betrag der gefilterten vertikalen Sensorreaktion muss die eingestellte Schwelle erreichen: standardmäßig 40 m/s², per Schieberegler 5 bis 100 m/s². Das sind technische Testwerte, keine rechtlichen Grenzwerte. Die Einstellung wird lokal gespeichert und gilt sofort; pro Treffer bleibt die verwendete Schwelle erhalten. Ein Treffer sammelt die Spitzenreaktion über 250 ms; gespeichert wird der Zeitpunkt dieser Spitze.
+
+Neue automatische Positionen werden über eine geodätische Projektion aus GPS-Koordinaten, GPS-Fahrtrichtung, Geschwindigkeit und vorzeichenbehaftetem Zeitabstand zum Sensorereignis geschätzt. Ältere Messungen werden vorwärts, spätere rückwärts projiziert. Bei fehlenden oder unbrauchbaren Bewegungsdaten, mehr als fünf Sekunden Zeitabstand oder angegebener Richtungsunsicherheit über 45° bleiben die ursprünglichen Koordinaten bestehen. Ursprüngliche GPS-Position, Verschiebung, Methode und Erkennungsversion werden gespeichert und exportiert. GPS-Fehler und die Annahme gleichbleibender Bewegung begrenzen die Aussagekraft; die Position ist keine vermessene Schadensstelle. Die Migration auf Datenbankschema 3 erhält bisherige Fundstellen und Spur. Bisherige Einträge werden nicht nachträglich korrigiert.
+
+Die aktuelle App speichert keine Rohsensorzeitreihen und berechnet keine Bodenwellenhöhe. Anforderungen an einen späteren Kalibrierungsmodus beschreibt [HOEHENMESSUNG.md](HOEHENMESSUNG.md).
 
 ## Nächste Schritte nach echten Fahrdaten
 

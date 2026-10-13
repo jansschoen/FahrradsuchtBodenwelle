@@ -41,6 +41,7 @@ public final class RecordingService extends Service implements SensorEventListen
     private LocationManager locations;
     private DeviceLocationSource locationSource;
     private FindingStore store;
+    private DetectionPreferences preferences;
     private Location latest;
     private PowerManager.WakeLock wakeLock;
     private long lastNotification;
@@ -50,6 +51,7 @@ public final class RecordingService extends Service implements SensorEventListen
     @Override public void onCreate() {
         super.onCreate();
         store = new FindingStore(this);
+        preferences = new DetectionPreferences(this);
         sensors = getSystemService(SensorManager.class);
         locations = getSystemService(LocationManager.class);
         locationSource = new DeviceLocationSource(this, this::onLocationChanged);
@@ -165,6 +167,7 @@ public final class RecordingService extends Service implements SensorEventListen
         if (!running) return;
         lastSensorAt = SystemClock.elapsedRealtime();
         double vertical = projector.accept(event.timestamp, event.values[0], event.values[1], event.values[2]);
+        detector.setThreshold(preferences.threshold());
         BumpDetector.Detection detection = detector.accept(event.timestamp / 1_000_000L, vertical, eligible());
         if (detection != null && latest != null) {
             try {

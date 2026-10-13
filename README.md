@@ -16,9 +16,18 @@ Für eine spätere breite öffentliche Veröffentlichung ist die aktuelle [OSM-K
 
 ## Auf dem Fairphone ausprobieren
 
-**[Android-Testversion 0.2.1 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.2.1.apk)**
+**[Android-Testversion 0.2.2 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.2.2.apk)**
 
-Öffne die heruntergeladene APK auf deinem Android-Handy. Falls Android danach fragt, erlaube die Installation aus dieser Quelle. Die [kurze Installationsanleitung](downloads/INSTALLATION.md) und die [SHA-256-Prüfsummen](downloads/SHA256SUMS) liegen neben der APK. Version 0.2.1 verwendet dieselbe App-ID und Signatur wie 0.2.0 und ist als Update über die vorhandene Installation vorgesehen. Eine Deinstallation würde die lokalen Daten löschen. Dies ist eine Debug-Testversion; die Korrekturen müssen auf dem Fairphone noch praktisch überprüft werden.
+Öffne die heruntergeladene APK auf deinem Android-Handy. Falls Android danach fragt, erlaube die Installation aus dieser Quelle. Die [kurze Installationsanleitung](downloads/INSTALLATION.md) und die [SHA-256-Prüfsummen](downloads/SHA256SUMS) liegen neben der APK. Version 0.2.2 verwendet dieselbe App-ID und Signatur wie 0.2.0 und 0.2.1 und ist als Update über die vorhandene Installation vorgesehen. Eine Deinstallation würde die lokalen Daten löschen. Dies ist eine Debug-Testversion; die Korrekturen müssen auf dem Fairphone noch praktisch überprüft werden.
+
+### Erkennung und Empfindlichkeit in 0.2.2
+
+- Die feste Auslöseschwelle startet bei **40 m/s²**. Gemeint ist der Betrag der gefilterten vertikalen Sensorreaktion nach Abzug der geschätzten Schwerkraft, nicht die Höhe einer Bodenwelle.
+- **Empfindlichkeit einstellen** an der Karte öffnet einen Schieberegler von 5 bis 100 m/s²: links weniger Treffer, rechts mehr Treffer. Die Einstellung wird gespeichert und gilt auch während einer laufenden Fahrt sofort für neue Messungen. Jede Fundstelle speichert ihre damalige Schwelle. Bediene das Telefon nur im sicheren Stand.
+- Automatische Fundstellen verwenden den Zeitpunkt der stärksten Reaktion im 250-ms-Erkennungsfenster. Aus Geschwindigkeit, GPS-Fahrtrichtung und dem zeitlichen Abstand zur GPS-Messung wird die Position für diesen Zeitpunkt geschätzt. Eine ältere GPS-Messung wird entlang der Fahrtrichtung verschoben, eine spätere zurückgerechnet.
+- Fehlen brauchbare Bewegungsdaten, bleibt die ursprüngliche GPS-Position erhalten. Die Korrektur setzt gleichbleibende Geschwindigkeit und Richtung voraus und beseitigt keine GPS-Messfehler. Ursprüngliche Koordinaten und Korrektur bleiben in Messdetails und Export nachvollziehbar. Bestehende Fundstellen bleiben unverändert.
+
+Eine belastbare Höhenmessung braucht zusätzliche Referenzmessungen und einen Kalibrierungsmodus; die bisherigen Spitzenwerte reichen dafür nicht. Siehe [Höhenmessung und benötigte Daten](docs/HOEHENMESSUNG.md).
 
 ### Korrekturen in 0.2.1
 
@@ -63,8 +72,14 @@ Der Bootstrap prüft die heruntergeladenen Werkzeuge anhand festgelegter Herstel
 
 ## Datenmodell
 
-Lokale SQLite-Fundstellen enthalten Ereigniszeit, Koordinaten, GPS-Genauigkeit, GPS-Fix-Alter, gegebenenfalls Geschwindigkeit, Sensor-Spitzenwert und Erkennungsschwelle sowie Quelle, Kategorie, Notiz und Freigabestatus. Die zuletzt gestartete Fahrt wird zusätzlich als lokale GPS-Spur mit getrennten Abschnitten gespeichert. Die Datenbankmigration von Version 0.1 erhält vorhandene Fundstellen. Rohsensorzeitreihen werden nicht gespeichert. Manuelle Einträge enthalten keine erfundenen Sensorwerte. Der Fundstellenexport verwendet UTC-Zeitpunkte und dokumentierte SI-Einheiten beziehungsweise km/h und enthält keine Fahrtspur.
+Lokale SQLite-Fundstellen enthalten Ereigniszeit, Koordinaten, GPS-Genauigkeit, Zeitabstand zwischen GPS-Fix und Ereignis, gegebenenfalls Geschwindigkeit, Sensor-Spitzenwert und Erkennungsschwelle sowie Quelle, Kategorie, Notiz und Freigabestatus. Die zuletzt gestartete Fahrt wird zusätzlich als lokale GPS-Spur mit getrennten Abschnitten gespeichert. Die Datenbankmigration erhält vorhandene Fundstellen und Fahrtspuren. Neue automatische Einträge enthalten zusätzlich ursprüngliche GPS-Koordinaten, Fahrtrichtung, geschätzte Verschiebung und Korrekturmethode. Die Erkennungsversion wird je Fundstelle gespeichert. Rohsensorzeitreihen werden nicht gespeichert. Manuelle Einträge enthalten keine erfundenen Sensorwerte. Der Fundstellenexport verwendet UTC-Zeitpunkte und dokumentierte SI-Einheiten beziehungsweise km/h und enthält keine Fahrtspur.
 
 ## Verwendete Kartenbibliothek
 
 osmdroid 6.1.20 ist unter der Apache-Lizenz 2.0 lizenziert. Eine Kopie der Lizenz liegt unter `app/src/main/assets/licenses/osmdroid-apache-2.0.txt`. Die OSM-Datenattribution bleibt direkt unter jeder Kartenansicht sichtbar und verlinkt die [OSM-Copyrightseite](https://www.openstreetmap.org/copyright).
+
+### Positionsangaben im CSV-Export
+
+Die ersten 13 Spalten bleiben erhalten. `latitude` und `longitude` sind bei korrigierten neuen Fundstellen die geschätzten Ereigniskoordinaten; `gps_latitude` und `gps_longitude` bewahren die ursprüngliche Messung. `gps_accuracy_m` gilt weiterhin für diese ursprüngliche GPS-Messung, nicht als garantierte Genauigkeit der korrigierten Position.
+
+Ab Version 0.2.2 ist `gps_fix_age_ms` der vorzeichenbehaftete Abstand **Ereigniszeit minus GPS-Messzeit**: positiv bei einer älteren, negativ bei einer späteren Messung. `bearing_deg` ist die GPS-Fahrtrichtung in Grad relativ zu Nord; `position_distance_m` enthält die Verschiebung mit Vorzeichen, `position_method` die Methode oder den Grund für unveränderte Koordinaten. `course_speed_time` bezeichnet die Projektion, `legacy_gps` frühere Fundstellen und `manual_gps` manuelle Markierungen. Mehr als fünf Sekunden Zeitabstand oder eine angegebene Richtungsunsicherheit über 45° führen zu keiner Projektion. Fehlende Werte bleiben leer. Frühere Einträge werden nicht nachträglich korrigiert, weil Richtung und Spitzenzeitpunkt fehlen.

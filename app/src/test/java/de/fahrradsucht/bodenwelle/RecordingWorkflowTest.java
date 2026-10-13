@@ -43,6 +43,7 @@ public class RecordingWorkflowTest {
     @Before public void before() {
         app = RuntimeEnvironment.getApplication();
         app.deleteDatabase("findings.db");
+        new DetectionPreferences(app).setThreshold(40);
         RecordingService.running = false;
         RecordingService.status = "Noch keine Fahrt gestartet.";
         RecordingService.lastAction = "";
@@ -98,12 +99,13 @@ public class RecordingWorkflowTest {
             SensorEvent event = ShadowSensorManager.createSensorEvent(3, Sensor.TYPE_ACCELEROMETER);
             event.timestamp = SystemClock.elapsedRealtimeNanos();
             event.values[0] = 0; event.values[1] = 0;
-            event.values[2] = i == 250 ? 17.81f : 9.81f;
+            event.values[2] = i == 250 ? 69.81f : 9.81f;
             Shadows.shadowOf(sensors).sendSensorEventToListeners(event, sensor);
         }
         try (FindingStore store = new FindingStore(app)) {
             assertEquals(1, store.count());
             assertEquals("automatic", store.all().get(0).source());
+            assertEquals(40, store.all().get(0).threshold(), 0);
         }
     }
     @Test public void networkPositionCanStartRideWhileGpsFixIsUnavailable() {
@@ -113,6 +115,24 @@ public class RecordingWorkflowTest {
         Shadows.shadowOf(manager).simulateLocation(fix(LocationManager.NETWORK_PROVIDER, 20));
         Shadows.shadowOf(Looper.getMainLooper()).idle();
         try (FindingStore store = new FindingStore(app)) { assertEquals(1, store.routeCount()); }
+    }
+    @Test public void thresholdChangeAffectsRunningRecorderWithoutRestart() {
+        start();
+        Shadows.shadowOf(manager).simulateLocation(fix(LocationManager.GPS_PROVIDER, 5));
+        Shadows.shadowOf(Looper.getMainLooper()).idle();
+        for (int i = 0; i < 380; i++) {
+            ShadowSystemClock.advanceBy(Duration.ofMillis(10));
+            if (i == 290) new DetectionPreferences(app).setThreshold(15);
+            SensorEvent event = ShadowSensorManager.createSensorEvent(3, Sensor.TYPE_ACCELEROMETER);
+            event.timestamp = SystemClock.elapsedRealtimeNanos();
+            event.values[0] = 0; event.values[1] = 0;
+            event.values[2] = i == 250 || i == 320 ? 29.81f : 9.81f;
+            Shadows.shadowOf(sensors).sendSensorEventToListeners(event, sensor);
+        }
+        try (FindingStore store = new FindingStore(app)) {
+            assertEquals(1, store.count());
+            assertEquals(15, store.all().get(0).threshold(), 0);
+        }
     }
     @Test public void startButtonExplainsDisabledLocationBeforeRequestingService() {
         Shadows.shadowOf(manager).setProviderEnabled(LocationManager.GPS_PROVIDER, false);

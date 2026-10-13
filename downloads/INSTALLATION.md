@@ -1,23 +1,23 @@
-# Bodenwelle 0.2.1 – Android-Testversion
+# Bodenwelle 0.2.2 – Android-Testversion
 
-Dies ist eine frühe Testversion für persönliche Fahrtests, noch keine geprüfte öffentliche Produktversion.
+Dies ist eine Testversion für persönliche Fahrtests.
 
 ## Herunterladen und installieren
 
-Öffne `Bodenwelle-0.2.1.apk` im Browser und lade die Datei herunter. Öffne sie anschließend auf deinem Android-Handy. Falls Android nachfragt, erlaube die Installation aus dieser Quelle. Die Datei ist eine direkt installierbare APK; sie muss nicht entpackt werden.
+[APK 0.2.2 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.2.2.apk). Öffne die Datei anschließend auf deinem Android-Handy. Falls Android nachfragt, erlaube die Installation aus dieser Quelle. Die APK muss nicht entpackt werden.
 
-Android 8.0 oder neuer und ein Beschleunigungssensor werden benötigt. Starte die App und erlaube vor der Fahrt den genauen Standort während der Nutzung. OpenStreetMap-Karten benötigen Internet. Neue Kartenausschnitte und die IP-Adresse werden dem Kartenanbieter bekannt; Fundstellen und die letzte Fahrtspur bleiben lokal.
+Installiere sie als Update über die vorhandene App. App-ID und Signatur sind mit 0.2.0 und 0.2.1 identisch; lokale Fundstellen und Fahrtspur bleiben beim Update erhalten. Eine Deinstallation würde deine lokalen Daten löschen.
 
-Die App erfasst experimentelle Erschütterungshinweise, keine verlässliche Bodenwellenhöhe oder rechtliche Einstufung. Die Karte zeigt Standort, Fahrtspur und Fundstellen. Nur bewusst geprüfte Fundstellen werden auf Wunsch als CSV gespeichert. Es gibt keinen automatischen Versand an Behörden.
+Android 8.0 oder neuer und ein Beschleunigungssensor werden benötigt. Erlaube den genauen Standort während der Nutzung. Neue OpenStreetMap-Kartenkacheln benötigen Internet; Fundstellen und Fahrtspur bleiben lokal. Es gibt keinen automatischen Versand an Behörden. Nur bewusst geprüfte Fundstellen werden auf Wunsch als CSV gespeichert.
+
+## Neu in 0.2.2
+
+Die Auslöseschwelle startet bei **40 m/s²**. An der Karte öffnet **Empfindlichkeit einstellen** den Regler von 5 bis 100 m/s²: links weniger Treffer, rechts mehr. Die Änderung wird gespeichert und gilt sofort während einer laufenden Aufzeichnung. Bitte nur im sicheren Stand bedienen.
+
+Neue automatische Fundstellen werden aus GPS-Fahrtrichtung, Geschwindigkeit und Zeitabstand zum stärksten Sensorstoß auf dessen Zeitpunkt korrigiert. Dies ist eine Schätzung bei gleichbleibender Bewegung. Originalkoordinaten und Korrektur bleiben nachvollziehbar; bestehende Einträge bleiben unverändert. Die App misst keine verlässliche Bodenwellenhöhe und trifft keine rechtliche Einstufung.
 
 ## Prüfstand
 
-50 automatisierte Tests, Android-Build und APK-Signatur wurden erfolgreich geprüft. Die neuen Tests prüfen Dienststart, Standort-/Sensordaten und SQLite-Speicherung auf simuliertem Android 9 und 15. Die genaue Ursache des zuerst gemeldeten Fairphone-Verhaltens ist ohne Gerätelogs nicht nachgewiesen; die Korrekturen müssen auf dem Gerät getestet werden.
+67 automatisierte Tests bestehen, einschließlich Live-Änderung der Empfindlichkeit auf simuliertem Android 9 und 15, vorwärts/rückwärts gerechneter Positionen, gespeicherter Einstellungen, Export und Datenbankmigration. Android-Build und APK-Signatur sind geprüft; Lint meldet keine Fehler und eine bereits bestehende Warnung zur Konstruktorform der programmgesteuerten Kartenansicht. Diese Prüfungen ersetzen keine praktische Vergleichsfahrt auf dem Fairphone.
 
-## Datei prüfen
-
-Die APK ist 616707 Bytes groß. Die SHA-256-Prüfsumme steht in `SHA256SUMS`.
-
-## Update von 0.2.0
-
-Installiere 0.2.1 über die vorhandene App. App-ID und Signatur sind identisch; lokale Einträge bleiben beim Update erhalten. Unter dem Startknopf steht der Startstatus. An der Karte siehst du die geschätzte Genauigkeit in Metern und das Alter der Messung. Falls der Start weiterhin scheitert, notiere den genauen Text im Fehlerdialog oder am Startknopf.
+Die APK ist 668690 Bytes groß. Die SHA-256-Prüfsumme steht in [SHA256SUMS](SHA256SUMS). Mehr zum Fahrtest: [FAHRTEST.md](../docs/FAHRTEST.md). Zur möglichen Höhenschätzung: [HOEHENMESSUNG.md](../docs/HOEHENMESSUNG.md).

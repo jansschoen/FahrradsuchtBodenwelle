@@ -1,4 +1,8 @@
 <resources>
+    <string name="sensitivity_summary">Empfindlichkeit einstellen · ab %1$d m/s²</string>
+    <string name="sensitivity_hint">Links: weniger Treffer · rechts: mehr Treffer. Die Änderung gilt sofort. Bitte nur im sicheren Stand bedienen.</string>
+    <string name="sensitivity_description">Empfindlichkeit: nach rechts wird die Auslöseschwelle niedriger</string>
+    <string name="sensitivity_reset">Standard wiederherstellen: 40 m/s²</string>
     <string name="map_description">OpenStreetMap-Karte mit Standort, Fahrtspur und Fundstellen</string>
     <string name="map_waiting">Genauigkeit: noch keine Messung. Standort wird gesucht; draußen kurz warten.</string>
     <string name="map_location_disabled">Standort am Handy ausgeschaltet. Bitte in den Einstellungen einschalten.</string>

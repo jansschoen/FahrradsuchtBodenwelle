@@ -44,6 +44,7 @@ public final class RideMapPanel extends LinearLayout {
     private final TextView routeStatus;
     private final Runnable requestLocation;
     private final Consumer<Finding> review;
+    private final SensitivityControl sensitivity;
     private final List<Polyline> lines = new ArrayList<>();
     private final List<Marker> markers = new ArrayList<>();
     private List<RoutePoint> points = new ArrayList<>();
@@ -62,7 +63,7 @@ public final class RideMapPanel extends LinearLayout {
         IConfigurationProvider config = Configuration.getInstance();
         config.setOsmdroidBasePath(base);
         config.setOsmdroidTileCache(cache);
-        config.setUserAgentValue("Bodenwelle/0.2.1 (de.fahrradsucht.bodenwelle; https://github.com/jansschoen/FahrradsuchtBodenwelle)");
+        config.setUserAgentValue("Bodenwelle/0.2.2 (de.fahrradsucht.bodenwelle; https://github.com/jansschoen/FahrradsuchtBodenwelle)");
         config.setTileDownloadThreads((short) 2);
         config.setTileFileSystemCacheMaxBytes(60 * 1024 * 1024L);
         config.setTileFileSystemCacheTrimBytes(48 * 1024 * 1024L);
@@ -100,6 +101,8 @@ public final class RideMapPanel extends LinearLayout {
         controls.addView(control(R.string.my_location, this::followLocation), new LayoutParams(0, -2, 1));
         controls.addView(control(R.string.show_route, this::showRoute), new LayoutParams(0, -2, 1));
         addView(controls);
+        sensitivity = new SensitivityControl(activity);
+        addView(sensitivity);
         text(activity.getString(R.string.map_legend), 12);
         TextView attribution = text(activity.getString(R.string.osm_attribution), 12);
         attribution.setMinHeight(dp(40));
@@ -140,6 +143,7 @@ public final class RideMapPanel extends LinearLayout {
     private static long age(Location fix) { return (SystemClock.elapsedRealtimeNanos() - fix.getElapsedRealtimeNanos()) / 1_000_000L; }
 
     public void refresh() {
+        sensitivity.refresh();
         int count = store.routeCount();
         if (shownRouteCount != count) {
             shownRouteCount = count;

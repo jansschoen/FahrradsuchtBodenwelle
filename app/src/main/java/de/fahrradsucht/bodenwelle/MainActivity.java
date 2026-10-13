@@ -203,13 +203,22 @@ public final class MainActivity extends Activity {
             addText(item, (f.reviewed() ? "✓ Geprüft · " : "Offen · ") + category, 18, INK, true);
             addText(item, DATE.format(Instant.ofEpochMilli(f.timeMillis())), 14, INK, false);
             addText(item, "manual".equals(f.source()) ? "Von dir markiert" : "Automatisch erfasst – bitte vor Ort zuordnen", 14, INK, false);
+            if (f.position().projected()) addText(item, "Position auf den Zeitpunkt der Erschütterung geschätzt", 14, GREEN, false);
             if (!f.note().isEmpty()) addText(item, f.note(), 15, INK, false);
             else addText(item, "Ergänze, was du an dieser Stelle gesehen hast.", 15, INK, false);
             button(item, "Auf der Karte ansehen", false, () -> openMap(f));
             button(item, "Stelle prüfen", true, () -> review(f));
             LinearLayout details = column();
             details.setVisibility(View.GONE);
-            addText(details, String.format(Locale.GERMANY, "Koordinaten: %.5f, %.5f\nGPS-Genauigkeit: ± %.0f m\nGPS-Position bei Erfassung: %.1f s alt", f.latitude(), f.longitude(), f.accuracy(), f.locationAgeMillis() / 1000.0), 14, INK, false);
+            addText(details, String.format(Locale.GERMANY, "Angezeigte Position: %.5f, %.5f\nUrsprüngliche GPS-Position: %.5f, %.5f\nGenauigkeit der GPS-Messung: ± %.0f m\nGPS-Messung: %.2f s %s dem Ereignis", f.latitude(), f.longitude(),
+                    f.position().gpsLatitude(), f.position().gpsLongitude(), f.accuracy(), Math.abs(f.locationAgeMillis()) / 1000.0,
+                    f.locationAgeMillis() >= 0 ? "vor" : "nach"), 14, INK, false);
+            if (f.position().projected()) {
+                addText(details, String.format(Locale.GERMANY, "Positionskorrektur: %.1f m %s der Fahrtrichtung. Schätzung bei gleichbleibender Geschwindigkeit und Richtung; die GPS-Genauigkeit gilt für die ursprüngliche Messung.",
+                        Math.abs(f.position().distanceMeters()), f.position().distanceMeters() >= 0 ? "entlang" : "entgegen"), 14, INK, false);
+            } else if ("automatic".equals(f.source()) && !"legacy_gps".equals(f.position().method())) {
+                addText(details, "Die ursprüngliche GPS-Position bleibt erhalten: keine zeitliche Verschiebung nötig oder keine brauchbare Richtung/Geschwindigkeit verfügbar.", 14, INK, false);
+            }
             String measurement = f.peak() == null ? "Manuelle Markierung" : String.format(Locale.GERMANY, "Sensorreaktion: %.1f m/s²", f.peak());
             if (f.speed() != null) measurement += String.format(Locale.GERMANY, " · %.1f km/h", f.speed() * 3.6f);
             addText(details, measurement, 14, INK, false);

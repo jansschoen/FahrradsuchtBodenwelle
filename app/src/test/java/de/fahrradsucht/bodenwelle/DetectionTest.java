@@ -16,60 +16,81 @@ public class DetectionTest {
     }
     @Test public void briefShockIsRecordedWithPeak() {
         BumpDetector d = warmed();
-        assertNull(d.accept(3000, 4, true));
-        assertNull(d.accept(3010, -8, true));
+        assertNull(d.accept(3000, 40, true));
+        assertNull(d.accept(3010, -60, true));
         BumpDetector.Detection finding = d.accept(3250, 0, true);
         assertNotNull(finding);
-        assertEquals(8, finding.peak(), 0.0001);
-        assertEquals(3000, finding.elapsedMillis());
-        assertTrue(finding.threshold() >= 3);
+        assertEquals(60, finding.peak(), 0.0001);
+        assertEquals(3010, finding.elapsedMillis());
+        assertEquals(40, finding.threshold(), 0);
     }
     @Test public void warmupIgnoresMountingShock() {
         BumpDetector d = new BumpDetector();
         assertNull(d.accept(0, 0, true));
-        assertNull(d.accept(1000, 15, true));
+        assertNull(d.accept(1000, 60, true));
         assertNull(d.accept(1250, 0, true));
     }
     @Test public void oneBumpWithSeveralOscillationsCreatesOneFinding() {
         BumpDetector d = warmed();
-        d.accept(3000, 8, true);
+        d.accept(3000, 60, true);
         assertNotNull(d.accept(3250, 0, true));
-        for (int t = 3260; t < 4700; t += 10) assertNull(d.accept(t, t % 100 < 20 ? 8 : 0, true));
+        for (int t = 3260; t < 4700; t += 10) assertNull(d.accept(t, t % 100 < 20 ? 60 : 0, true));
     }
     @Test public void distinctLaterShockCreatesAnotherFinding() {
         BumpDetector d = warmed();
-        d.accept(3000, 8, true);
+        d.accept(3000, 60, true);
         assertNotNull(d.accept(3250, 0, true));
         for (int t = 3260; t < 5000; t += 10) d.accept(t, 0, true);
-        d.accept(5000, 8, true);
+        d.accept(5000, 60, true);
         assertNotNull(d.accept(5250, 0, true));
     }
     @Test public void lossOfPositionCancelsPendingFinding() {
         BumpDetector d = warmed();
-        d.accept(3000, 8, true);
+        d.accept(3000, 60, true);
         assertNull(d.accept(3100, 0, false));
         assertNull(d.accept(3250, 0, true));
     }
     @Test public void standstillDoesNotCreateAutomaticFinding() {
         BumpDetector d = warmed();
-        assertNull(d.accept(3000, 12, false));
+        assertNull(d.accept(3000, 60, false));
         assertNull(d.accept(3250, 0, false));
     }
-    @Test public void roughContinuousSurfaceRaisesThreshold() {
+    @Test public void continuousSignalBelowFortyDoesNotTrigger() {
         BumpDetector d = new BumpDetector();
-        for (int t = 0; t < 10_000; t += 10) assertNull(d.accept(t, t % 20 == 0 ? 2.5 : -2.5, true));
-        assertNull(d.accept(10_000, 6, true));
+        for (int t = 0; t < 10_000; t += 10) assertNull(d.accept(t, t % 20 == 0 ? 39.99 : -39.99, true));
+        assertNull(d.accept(10_000, 39.99, true));
         assertNull(d.accept(10_250, 0, true));
     }
     @Test public void sensorGapRequiresNewWarmup() {
         BumpDetector d = warmed();
-        assertNull(d.accept(10_000, 12, true));
+        assertNull(d.accept(10_000, 60, true));
         assertNull(d.accept(10_250, 0, true));
     }
     @Test public void invalidSensorValuesDoNotCreateFindings() {
         BumpDetector d = warmed();
         assertNull(d.accept(3000, Double.NaN, true));
         assertNull(d.accept(3000, Double.POSITIVE_INFINITY, true));
+    }
+    @Test public void exactlyFortyTriggersWhileThirtyNineDoesNot() {
+        BumpDetector d = warmed();
+        assertNull(d.accept(3000, 39.99, true));
+        assertNull(d.accept(3010, -40, true));
+        BumpDetector.Detection result = d.accept(3260, 0, true);
+        assertNotNull(result); assertEquals(40, result.peak(), 0);
+    }
+    @Test public void sensitivityChangeTakesEffectWithoutRestart() {
+        BumpDetector d = warmed();
+        assertNull(d.accept(3000, 20, true));
+        d.setThreshold(15);
+        assertNull(d.accept(3010, 20, true));
+        BumpDetector.Detection result = d.accept(3260, 0, true);
+        assertNotNull(result); assertEquals(15, result.threshold(), 0);
+    }
+    @Test public void increasingThresholdCancelsCandidateFromOldSetting() {
+        BumpDetector d = warmed(); d.accept(3000, 60, true);
+        d.setThreshold(80);
+        assertNull(d.accept(3250, 60, true));
+        assertNull(d.accept(3500, 0, true));
     }
     @Test public void projectionWorksForDifferentPhoneOrientations() {
         AccelerationProjector upright = new AccelerationProjector();
