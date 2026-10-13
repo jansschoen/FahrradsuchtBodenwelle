@@ -16,9 +16,17 @@ Für eine spätere breite öffentliche Veröffentlichung ist die aktuelle [OSM-K
 
 ## Auf dem Fairphone ausprobieren
 
-**[Android-Testversion 0.4.0 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.4.0.apk)**
+**[Android-Testversion 0.5.0 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.5.0.apk)**
 
-Öffne die heruntergeladene APK auf deinem Android-Handy. Falls Android danach fragt, erlaube die Installation aus dieser Quelle. Die [kurze Installationsanleitung](downloads/INSTALLATION.md) und die [SHA-256-Prüfsummen](downloads/SHA256SUMS) liegen neben der APK. Version 0.4.0 verwendet dieselbe App-ID und Signatur wie die vorherigen Testversionen und ist als Update über die vorhandene Installation vorgesehen. Eine Deinstallation würde die lokalen Daten löschen. Dies ist eine Debug-Testversion; die Korrekturen müssen auf dem Fairphone noch praktisch überprüft werden.
+Öffne die heruntergeladene APK auf deinem Android-Handy. Falls Android danach fragt, erlaube die Installation aus dieser Quelle. Die [kurze Installationsanleitung](downloads/INSTALLATION.md) und die [SHA-256-Prüfsummen](downloads/SHA256SUMS) liegen neben der APK. Version 0.5.0 verwendet dieselbe App-ID und Signatur wie die vorherigen Testversionen und ist als Update über die vorhandene Installation vorgesehen. Eine Deinstallation würde die lokalen Daten löschen. Dies ist eine Debug-Testversion; die Korrekturen müssen auf dem Fairphone noch praktisch überprüft werden.
+
+### Wiederholte Beobachtungen und Fotos in 0.5.0
+
+**Mehrfachtreffer bündeln** schlägt nahe, freigegebene Beobachtungen gleicher Art vor. Nach deiner Bestätigung erscheinen sie als gemeinsame Fundstelle in Liste und Karte. Alle Originalmessungen und Freigaben bleiben erhalten; die Bündelung lässt sich auflösen. Du kannst bei ungenauem GPS auch selbst auswählen.
+
+Unter **Stelle prüfen und Fotos ergänzen** lassen sich Bilder auswählen oder über die Kamera aufnehmen. Bis zu fünf lokale Fotokopien je Beobachtung werden verkleinert und ohne ursprüngliche EXIF-Orts-/Zeitangaben gespeichert. Originale im Album bleiben erhalten. Prüfe Bildinhalte selbst vor dem Weitergeben.
+
+Die Mail fasst bestätigte Wiederholungen zu einer Fundstelle mit Anzahl, Kalenderwochen und Wertebereichen zusammen. Nur ausgewählte freigegebene Beobachtungen und ihre ausgewählten Fotos werden übernommen. Bis zu 20 Fundstellen je Mail und zehn Fotos / 10 MB je Entwurf sind möglich. Fotos tragen zur Textnummer passende Namen; erst im externen Mailprogramm wird versendet. 169 automatisierte Tests sowie Android-Build, Lint und APK-Signatur sind geprüft. Kamera und Anhänge brauchen noch einen praktischen Fairphone-Test. Anleitung und Grenzen: [BUENDELUNG-FOTOS.md](docs/BUENDELUNG-FOTOS.md).
 
 ### Bedienung und Mailentwürfe in 0.4.0
 
@@ -26,7 +34,7 @@ Der Schieberegler ist umgedreht: **links kleinere Werte und mehr Treffer, rechts
 
 **Meldung an die Verwaltung vorbereiten** erstellt aus ausgewählten freigegebenen Fundstellen bearbeitbare Mailentwürfe. Automatische Messzeitangaben enthalten ausschließlich die Berliner ISO-Kalenderwoche und das Wochenjahr. Der geografische Bezirksvorschlag lässt sich prüfen und korrigieren; bei mehreren Bezirken gibt es getrennte Entwürfe. Zwölf auf offiziellen Berlin.de-Seiten geprüfte Kontaktadressen sind hinterlegt. Der gebündelte Grenzdatensatz stammt allerdings aus 2013 und ist ausdrücklich ein Vorschlag; Grenznähe und besondere Straßen erfordern eigene Prüfung.
 
-Die Mail ist persönlich formuliert, wahlweise mit kurzem Hinweis auf Bodenwelle. Eigene Notizen bleiben zunächst aus. Der Entwurf enthält keine Fahrtspur oder Rohdatenanhänge. **Im Mailprogramm öffnen** übergibt ihn an das Handy-Mailprogramm, in dem du selbst versendest. Dokumentation, Quellen und Grenzen: [MAIL-MELDUNGEN.md](docs/MAIL-MELDUNGEN.md).
+Die Mail ist persönlich formuliert, wahlweise mit kurzem Hinweis auf Bodenwelle. Eigene Notizen bleiben zunächst aus. Der Entwurf enthält keine Fahrtspur oder Rohdatenanhänge; ab 0.5.0 können ausgewählte bereinigte Fotos angehängt werden. **Im Mailprogramm öffnen** übergibt ihn an das Handy-Mailprogramm, in dem du selbst versendest. Dokumentation, Quellen und Grenzen: [MAIL-MELDUNGEN.md](docs/MAIL-MELDUNGEN.md).
 
 ### Klassifizierung und OSM-Ergänzung in 0.3.0
 
@@ -90,7 +98,7 @@ Der Bootstrap prüft die heruntergeladenen Werkzeuge anhand festgelegter Herstel
 
 ## Datenmodell
 
-Lokale SQLite-Fundstellen enthalten zusätzlich strukturierte Klassifizierungs- und OSM-Metadaten einschließlich manueller Herkunftskennzeichen und optionaler bestätigter Höhenmessung. Ein separater, begrenzter Cache speichert öffentliche OSM-Ausschnitte. Sie enthalten außerdem Ereigniszeit, Koordinaten, GPS-Genauigkeit, Zeitabstand zwischen GPS-Fix und Ereignis, gegebenenfalls Geschwindigkeit, Sensor-Spitzenwert und Erkennungsschwelle sowie Quelle, Kategorie, Notiz und Freigabestatus. Die zuletzt gestartete Fahrt wird zusätzlich als lokale GPS-Spur mit getrennten Abschnitten gespeichert. Die Datenbankmigration erhält vorhandene Fundstellen und Fahrtspuren. Schema 5 speichert zusätzlich eine optionale manuelle Bezirkszuordnung für Meldungen. Neue automatische Einträge enthalten zusätzlich ursprüngliche GPS-Koordinaten, Fahrtrichtung, geschätzte Verschiebung und Korrekturmethode. Die Erkennungsversion wird je Fundstelle gespeichert. Rohsensorzeitreihen werden nicht gespeichert. Manuelle Einträge enthalten keine erfundenen Sensorwerte. Der Fundstellenexport verwendet UTC-Zeitpunkte und dokumentierte SI-Einheiten beziehungsweise km/h und enthält keine Fahrtspur.
+Lokale SQLite-Fundstellen enthalten zusätzlich strukturierte Klassifizierungs- und OSM-Metadaten einschließlich manueller Herkunftskennzeichen und optionaler bestätigter Höhenmessung. Ein separater, begrenzter Cache speichert öffentliche OSM-Ausschnitte. Sie enthalten außerdem Ereigniszeit, Koordinaten, GPS-Genauigkeit, Zeitabstand zwischen GPS-Fix und Ereignis, gegebenenfalls Geschwindigkeit, Sensor-Spitzenwert und Erkennungsschwelle sowie Quelle, Kategorie, Notiz und Freigabestatus. Die zuletzt gestartete Fahrt wird zusätzlich als lokale GPS-Spur mit getrennten Abschnitten gespeichert. Die Datenbankmigration erhält vorhandene Fundstellen und Fahrtspuren. Schema 5 speichert zusätzlich eine optionale manuelle Bezirkszuordnung für Meldungen. Schema 6 ergänzt bestätigte Bündelungen und Fotometadaten, ohne ursprüngliche Beobachtungen zu entfernen. Neue automatische Einträge enthalten zusätzlich ursprüngliche GPS-Koordinaten, Fahrtrichtung, geschätzte Verschiebung und Korrekturmethode. Die Erkennungsversion wird je Fundstelle gespeichert. Rohsensorzeitreihen werden nicht gespeichert. Manuelle Einträge enthalten keine erfundenen Sensorwerte. Der Fundstellenexport verwendet UTC-Zeitpunkte und dokumentierte SI-Einheiten beziehungsweise km/h und enthält keine Fahrtspur.
 
 ## Verwendete Kartenbibliothek
 
@@ -101,3 +109,5 @@ osmdroid 6.1.20 ist unter der Apache-Lizenz 2.0 lizenziert. Eine Kopie der Lizen
 Die ersten 13 Spalten bleiben erhalten. `latitude` und `longitude` sind bei korrigierten neuen Fundstellen die geschätzten Ereigniskoordinaten; `gps_latitude` und `gps_longitude` bewahren die ursprüngliche Messung. `gps_accuracy_m` gilt weiterhin für diese ursprüngliche GPS-Messung, nicht als garantierte Genauigkeit der korrigierten Position.
 
 Ab Version 0.2.2 ist `gps_fix_age_ms` der vorzeichenbehaftete Abstand **Ereigniszeit minus GPS-Messzeit**: positiv bei einer älteren, negativ bei einer späteren Messung. `bearing_deg` ist die GPS-Fahrtrichtung in Grad relativ zu Nord; `position_distance_m` enthält die Verschiebung mit Vorzeichen, `position_method` die Methode oder den Grund für unveränderte Koordinaten. `course_speed_time` bezeichnet die Projektion, `legacy_gps` frühere Fundstellen und `manual_gps` manuelle Markierungen. Mehr als fünf Sekunden Zeitabstand oder eine angegebene Richtungsunsicherheit über 45° führen zu keiner Projektion. Fehlende Werte bleiben leer. Frühere Einträge werden nicht nachträglich korrigiert, weil Richtung und Spitzenzeitpunkt fehlen.
+
+AndroidX ExifInterface 1.3.7 (Apache 2.0) liest die Orientierung importierter Fotos. Die Lizenzkopie liegt unter `app/src/main/assets/licenses/androidx-exifinterface-apache-2.0.txt`.

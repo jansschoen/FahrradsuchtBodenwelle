@@ -64,7 +64,7 @@ public final class RideMapPanel extends LinearLayout {
         IConfigurationProvider config = Configuration.getInstance();
         config.setOsmdroidBasePath(base);
         config.setOsmdroidTileCache(cache);
-        config.setUserAgentValue("Bodenwelle/0.4.0 (de.fahrradsucht.bodenwelle; https://github.com/jansschoen/FahrradsuchtBodenwelle)");
+        config.setUserAgentValue("Bodenwelle/0.5.0 (de.fahrradsucht.bodenwelle; https://github.com/jansschoen/FahrradsuchtBodenwelle)");
         config.setTileDownloadThreads((short) 2);
         config.setTileFileSystemCacheMaxBytes(60 * 1024 * 1024L);
         config.setTileFileSystemCacheTrimBytes(48 * 1024 * 1024L);
@@ -172,7 +172,8 @@ public final class RideMapPanel extends LinearLayout {
             for (Marker marker : markers) { marker.closeInfoWindow(); marker.onDetach(map); }
             map.getOverlays().removeAll(markers); markers.clear();
             int shown = 0;
-            for (Finding finding : store.all()) {
+            for (FindingBundle bundle : store.bundles()) {
+                Finding finding=bundle.representative();
                 if (shown++ >= 500) break;
                 Marker marker = new Marker(map);
                 marker.setPosition(new GeoPoint(finding.latitude(), finding.longitude()));
@@ -180,11 +181,11 @@ public final class RideMapPanel extends LinearLayout {
                 GradientDrawable icon = new GradientDrawable();
                 icon.setShape(GradientDrawable.OVAL);
                 icon.setSize(dp(20), dp(20));
-                icon.setColor(finding.details().intensity().color());
+                icon.setColor(bundle.intensity().color());
                 icon.setStroke(dp(2), Color.WHITE);
                 marker.setIcon(icon);
-                marker.setTitle(finding.reviewed() ? "Geprüfte Fundstelle" : "Ungeprüfte Fundstelle");
-                marker.setSnippet(Classification.label(Classification.BUMPS, finding.category()) + " · " + finding.details().intensity().label() + (finding.note().isEmpty() ? "" : " · " + finding.note()));
+                marker.setTitle((bundle.reviewedCount()==bundle.observations().size()?"Geprüfte Fundstelle":"Fundstelle mit offenen Beobachtungen")+" · "+bundle.observations().size()+" Beobachtung(en)");
+                marker.setSnippet(bundle.title() + " · " + bundle.intensity().label()+(bundle.observations().size()>1?" · bisheriger Höchstwert":"") + (finding.note().isEmpty() ? "" : " · " + finding.note()));
                 marker.setOnMarkerClickListener((m, view) -> {
                     if (review != null && !RecordingService.running) review.accept(finding);
                     else m.showInfoWindow();

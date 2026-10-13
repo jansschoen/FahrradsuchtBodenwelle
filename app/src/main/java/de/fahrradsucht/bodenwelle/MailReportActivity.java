@@ -44,11 +44,14 @@ public final class MailReportActivity extends Activity {
     private final Map<String, DraftState> saved = new HashMap<>();
     private MailReports.Group current;
     private boolean building;
+    private final Map<Long,CheckBox> photoChecks=new java.util.LinkedHashMap<>();
+    private List<MailAttachments.Choice> attachmentChoices=new ArrayList<>();
     private record Row(long id, CheckBox selected, Spinner district, BerlinDistricts.Assignment automatic) {}
     private record DistrictOption(String id, String label) { @Override public String toString() { return label; } }
     private static final class DraftState {
         String address = "", authority = "", subject = "", body = "";
         boolean handedOff;
+        java.util.Set<Long> selectedPhotos;
     }
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -139,7 +142,7 @@ public final class MailReportActivity extends Activity {
         return boundaries.assign(f, "");
     }
     private String groupLabel(MailReports.Group g) {
-        return (split.isChecked() ? catalog.name(g.districtId()) : "Gesamte Auswahl") + " · " + g.items().size() + " Stellen"
+        return (split.isChecked() ? catalog.name(g.districtId()) : "Gesamte Auswahl") + " · " + g.points().size() + " Fundstellen"
                 + (g.parts() > 1 ? " · Teil " + g.part() + "/" + g.parts() : "");
     }
     private LinearLayout preview;
@@ -174,7 +177,17 @@ public final class MailReportActivity extends Activity {
         text(preview, "Empfänger", 15); recipient = edit(preview, state.address, false); recipient.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS); recipient.setId(R.id.mail_recipient);
         text(preview, "Betreff", 15); subject = edit(preview, state.subject, false); subject.setId(R.id.mail_subject);
         text(preview, "Mailtext – vor der Übergabe prüfen", 18); body = edit(preview, state.body, true); body.setId(R.id.mail_body);
-        handoff = text(preview, state.handedOff ? "Entwurf bereits an das Mailprogramm übergeben; Versand dort prüfen." : "Es wurde noch keine Mail versendet.", 14);
+        photoChecks.clear();attachmentChoices=MailAttachments.choices(group,store);
+        if(!attachmentChoices.isEmpty()) {
+            text(preview,"Fotos auswählen (höchstens 10 Fotos / 10 MB)",18);
+            text(preview,"Die Nummer im Dateinamen gehört zur Fundstelle im Text. Prüfe Bildinhalte vor der Übergabe. Metadaten wurden beim Import entfernt. Änderungen der Nummerierung im Mailtext erfordern passende Fotozuordnung.",14);
+            for(MailAttachments.Choice choice:attachmentChoices) {
+                CheckBox checked=check(preview,choice.displayName()+" · "+Math.max(1,choice.photo().bytes()/1024)+" KB",state.selectedPhotos==null||state.selectedPhotos.contains(choice.photo().id()));
+                photoChecks.put(choice.photo().id(),checked);
+                button(preview,"Foto zu Stelle "+choice.place()+" ansehen",()->PhotoPanel.show(this,choice.photo()));
+            }
+        }
+        handoff = text(preview, state.handedOff ? "Mailprogramm oder Auswahl bereits geöffnet; Text, Anhänge und Versand dort prüfen." : "Es wurde noch keine Mail versendet.", 14);
         recipientOffice.setOnItemSelectedListener(listener(() -> {
             if (building) return;
             DraftState currentState = saved.get(current.key()); String next = ((DistrictOption) recipientOffice.getSelectedItem()).id();
@@ -203,17 +216,21 @@ public final class MailReportActivity extends Activity {
         DraftState d = saved.get(current.key()); if (d == null) return;
         d.address = recipient.getText().toString().trim(); d.subject = subject.getText().toString(); d.body = body.getText().toString();
         d.authority = ((DistrictOption) recipientOffice.getSelectedItem()).id();
+        d.selectedPhotos=new java.util.HashSet<>();for(Map.Entry<Long,CheckBox> entry:photoChecks.entrySet())if(entry.getValue().isChecked())d.selectedPhotos.add(entry.getKey());
     }
     private void openMail() {
         try {
             // Recheck consent on handoff; opening a stale screen cannot export a revoked/deleted entry.
             if (!stillReviewed()) return;
-            Intent intent = MailIntent.create(recipient.getText().toString().trim(), subject.getText().toString(), body.getText().toString());
-            startActivity(intent); saveCurrent(); saved.get(current.key()).handedOff = true;
+            MailIntent.create(recipient.getText().toString().trim(),subject.getText().toString(),body.getText().toString());
+            List<MailAttachments.Choice> chosen=new ArrayList<>();for(MailAttachments.Choice choice:attachmentChoices)if(photoChecks.get(choice.photo().id()).isChecked())chosen.add(choice);
+            java.util.ArrayList<Uri> photos=MailAttachments.prepare(this,chosen,current);
+            Intent intent=MailIntent.withPhotos(recipient.getText().toString().trim(),subject.getText().toString(),body.getText().toString(),photos);
+            startActivity(photos.isEmpty()?intent:Intent.createChooser(intent,"Mailprogramm für Text und Fotos auswählen")); saveCurrent(); saved.get(current.key()).handedOff = true;
             DistrictCatalog.Authority a = selectedAuthority();
             if (a != null) settings.edit().putString("address_" + a.id(), recipient.getText().toString().trim()).apply();
             handoff.setText(R.string.mail_handed_off);
-        } catch (IllegalArgumentException e) { toast(e.getMessage()); }
+        } catch (IllegalArgumentException | IOException e) { toast(e.getMessage()); }
         catch (ActivityNotFoundException e) {
             new AlertDialog.Builder(this).setTitle("Kein Mailprogramm gefunden").setMessage("Richte ein Mailprogramm auf dem Handy ein. Du kannst den Entwurf auch über „Mailtext kopieren“ übernehmen.").setPositiveButton("Verstanden", null).show();
         }
@@ -232,7 +249,8 @@ public final class MailReportActivity extends Activity {
             ArrayList<String> selected = new ArrayList<>(); for (Row row : rows) if (row.selected.isChecked()) selected.add(Long.toString(row.id)); out.putStringArrayList("selected", selected);
             Bundle all = new Bundle();
             for (Map.Entry<String, DraftState> e : saved.entrySet()) {
-                Bundle d = new Bundle(); d.putString("address", e.getValue().address); d.putString("authority", e.getValue().authority); d.putString("subject", e.getValue().subject); d.putString("body", e.getValue().body); d.putBoolean("handoff", e.getValue().handedOff); all.putBundle(e.getKey(), d);
+                Bundle d = new Bundle(); d.putString("address", e.getValue().address); d.putString("authority", e.getValue().authority); d.putString("subject", e.getValue().subject); d.putString("body", e.getValue().body); d.putBoolean("handoff", e.getValue().handedOff);
+                if(e.getValue().selectedPhotos!=null){ArrayList<String> photoIds=new ArrayList<>();for(Long id:e.getValue().selectedPhotos)photoIds.add(Long.toString(id));d.putStringArrayList("photos",photoIds);} all.putBundle(e.getKey(), d);
             }
             out.putBundle("drafts", all); if (current != null) out.putString("group", current.key());
         }
@@ -245,7 +263,8 @@ public final class MailReportActivity extends Activity {
         prepare(); saved.clear(); current = null;
         for (String key : draftsState.keySet()) {
             Bundle b = draftsState.getBundle(key); if (b == null) continue; DraftState d = new DraftState();
-            d.address = b.getString("address", ""); d.authority = b.getString("authority", ""); d.subject = b.getString("subject", ""); d.body = b.getString("body", ""); d.handedOff = b.getBoolean("handoff"); saved.put(key, d);
+            d.address = b.getString("address", ""); d.authority = b.getString("authority", ""); d.subject = b.getString("subject", ""); d.body = b.getString("body", ""); d.handedOff = b.getBoolean("handoff");
+            ArrayList<String> photoIds=b.getStringArrayList("photos");if(photoIds!=null){d.selectedPhotos=new java.util.HashSet<>();for(String id:photoIds)d.selectedPhotos.add(Long.valueOf(id));} saved.put(key, d);
         }
         Spinner choice = findViewById(R.id.mail_group);
         for (int i = 0; i < groups.size(); i++) if (groups.get(i).key().equals(state.getString("group"))) { choice.setSelection(i); showGroup(groups.get(i)); break; }

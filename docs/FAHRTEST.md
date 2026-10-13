@@ -61,7 +61,7 @@ Mehr zu Skalen, gespeicherten Originaltags und Grenzen steht in [KLASSIFIZIERUNG
 
 ## Nach diesem ersten Versuch
 
-### Update auf 0.4.0
+### Update auf 0.5.0
 
 Installiere die neue APK über die vorhandene Version, damit deine gespeicherten Einträge erhalten bleiben. Prüfe danach draußen **Mein Standort** und die Meterangabe. Tippe auf **Fahrt starten**: Ein Startstatus soll sofort erscheinen, dann die große Karte. Beim Stehen kann die Fahrt bereits laufen, während die automatische Stoßerkennung noch auf Fahrgeschwindigkeit wartet. Manuelle Markierungen sind bei ausreichender aktueller Position möglich.
 
@@ -74,3 +74,11 @@ Weitere Informationen zur möglichen Höhenmessung stehen in [HOEHENMESSUNG.md](
 ## Meldung vorbereiten
 
 Wähle nach dem Freigeben **Meldung an die Verwaltung vorbereiten**. Prüfe die ausgewählten Stellen und Bezirksvorschläge. **Nach Bezirk aufteilen** erstellt getrennte Entwürfe. Kontrolliere Empfängeradresse und Vorschau; der Entwurf nennt automatisch nur Kalenderwochen. **Im Mailprogramm öffnen** öffnet ihn auf dem Handy. Erst dort wird versendet. Eigene Notizen werden zunächst nicht übernommen. Näheres einschließlich Quellen und älterem Grenzdatenstand: [MAIL-MELDUNGEN.md](MAIL-MELDUNGEN.md).
+
+## Mehrfachtreffer und Fotos ausprobieren
+
+Öffne **Mehrfachtreffer bündeln** und bestätige nur dieselbe tatsächliche Unebenheit. Prüfe insbesondere benachbarte Schäden und die Straßenseite. Die bestätigte Fundstelle erscheint einmal mit ihrer Beobachtungsanzahl; Auflösen erhält die einzelnen Messungen.
+
+Unter **Stelle prüfen und Fotos ergänzen** öffnest du **Fotos ansehen und ergänzen**. Wähle ein Bild oder nimm im sicheren Stand ein Foto auf. Tippe die Vorschau an und prüfe Bildinhalte. Die gespeicherte Kopie enthält keine ursprünglichen EXIF-Orts-/Zeitangaben; dein Albumoriginal bleibt erhalten.
+
+Erzeuge eine Mail mit den gewünschten freigegebenen Beobachtungen. Wiederholungen erscheinen zusammen mit Anzahl und Kalenderwochen. Prüfe Fotoauswahl und Nummerierung und danach im Mailprogramm die tatsächlichen Anhänge. Versende erst nach Prüfung. Weitere Anleitung und Grenzen: [BUENDELUNG-FOTOS.md](BUENDELUNG-FOTOS.md).

@@ -14,8 +14,20 @@ public final class MailReports {
     public static final int MAX_POINTS = 20;
     private MailReports() {}
     public record Item(Finding finding, String districtId, String assignmentMethod) {}
+    public record Point(List<Item> observations) {
+        public Point { observations=java.util.Collections.unmodifiableList(new ArrayList<>(observations)); }
+        public Finding representative() { return observations.stream().map(Item::finding).min(java.util.Comparator.comparingDouble((Finding f)->f.accuracy()).thenComparingLong(f->-f.id())).orElseThrow(); }
+        public String weeks() { return observations.stream().map(i->calendarWeek(i.finding().timeMillis())).distinct().sorted().collect(java.util.stream.Collectors.joining(", ")); }
+        public String title() { return observations.stream().map(i->Classification.label(Classification.BUMPS,Classification.bumpId(i.finding().category()))).distinct().collect(java.util.stream.Collectors.joining(" / ")); }
+    }
+    public static List<Point> points(List<Item> items) {
+        Map<String,List<Item>> points=new LinkedHashMap<>();
+        for(Item item:items) if(item.finding().reviewed()) points.computeIfAbsent(item.districtId()+":"+item.finding().bundleKey(),k->new ArrayList<>()).add(item);
+        List<Point> result=new ArrayList<>();for(List<Item> observations:points.values())result.add(new Point(observations));return result;
+    }
     public record Group(String key, String districtId, List<Item> items, int part, int parts) {
         public Group { items = java.util.Collections.unmodifiableList(new ArrayList<>(items)); }
+        public List<Point> points() { return MailReports.points(items); }
     }
     public record Draft(String subject, String body) {}
     public static String calendarWeek(long millis) {
@@ -34,9 +46,10 @@ public final class MailReports {
         }
         List<Group> result = new ArrayList<>();
         for (Map.Entry<String, List<Item>> e : buckets.entrySet()) {
-            int parts = (e.getValue().size() + MAX_POINTS - 1) / MAX_POINTS;
+            List<Point> locations=points(e.getValue());
+            int parts = (locations.size() + MAX_POINTS - 1) / MAX_POINTS;
             for (int i = 0; i < parts; i++) {
-                List<Item> portion = e.getValue().subList(i * MAX_POINTS, Math.min((i + 1) * MAX_POINTS, e.getValue().size()));
+                List<Item> portion=new ArrayList<>();for(Point point:locations.subList(i*MAX_POINTS,Math.min((i+1)*MAX_POINTS,locations.size())))portion.addAll(point.observations());
                 result.add(new Group(e.getKey() + ":" + i, splitDistricts ? e.getKey() : "", portion, i + 1, parts));
             }
         }
@@ -46,16 +59,16 @@ public final class MailReports {
         if (group.items().isEmpty()) throw new IllegalArgumentException("No reviewed findings selected");
         for (Item item : group.items()) if (!item.finding().reviewed()) throw new IllegalArgumentException("Unreviewed finding");
         String area = districtName.isEmpty() ? "" : " im Bezirk " + districtName;
-        String subject = "Bitte um Prüfung: " + group.items().size() + (group.items().size() == 1 ? " Unebenheit" : " Unebenheiten") + area;
+        String subject = "Bitte um Prüfung: " + group.points().size() + (group.points().size() == 1 ? " Unebenheit" : " Unebenheiten") + area;
         if (group.parts() > 1) subject += " · Teil " + group.part() + "/" + group.parts();
         StringBuilder body = new StringBuilder("Guten Tag,\n\nich möchte folgende Unebenheiten").append(area)
                 .append(" melden und Sie um eine Prüfung vor Ort bitten.\n\n");
         boolean hasSensor = false, hasHeight = false, hasOsm = false;
         int index = 0;
-        for (Item item : group.items()) {
-            Finding f = item.finding(); FindingDetails d = f.details();
-            body.append(++index).append(". ").append(Classification.label(Classification.BUMPS, Classification.bumpId(f.category())))
-                    .append(" · ").append(calendarWeek(f.timeMillis())).append('\n');
+        for (Point point : group.points()) {
+            Finding f=point.representative(); FindingDetails d=f.details();
+            body.append(++index).append(". ").append(point.title()).append(" · ").append(point.weeks()).append('\n');
+            if(point.observations().size()>1)body.append("Wiederholt beobachtet: ").append(point.observations().size()).append(" ausgewählte Beobachtungen derselben bestätigten Fundstelle\n");
             String roadName = d.osm().assigned() ? d.osm().tags().getOrDefault("name", "") : "";
             if (!roadName.isEmpty()) body.append("Straße/Weg laut OSM: ").append(oneLine(roadName)).append('\n');
             String lat = String.format(Locale.ROOT, "%.6f", f.latitude()), lon = String.format(Locale.ROOT, "%.6f", f.longitude());
@@ -68,19 +81,17 @@ public final class MailReports {
                     .append(d.trafficManual() ? " (manuell geprüft)\n" : " (OSM-Vorschlag, vor Ort zu prüfen)\n");
             if (!"unknown".equals(d.surface())) body.append("Oberfläche: ").append(Classification.label(Classification.SURFACES, d.surface()))
                     .append(d.surfaceManual() ? " (manuell angegeben)\n" : " (OSM-Angabe)\n");
-            if (d.heightMm() != null) {
-                hasHeight = true; body.append(String.format(Locale.GERMANY, "Vor Ort gemessener Höhenunterschied: %.2f mm\n", d.heightMm()));
+            List<Double> heights=new ArrayList<>(),peaks=new ArrayList<>();java.util.Set<String> notes=new java.util.LinkedHashSet<>();int flags=0;
+            for(Item observation:point.observations()) {
+                Finding x=observation.finding();if(x.details().heightMm()!=null)heights.add(x.details().heightMm());if(x.peak()!=null)peaks.add(x.peak());
+                flags|=x.details().hazards();if(includeNotes&&!x.note().isEmpty())notes.add(x.note());hasOsm|=x.details().osm().assigned();
             }
-            if (f.peak() != null) {
-                hasSensor = true; body.append(String.format(Locale.GERMANY, "Smartphone-Sensorreaktion: %.1f m/s²", f.peak()));
-                if (f.threshold() != null) body.append(String.format(Locale.GERMANY, " (Auslöseschwelle %.1f m/s²)", f.threshold()));
-                body.append('\n');
-            }
-            for (int i = 0; i < Classification.HAZARDS.length; i++) if ((d.hazards() & (1 << i)) != 0)
-                body.append("Zusätzliche Beobachtung: ").append(Classification.HAZARDS[i].label()).append('\n');
-            if (includeNotes && !f.note().isEmpty()) body.append("Beschreibung: ").append(f.note()).append('\n');
-            hasOsm |= d.osm().assigned();
+            if(!heights.isEmpty()) { hasHeight=true;body.append("Vor Ort gemessener Höhenunterschied: ").append(range(heights,2)).append(" mm (").append(heights.size()).append(" Messung(en))\n"); }
+            if(!peaks.isEmpty()) { hasSensor=true;body.append("Smartphone-Sensorreaktion: ").append(range(peaks,1)).append(" m/s² (").append(peaks.size()).append(" Beobachtung(en))\n"); }
+            for(int i=0;i<Classification.HAZARDS.length;i++)if((flags&(1<<i))!=0)body.append("Zusätzliche Beobachtung: ").append(Classification.HAZARDS[i].label()).append('\n');
+            for(String note:notes)body.append("Beschreibung: ").append(note).append('\n');
             body.append('\n');
+
         }
         if (hasSensor) body.append("Die Beschleunigungswerte beschreiben die Reaktion des Handys am Lenker. Sie sind Hinweise auf Erschütterungen und keine gemessenen Schadenshöhen.\n\n");
         if (hasHeight) body.append("Die Höhenangaben stammen aus eigenen Messungen vor Ort; daraus leite ich keine rechtlichen Grenzwerte ab.\n\n");
@@ -89,6 +100,10 @@ public final class MailReports {
         if (appNotice) body.append("\n\nDiese Meldung wurde mit Bodenwelle zusammengestellt. Die aufgeführten Fundstellen habe ich geprüft.");
         if (hasOsm) body.append("\n\nKartendaten: © OpenStreetMap contributors, ODbL 1.0 · https://www.openstreetmap.org/copyright");
         return new Draft(subject, body.toString());
+    }
+    private static String range(List<Double> values,int precision) {
+        double min=java.util.Collections.min(values),max=java.util.Collections.max(values);
+        return String.format(Locale.GERMANY,min==max?"%."+precision+"f":"%."+precision+"f–%."+precision+"f",min,max);
     }
     private static String oneLine(String text) { return text.replace('\n', ' ').replace('\r', ' '); }
 }

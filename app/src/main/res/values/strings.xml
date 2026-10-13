@@ -1,4 +1,10 @@
 <resources>
+    <string name="photos_hint">Bis zu fünf Fotos pro Beobachtung. Kopien werden verkleinert; EXIF-Orts- und Zeitangaben werden entfernt. Bitte Bildinhalte wie Gesichter und Kennzeichen vor dem Weitergeben prüfen. Nur im sicheren Stand fotografieren.</string>
+    <string name="photos_section">Fotos ansehen und ergänzen</string>
+    <string name="photo_preview">Foto der Unebenheit – zum Vergrößern antippen</string>
+    <string name="photo_remove">Foto löschen</string>
+    <string name="photo_pick">Vorhandenes Foto auswählen</string>
+    <string name="photo_capture">Neues Foto aufnehmen</string>
     <string name="geodata_toggle">OSM-Verkehrsfläche und Oberfläche automatisch ergänzen</string>
     <string name="sensitivity_summary">Empfindlichkeit einstellen · ab %1$d m/s²</string>
     <string name="sensitivity_hint">Links: niedrigere Schwelle, mehr Treffer · rechts: höhere Schwelle, weniger Treffer. Der Regler gilt sofort. Bitte nur im sicheren Stand bedienen.</string>
@@ -7,7 +13,7 @@
     <string name="sensitivity_number_value">%1$d</string>
     <string name="sensitivity_apply">Übernehmen</string>
     <string name="sensitivity_number_error">Bitte eine ganze Zahl von 5 bis 100 eingeben.</string>
-    <string name="mail_handed_off">Entwurf an das Mailprogramm übergeben. Erst dort versendest du die Mail.</string>
+    <string name="mail_handed_off">Mailprogramm oder Auswahl geöffnet. Prüfe dort Text und Anhänge; erst dort versendest du die Mail.</string>
     <string name="sensitivity_reset">Standard wiederherstellen: 40 m/s²</string>
     <string name="map_description">OpenStreetMap-Karte mit Standort, Fahrtspur und Fundstellen</string>
     <string name="map_waiting">Genauigkeit: noch keine Messung. Standort wird gesucht; draußen kurz warten.</string>

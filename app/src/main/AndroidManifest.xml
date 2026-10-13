@@ -25,6 +25,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".MapActivity" android:exported="false" />
+        <activity android:name=".BundleActivity" android:exported="false" />
+        <provider android:name=".PhotoShareProvider" android:authorities="${applicationId}.photos" android:exported="false" android:grantUriPermissions="true" />
         <activity android:name=".MailReportActivity" android:exported="false" />
         <service android:name=".RecordingService" android:exported="false"
             android:foregroundServiceType="location" />

@@ -28,4 +28,16 @@ public final class MailIntent {
         return new Intent(Intent.ACTION_SENDTO, uri).putExtra(Intent.EXTRA_EMAIL, new String[]{recipient})
                 .putExtra(Intent.EXTRA_SUBJECT, subject).putExtra(Intent.EXTRA_TEXT, body);
     }
+    public static Intent withPhotos(String recipient,String subject,String body,java.util.ArrayList<Uri> photos) {
+        if(photos.isEmpty())return create(recipient,subject,body);
+        create(recipient,subject,body); // Reuse recipient/header/size checks.
+        Intent mail=new Intent(photos.size()==1?Intent.ACTION_SEND:Intent.ACTION_SEND_MULTIPLE).setType("message/rfc822")
+                .putExtra(Intent.EXTRA_EMAIL,new String[]{recipient}).putExtra(Intent.EXTRA_SUBJECT,subject).putExtra(Intent.EXTRA_TEXT,body);
+        if(photos.size()==1)mail.putExtra(Intent.EXTRA_STREAM,photos.get(0));else mail.putParcelableArrayListExtra(Intent.EXTRA_STREAM,photos);
+        android.content.ClipData clip=new android.content.ClipData("Fotos zu Fundstellen",new String[]{"image/jpeg"},new android.content.ClipData.Item(photos.get(0)));
+        for(int i=1;i<photos.size();i++)clip.addItem(new android.content.ClipData.Item(photos.get(i)));
+        mail.setClipData(clip);mail.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        mail.setSelector(new Intent(Intent.ACTION_SENDTO,Uri.parse("mailto:"+Uri.encode(recipient,"@"))));
+        return mail;
+    }
 }

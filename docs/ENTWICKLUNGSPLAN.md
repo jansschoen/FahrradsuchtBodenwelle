@@ -36,11 +36,15 @@ Eine begrenzte Overpass-Anbindung ergänzt OSM-Verkehrsfläche und Oberfläche m
 
 Der Sensitivitätsregler steigt numerisch nach rechts; zusätzlich ist eine Zahleneingabe vorhanden. Aus ausgewählten freigegebenen Einträgen entstehen bearbeitbare Mailentwürfe mit ISO-Kalenderwoche statt genauem Messzeitpunkt. Bezirksvorschläge nutzen einen gebündelten älteren Polygonbestand (2013); zwölf aktuelle, auf Berlin.de veröffentlichte Mailkontakte sind mit Quellen hinterlegt. Manuelle Korrektur, Aufteilung nach Bezirk und Übergabe per `ACTION_SENDTO` sind umgesetzt. Die App sendet keine Nachricht selbst und bestätigt keinen Versand. Dokumentation: [MAIL-MELDUNGEN.md](MAIL-MELDUNGEN.md).
 
+## Version 0.5: Bündelung und Fotos
+
+Bestätigte Bündelungen verknüpfen ursprüngliche Beobachtungen und bleiben reversibel. Nähe gleicher freigegebener Kategorien liefert Vorschläge, die eine Person bestätigen muss. Fotos werden über Android-Bildauswahl beziehungsweise externe Kamera ergänzt, lokal neu kodiert und ohne ursprüngliche EXIF-Metadaten abgelegt. Mails zählen bestätigte Fundstellen statt Einzelereignisse und übergeben ausgewählte Bilder mit begrenzten Leserechten. Anleitung und Grenzen: [BUENDELUNG-FOTOS.md](BUENDELUNG-FOTOS.md).
+
 ## Nächste Schritte nach echten Fahrdaten
 
 1. Bekannte Stellen und glatte Vergleichsabschnitte erfassen; Fehlalarme und Auslassungen nachvollziehen. Halterung, Reifendruck und Geschwindigkeit berücksichtigen.
 2. Die integrierte Karte im Fahrtest prüfen; Zusammenführung benachbarter Fundstellen und Fotoanhänge hinzufügen; eigene Messpositionen korrigierbar machen.
-3. Aktuelle amtliche Bezirksgrenzen und konkrete Straßenbaulast verifizieren; Fotoanhänge, Zusammenführung wiederholter Treffer und Bearbeitungsstatus entwickeln.
+3. Aktuelle amtliche Bezirksgrenzen und konkrete Straßenbaulast verifizieren; Foto- und Bündelungsfunktion im Fahrtest prüfen und Bearbeitungsstatus entwickeln.
 4. Unterschiedliche Android-Geräte, Berechtigungsverläufe, Batterieeinstellungen und längere Fahrten testen.
 5. Erst danach: öffentliche Testversion, signiertes Release, Datenschutzinformationen, barrierearme Bedienung, Übersetzungen und Wartungsprozess.
 

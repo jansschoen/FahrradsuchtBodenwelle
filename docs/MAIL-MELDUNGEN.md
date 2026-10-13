@@ -5,7 +5,7 @@
 1. Beende die Fahrt, prüfe Fundstellen und gib nachvollziehbare Einträge frei.
 2. Wähle auf der Startseite **Meldung an die Verwaltung vorbereiten**.
 3. Unter **Stellen und Bezirke prüfen** kannst du Einträge abwählen und Bezirksvorschläge manuell korrigieren. Bei unklaren Zuordnungen ist dieser Bereich zunächst geöffnet.
-4. **Nach Bezirk aufteilen** erstellt getrennte Entwürfe; ohne Häkchen wird die gesamte Auswahl zusammengestellt. Große Auswahlen werden vollständig auf Teile mit höchstens 20 Stellen aufgeteilt.
+4. **Nach Bezirk aufteilen** erstellt getrennte Entwürfe; ohne Häkchen wird die gesamte Auswahl zusammengestellt. Große Auswahlen werden vollständig auf Teile mit höchstens 20 Fundstellen aufgeteilt. Ab 0.5.0 werden bestätigte Wiederholungen als gemeinsame Fundstelle gezählt.
 5. Wähle, ob ein kurzer Hinweis auf Bodenwelle ergänzt werden soll. Ohne den Hinweis bleibt die gleiche sachliche Mail in persönlicher Form. Du kannst optional deinen Namen ergänzen. Eigene Notizen werden zunächst nicht übernommen, weil sie Namen und genaue Zeitangaben enthalten können.
 6. **Mailentwürfe erzeugen** öffnet die Vorschau. Wähle den gewünschten Bezirk beziehungsweise Teil. Prüfe Anlaufstelle und Empfängeradresse; die offizielle Kontaktseite ist verlinkt. Betreff und Text sind direkt bearbeitbar. Änderungen bleiben beim Wechsel zwischen Entwürfen und beim Drehen des Handys erhalten. Neu-Erzeugen ersetzt die bisherigen Entwürfe durch neue Vorlagen.
 7. **Im Mailprogramm öffnen** übergibt den Entwurf an das installierte Mailprogramm. Erst dort versendest du ihn. Bei fehlendem Mailprogramm erklärt die App die Möglichkeiten; **Mailtext kopieren** übernimmt Betreff und Text in die Zwischenablage.
@@ -16,7 +16,7 @@ Eine Übergabe wird ausdrücklich nicht als „gesendet“ bezeichnet. Die App k
 
 Mails enthalten ausgewählte freigegebene Fundstellen mit Art, Lage, einem OSM-Kartenlink, GPS-Messqualität, verfügbarer gemessener Höhe beziehungsweise ursprünglicher Sensorreaktion und optionalen Gefährdungsmerkmalen. Verkehrsfläche/Oberfläche werden mit ihrer manuellen oder OSM-Herkunft erkennbar angegeben. Sensorwerte werden nicht als Straßenhöhe oder rechtlicher Nachweis ausgegeben. Der Text bittet höflich um Ortsprüfung, Rückmeldung und nötigenfalls Weiterleitung.
 
-Automatisch erzeugte Messzeitangaben enthalten ausschließlich **ISO-Kalenderwoche und ISO-Wochenjahr**, berechnet in `Europe/Berlin`, beispielsweise `KW 42/2026`. Das Wochenjahr kann am Jahreswechsel vom Kalenderjahr abweichen. Weder exakter Messzeitpunkt noch GPS-Fix-Alter, Richtung, OSM-Abfragezeit oder Fahrtspur werden in die Mail übernommen. Die Stellen werden geografisch statt nach zeitlicher Fahrtreihenfolge sortiert. Es gibt keine Anhänge und insbesondere keinen unverändert angehängten Rohdatenexport.
+Automatisch erzeugte Messzeitangaben enthalten ausschließlich **ISO-Kalenderwoche und ISO-Wochenjahr**, berechnet in `Europe/Berlin`, beispielsweise `KW 42/2026`. Das Wochenjahr kann am Jahreswechsel vom Kalenderjahr abweichen. Weder exakter Messzeitpunkt noch GPS-Fix-Alter, Richtung, OSM-Abfragezeit oder Fahrtspur werden in die Mail übernommen. Die Stellen werden geografisch statt nach zeitlicher Fahrtreihenfolge sortiert. Ab Version 0.5.0 sind ausgewählte bereinigte Fotoanhänge möglich. Es wird kein unveränderter Rohdatenexport angehängt.
 
 Das ist eine Reduzierung der Messzeit, keine Zusicherung vollständiger Anonymität: Fundstellenkoordinaten sind für die Bearbeitung erforderlich, und das Mailprogramm ergänzt beim Versand üblicherweise Absender und Versandzeit. Wenn du eigene Notizen übernimmst oder den Mailtext bearbeitest, prüfe darin enthaltene Namen und konkrete Datums-/Uhrzeitangaben selbst. Der separate CSV-Rohdatenexport behält weiterhin seine genaue Zeit und ist deutlich als solcher angekündigt.
 
@@ -56,3 +56,7 @@ Schema 5 fügt nur die optionale manuelle Bezirkszuordnung hinzu; Fundstellen, S
 Tests prüfen Reglerumkehr, Zahleneingabe, ungültige Eingaben, ISO-Wochenjahr und Berliner Zeitzone, fehlende genaue Messzeiten, Ausschluss nicht freigegebener Stellen, Bezirksaufteilung und vollständige Teilmails, repräsentative Punkte aller zwölf Bezirke, Grenzfälle, Migration, Mail-Intent, manuelle Empfänger, Widerruf der Freigabe und erhaltene Bearbeitungen beim Drehen des Geräts. Frameworktests laufen auf simuliertem Android 9 und 15. Das konkrete Mailprogramm auf dem Fairphone muss noch praktisch geprüft werden; einige Programme können vorbefüllte Angaben unterschiedlich übernehmen.
 
 Sinnvolle nächste Schritte: wiederholte Treffer einer tatsächlich gleichen Stelle nach Prüfung bündeln, Fotoanhänge mit entfernbaren Metadaten ergänzen sowie Aktenzeichen und Bearbeitungsstand lokal verwalten. Aktuelle amtliche Grenzgeometrien und gegebenenfalls ein Straßenbaulastverzeichnis würden die Empfängervorschläge weiter verbessern.
+
+## Erweiterung in 0.5.0
+
+Bestätigte Bündelungen, lokale Fotos, Fotoauswahl und deren Übergabe sind in [BUENDELUNG-FOTOS.md](BUENDELUNG-FOTOS.md) dokumentiert. Der Mailtext nennt nur ausgewählte freigegebene Beobachtungen; exakte Messzeiten bleiben lokal.

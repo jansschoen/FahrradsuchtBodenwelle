@@ -1,0 +1,45 @@
+# Wiederholte Beobachtungen und Fotos in Version 0.5.0
+
+## Bündelung benutzen
+
+Auf der Startseite öffnet **Mehrfachtreffer bündeln** die Vorschläge und die manuelle Auswahl. Prüfe, ob die Beobachtungen tatsächlich dieselbe Unebenheit betreffen, einschließlich Straßenseite und benachbarter Schäden. **Als dieselbe Fundstelle bestätigen** zeigt vor dem Zusammenfassen Anzahl und räumliche Ausdehnung. Eine Bündelung wird erst nach deiner Bestätigung gespeichert.
+
+Die Vorschläge berücksichtigen bereits freigegebene Beobachtungen bekannter, gleicher Art, einen Abstand von höchstens 12 m und ursprüngliche GPS-Genauigkeiten bis 15 m. Bekannte unterschiedliche OSM-Weg-IDs oder Fahrtrichtungen mit mehr als 45° Unterschied verhindern einen Vorschlag. Alle Beobachtungspaare müssen passen; eine Kette benachbarter Treffer wird nicht automatisch zu einer langen Fundstelle. Diese Grenzen sind konservative Heuristiken, keine Garantie identischer Schäden. Bei fehlenden Angaben oder ungenauem GPS kannst du Fundstellen selbst auswählen und nach Ortskenntnis bestätigen.
+
+Bestätigte Fundstellen erscheinen in Liste und Karte einmal mit der Anzahl der Beobachtungen. Ihre repräsentative Position stammt aus der Beobachtung mit der kleinsten ursprünglichen GPS-Genauigkeitsangabe; bei Gleichstand aus der neuesten. Originalkoordinaten und zeitliche Positionskorrekturen werden nicht gemittelt oder überschrieben. Die Intensitätsfarbe zeigt den bisherigen höchsten tatsächlichen Höhenmesswert, falls vorhanden; sonst die stärkste Sensorreaktion. Höhen- und Beschleunigungsklassen werden nicht vermischt. Der Höchstwert ist ausdrücklich historisch, keine Zusicherung des heutigen Zustands. Unterschiedliche Angaben bleiben einzeln prüfbar. Über **Beobachtungen prüfen und Fotos ergänzen** wählst du die gewünschte Beobachtung.
+
+**Diese Bündelung auflösen** beziehungsweise **Bündelung auflösen** zeigt die Beobachtungen wieder einzeln. Messungen, Notizen, Bezirkskorrekturen, Freigaben und Fotos bleiben dabei erhalten. Neue Beobachtungen werden nicht ohne weitere Prüfung in bestehende Fundstellen übernommen. Der separate CSV-Rohdatenexport behält eine Zeile je freigegebener Beobachtung und ergänzt `bundle_id`; die Mail fasst bestätigte Wiederholungen zusammen.
+
+## Fotos hinzufügen
+
+Öffne **Stelle prüfen und Fotos ergänzen** und den Bereich **Fotos ansehen und ergänzen**. Du kannst ein vorhandenes Bild auswählen oder über die Kamera-App ein neues Foto aufnehmen. Bediene das Telefon nur im sicheren Stand. Die App fordert weder breiten Zugriff auf deine Fotobibliothek noch eine eigene Kameraberechtigung an: Die Android-Bildauswahl gibt nur gewählte Dateien frei; die Kamera erhält Zugriff auf genau ihre temporäre Ausgabedatei.
+
+Pro Beobachtung sind bis zu fünf Fotos möglich. Sie gehören zur ursprünglichen Beobachtung und bleiben beim Bündeln beziehungsweise Auflösen richtig zugeordnet. Vorschauen lassen sich antippen; Fotos können einzeln gelöscht werden. Bei einer gebündelten Fundstelle kannst du Fotos über die jeweilige Beobachtung ansehen und ergänzen. Das Löschen einer Beobachtung entfernt deren lokale Fotokopien. **Alle Fundstellen löschen** entfernt auch die dazugehörigen Fotos aus der App, nicht aus deinem Album oder aus schon weitergegebenen Kopien.
+
+Importierte Dateien werden lokal neu als JPEG kodiert. Die längste Seite ist höchstens 2048 Pixel; JPEG-Qualität beginnt bei 85 und wird nötigenfalls reduziert, bis die Kopie höchstens 1,5 MB groß ist. Unterstützte EXIF-Drehungen und Spiegelungen werden auf die Pixel angewendet. Transparenz wird auf Weiß dargestellt. Eingaben sind auf 32 MB und sinnvolle Bilddimensionen begrenzt. Bildformate hängen zusätzlich vom Android-Decoder ab; ein nicht lesbares Bild wird mit einer Rückmeldung abgelehnt.
+
+Beim Neu-Kodieren werden ursprüngliche EXIF-GPS-Koordinaten, Aufnahmezeiten und Kamerametadaten nicht übernommen. Die Originaldatei im Fotoalbum bleibt unverändert. **Bildinhalte** wie Personen, Kennzeichen, sichtbare Datumsstempel oder private Details werden dadurch nicht entfernt; prüfe sie vor dem Weitergeben. Die App erkennt oder verpixelt solche Inhalte nicht automatisch.
+
+## Gebündelte Mail mit Fotos
+
+Die Mail enthält jede bestätigte, ausgewählte Fundstelle einmal mit der Anzahl ihrer ausgewählten freigegebenen Beobachtungen, Kalenderwochen und gegebenenfalls Wertebereichen für Sensorreaktion und tatsächliche Höhenmessung. Sensorwerte werden weiterhin nicht in Höhen umgerechnet. Die Lage stammt aus der präzisesten ausgewählten freigegebenen Beobachtung. Nicht freigegebene oder abgewählte Beobachtungen werden weder mitgezählt noch zur Lage oder zu den Fotos der Mail herangezogen.
+
+Eine Mail enthält höchstens **20 Fundstellen**; eine bestätigte Fundstelle wird dabei nicht wegen vieler Einzelbeobachtungen geteilt. Die Bezirksaufteilung bleibt erhalten. Unterschiedliche Bezirkszuordnungen werden auch innerhalb einer bestätigten Bündelung nicht still zusammengeführt, sondern entsprechend den Empfängervorschlägen getrennt verarbeitet. Eigene Notizen bleiben zunächst ausgeschaltet. Exakte Messzeiten und die Fahrtspur werden nicht übernommen.
+
+In der Vorschau kannst du Fotos ansehen und einzeln abwählen. Dateinamen wie **Stelle-01-Foto-02.jpg** entsprechen der Nummerierung der Fundstellen im Mailtext und enthalten keine ursprünglichen Dateinamen oder Aufnahmezeiten. Wenn du die Textnummerierung selbst änderst, prüfe auch diese Zuordnung. Pro Mail sind höchstens **zehn Fotos mit zusammen 10 MB** möglich. Bei Überschreitung fordert die App zum Abwählen auf; es werden keine Bilder still weggelassen.
+
+Vor der Übergabe werden Freigaben und die ausgewählten Fotos erneut geprüft. Die App erzeugt separate, unveränderte Kopien der bereits bereinigten JPEGs für diese Mail. Ein privater Android-ContentProvider gibt nur die konkret übergebenen Anhänge zum Lesen frei. Das Mailprogramm kann darüber nicht die Fotobibliothek auflisten oder Originalbilder verändern. Kamera-Ausgabedateien und ausgehende Mailfotos nutzen getrennte Pfade; Schreibzugriff ist nur für die temporäre Kameraausgabe möglich.
+
+Ohne Fotos bleibt die bisherige `ACTION_SENDTO`-Übergabe bestehen. Mit Fotos wird `ACTION_SEND` beziehungsweise `ACTION_SEND_MULTIPLE` mit Empfänger, Text, Anhängen und begrenzten Leserechten verwendet; ein Mail-Selector und die Android-Auswahl öffnen ein Mailprogramm. **Erst dort wird versendet.** Prüfe im konkreten Mailprogramm, ob Text, Empfänger und alle gewählten Anhänge übernommen wurden. Die App kann den Versand nicht bestätigen. Bei fehlendem kompatiblem Mailprogramm erklärt sie den Fehler; Fotos werden nicht unbemerkt entfernt, um trotzdem nur Text zu versenden.
+
+## Speicherung, Migration und Prüfung
+
+Schema 6 ergänzt eine optionale Bündel-ID, eine Tabelle bestätigter Fundstellen und Fotometadaten mit Fremdschlüsseln zur ursprünglichen Beobachtung. Bestehende Einträge werden zunächst unverändert einzeln dargestellt. Migrationen erhalten Kategorien, genaue lokale Messzeiten, Positionskorrekturen, Freigaben, manuelle Bezirke, OSM-Angaben und die Fahrtspur. Bündelungen sind reine Verknüpfungen; Originalmessungen bleiben erhalten.
+
+Fotokopien liegen im privaten, vom Backup ausgeschlossenen App-Bereich. Temporäre Kamera-/Importdateien werden nach Verarbeitung oder Abbruch gelöscht; verbleibende alte temporäre Dateien werden beim nächsten App-Start nach 24 Stunden bereinigt. Vorbereitete ausgehende Mailkopien werden nach sieben Tagen beim nächsten Start bereinigt. Dadurch bleiben bereits übergebene Anhänge zunächst verfügbar, auch wenn eine lokale Fotokopie anschließend gelöscht wird. Die Empfänger-App kann bereits gelesene Kopien selbst speichern; deren Löschung liegt außerhalb von Bodenwelle.
+
+Die EXIF-Bibliothek AndroidX ExifInterface 1.3.7 steht unter Apache 2.0; eine Lizenzkopie wird mitgeliefert. Der App-Import nutzt die Bibliothek nur für die Bildorientierung und übernimmt sonst ausschließlich neu kodierte Pixel.
+
+169 automatisierte Tests bestehen. Neue Prüfungen decken Vorschlagsgrenzen und den Ausschluss von Verkettungen, reversible Bündelung, Migration von Schema 5, Freigaben, Wertebereiche, Kalenderwochen, Kamera-/Bildauswahl, Auswahlpersistenz beim Drehen, Mailanhänge, schreibgeschützte Dateifreigabe, Löschung und Limits ab. Ein Test mit nativer Grafikverarbeitung prüft eine echte JPEG-Datei mit GPS-, Zeit- und Kamerametadaten: Orientierung wird übernommen, Metadaten werden entfernt und das Original bleibt unverändert. Android-Build und Lint sind geprüft; Lint meldet keine Fehler, einen Versionshinweis zur passend zur EXIF-Abhängigkeit eingebundenen Annotation-Bibliothek und die bereits bestehende Konstruktorwarnung der programmgesteuerten Kartenansicht.
+
+Frameworktests laufen auf simuliertem Android 9 und 15; die native JPEG-Prüfung auf simuliertem Android 15. Kamera und konkretes Mailprogramm auf dem Fairphone müssen noch praktisch getestet werden.

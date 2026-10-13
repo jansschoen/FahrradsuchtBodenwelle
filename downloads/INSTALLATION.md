@@ -1,19 +1,21 @@
-# Bodenwelle 0.4.0 – Android-Testversion
+# Bodenwelle 0.5.0 – Android-Testversion
 
-[APK 0.4.0 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.4.0.apk). Öffne sie auf dem Fairphone und installiere sie **als Update über die vorhandene App**. App-ID und Signatur bleiben gleich; lokale Einträge, Fahrtspur und Empfindlichkeit bleiben erhalten. Bitte nicht zuerst deinstallieren.
+[APK 0.5.0 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.5.0.apk). Installiere sie **als Update über die vorhandene App**. App-ID und Signatur bleiben gleich; Einträge, Fahrtspur und Einstellungen bleiben erhalten. Bitte nicht zuerst deinstallieren.
 
 ## Neu ausprobieren
 
-**Empfindlichkeit einstellen**: Nach rechts steigt der Zahlenwert und es entstehen weniger Treffer. Nach links sinkt er und es entstehen mehr Treffer. Du kannst eine ganze Zahl von 5 bis 100 m/s² eingeben und mit **Übernehmen** anwenden. Standard: 40 m/s². Bitte nur im sicheren Stand bedienen.
+**Mehrfachtreffer bündeln** schlägt nahe Beobachtungen gleicher Art vor. Bestätige nur dieselbe tatsächliche Unebenheit. Messungen und einzelne Freigaben bleiben erhalten; die Bündelung lässt sich auflösen. Liste und Karte zeigen die gemeinsame Fundstelle mit der Beobachtungsanzahl.
 
-Nach der Prüfung und Freigabe von Fundstellen wählst du **Meldung an die Verwaltung vorbereiten**. Prüfe die Auswahl und Bezirksvorschläge; **Nach Bezirk aufteilen** erstellt getrennte Entwürfe. Alle zwölf Bezirkskontakte wurden auf Berlin.de geprüft. Der offline gebündelte Grenzdatenstand ist jedoch von 2013; Grenznähe und tatsächliche Zuständigkeit müssen geprüft werden. Manuelle Korrektur ist möglich.
+Unter **Stelle prüfen und Fotos ergänzen** öffnet **Fotos ansehen und ergänzen** Kamera und Bildauswahl. Bis zu fünf Fotokopien je Beobachtung werden lokal verkleinert und ohne ursprüngliche EXIF-Orts-/Zeitangaben gespeichert. Albumoriginale bleiben unverändert. Bitte Bildinhalte prüfen und nur im sicheren Stand fotografieren.
 
-Die Mail enthält automatisch nur Kalenderwochen statt genauer Messzeitpunkte. Eigene Notizen sind zunächst ausgeschaltet. Persönliche Formulierung und ein kurzer Hinweis auf Bodenwelle sind wählbar; Betreff, Empfänger und Text bleiben bearbeitbar. **Im Mailprogramm öffnen** öffnet den Entwurf; erst dort versendest du die Mail. Es gibt keine automatisch versendeten Nachrichten oder Rohdatenanhänge. Weitere Hinweise: [MAIL-MELDUNGEN.md](../docs/MAIL-MELDUNGEN.md).
+Mailentwürfe fassen ausgewählte freigegebene Wiederholungen mit Anzahl, Kalenderwochen und Messwertbereichen zusammen. Du kannst Fotos ansehen und abwählen. Pro Mail sind 20 Fundstellen und zehn Fotos / 10 MB möglich; Dateinamen passen zur Nummer im Text. Erst im externen Mailprogramm wird versendet. Prüfe dort Empfänger, Text und tatsächliche Anhänge.
+
+Weitere Anleitung: [BUENDELUNG-FOTOS.md](../docs/BUENDELUNG-FOTOS.md).
 
 ## Prüfstand
 
-134 automatisierte Tests bestehen; Android-Build und APK-Signatur sind geprüft. Lint meldet keine Fehler und eine bestehende Warnung zur Konstruktorform der programmgesteuerten Kartenansicht. Neue Tests auf simuliertem Android 9 und 15 prüfen unter anderem Reglerumkehr und Zahleneingabe, Kalenderwochen am Jahreswechsel, Bezirksaufteilung, Grenzfälle, Migration, Mail-Intent, manuelle Empfänger, Widerruf der Freigabe und erhaltene Entwürfe beim Drehen des Handys.
+169 automatisierte Tests bestehen, einschließlich Datenmigration, reversibler Bündelung, einzelner Freigaben, Kamera-/Bildauswahl und Mailanhängen auf simuliertem Android 9 und 15. Eine echte JPEG-Prüfung mit nativer Grafikverarbeitung auf simuliertem Android 15 bestätigt die Entfernung von GPS-, Zeit- und Kamerametadaten sowie korrekte Orientierung und ein unverändertes Original. Android-Build und APK-Signatur sind geprüft. Lint meldet keine Fehler, einen Hinweis zur älteren Annotation-Abhängigkeit und die bestehende Konstruktorwarnung der Kartenansicht.
 
-Android 8.0 oder neuer und ein Beschleunigungssensor werden benötigt. Kartenkacheln und OSM-Straßentags brauchen Internet; die Aufzeichnung und gebündelte Bezirkszuordnung funktionieren offline. Die Live-Overpass-Anbindung sowie das konkrete Mailprogramm müssen auf dem Fairphone praktisch geprüft werden. Die App berechnet keine automatische Schadenshöhe und trifft keine rechtlich verbindliche Einstufung.
+Android 8.0 oder neuer und ein Beschleunigungssensor werden benötigt. Kamera und dein konkretes Mailprogramm müssen auf dem Fairphone praktisch geprüft werden. Die Bezirksgrenzen stammen weiterhin aus 2013 und liefern nur korrigierbare Vorschläge. Die App berechnet keine automatische Schadenshöhe und trifft keine rechtlich verbindliche Einstufung.
 
-Dateigröße: 878730 Bytes. SHA-256-Prüfsumme: [SHA256SUMS](SHA256SUMS). Fahrtest: [FAHRTEST.md](../docs/FAHRTEST.md).
+Dateigröße: 916026 Bytes. SHA-256-Prüfsumme: [SHA256SUMS](SHA256SUMS). Fahrtest: [FAHRTEST.md](../docs/FAHRTEST.md).

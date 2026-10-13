@@ -7,10 +7,10 @@ Ziel ist die Beseitigung nachvollziehbar dokumentierter Mängel. Eine automatisi
 - Genaue Lage: Straße, Abschnitt, Straßenseite, Fahrtrichtung und ein Bezugspunkt; zusätzlich Koordinaten mit ihrer GPS-Genauigkeit.
 - Sichtbare Beobachtung: etwa angehobene Platte, Wurzelaufbruch oder unebene Oberfläche; Datum der Beobachtung.
 - Auswirkung auf die Nutzung: beispielsweise eine schwer erkennbare Kante oder eine erforderliche Ausweichbewegung, soweit tatsächlich beobachtet.
-- Ein Übersichtsfoto und ein Detailfoto, sicher im Stand aufgenommen. Die erste App-Version verwaltet noch keine Fotos; diese können separat zur Meldung hinzugefügt werden.
+- Ein Übersichtsfoto und ein Detailfoto, sicher im Stand aufgenommen. Ab Version 0.5.0 kannst du Bilder in der App ergänzen und in der Mailvorschau auswählen.
 - Eine klare Bitte: Zustand vor Ort prüfen, die Zuständigkeit bestätigen und Rückmeldung zum weiteren Vorgehen geben.
 
-Sensorwerte können ergänzen, dass sich eine auffällige Stelle bei wiederholten Fahrten bemerkbar gemacht hat. Werte verschiedener Fahrräder, Handys und Halterungen lassen sich ohne Kalibrierung nicht direkt als Schadensschwere vergleichen. Wiederholungen und mehrere Nutzer:innen sollten später zu einer übersichtlichen Meldung je Stelle zusammengeführt werden, anstatt jedes Sensorereignis einzeln zu versenden. Die erste Version hat diese Zusammenführung noch nicht.
+Sensorwerte können ergänzen, dass sich eine auffällige Stelle bei wiederholten Fahrten bemerkbar gemacht hat. Werte verschiedener Fahrräder, Handys und Halterungen lassen sich ohne Kalibrierung nicht direkt als Schadensschwere vergleichen. Wiederholungen und mehrere Nutzer:innen sollten später zu einer übersichtlichen Meldung je Stelle zusammengeführt werden, anstatt jedes Sensorereignis einzeln zu versenden. Ab Version 0.5.0 verknüpft eine bestätigte Bündelung Beobachtungen derselben Stelle und fasst sie in der Mail zusammen.
 
 ## Berliner Anlaufstellen und App-Entwürfe
 
