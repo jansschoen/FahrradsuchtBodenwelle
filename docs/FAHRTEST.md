@@ -29,7 +29,7 @@ Die App erkennt die Sensorantwort von Fahrrad und Halterung. Sie kann Wurzeln, B
 
 ## Empfindlichkeit ausprobieren
 
-Tippe an der Karte auf **Empfindlichkeit einstellen**. Der Standard ist **40 m/s²**. Der Schieberegler reicht von 5 bis 100 m/s²; nach rechts sinkt die Schwelle und es entstehen mehr Treffer. **Standard wiederherstellen** setzt 40 m/s² zurück. Die Einstellung bleibt nach dem Schließen der App erhalten und gilt bei laufender Aufzeichnung sofort. Ein gerade noch nicht abgeschlossener Treffer wird bei einer Änderung verworfen, damit alte und neue Einstellungen nicht vermischt werden.
+Tippe an der Karte auf **Empfindlichkeit einstellen**. Der Standard ist **40 m/s²**. Der Schieberegler reicht von 5 bis 100 m/s²; nach rechts steigt die Schwelle und es entstehen weniger Treffer. Eine Zahl von 5 bis 100 kannst du auch direkt eingeben und mit **Übernehmen** anwenden. **Standard wiederherstellen** setzt 40 m/s² zurück. Die Einstellung bleibt nach dem Schließen der App erhalten und gilt bei laufender Aufzeichnung sofort. Ein gerade noch nicht abgeschlossener Treffer wird bei einer Änderung verworfen, damit alte und neue Einstellungen nicht vermischt werden.
 
 Halte zum Verstellen sicher an. Vergleiche dieselbe Strecke mit wenigen unterschiedlichen Einstellungen und notiere Fehlalarme, verpasste Stellen und die verwendete Schwelle. Die Messdetails jeder Fundstelle zeigen Spitzenwert und damalige Auslöseschwelle. Das sind Smartphone-Reaktionen, keine Zentimeterangaben oder gesetzlichen Grenzwerte.
 
@@ -61,7 +61,7 @@ Mehr zu Skalen, gespeicherten Originaltags und Grenzen steht in [KLASSIFIZIERUNG
 
 ## Nach diesem ersten Versuch
 
-### Update auf 0.3.0
+### Update auf 0.4.0
 
 Installiere die neue APK über die vorhandene Version, damit deine gespeicherten Einträge erhalten bleiben. Prüfe danach draußen **Mein Standort** und die Meterangabe. Tippe auf **Fahrt starten**: Ein Startstatus soll sofort erscheinen, dann die große Karte. Beim Stehen kann die Fahrt bereits laufen, während die automatische Stoßerkennung noch auf Fahrgeschwindigkeit wartet. Manuelle Markierungen sind bei ausreichender aktueller Position möglich.
 
@@ -70,3 +70,7 @@ Falls der Start weiter scheitert, notiere den genauen Text direkt unter dem Star
 Für die nächste Entwicklungsrunde brauchen wir vor allem konkrete Fehlalarme und verpasste Stellen aus normalen Fahrten. Die Erschütterungswerte dienen dem Vergleich unter ähnlichen Bedingungen. Eine Zentimeterangabe würde zusätzliche Referenzmessungen und ein validiertes Modell für Reifen, Fahrrad und Befestigung voraussetzen; allein aus Beschleunigung und GPS-Geschwindigkeit ist sie nicht zuverlässig ableitbar.
 
 Weitere Informationen zur möglichen Höhenmessung stehen in [HOEHENMESSUNG.md](HOEHENMESSUNG.md).
+
+## Meldung vorbereiten
+
+Wähle nach dem Freigeben **Meldung an die Verwaltung vorbereiten**. Prüfe die ausgewählten Stellen und Bezirksvorschläge. **Nach Bezirk aufteilen** erstellt getrennte Entwürfe. Kontrolliere Empfängeradresse und Vorschau; der Entwurf nennt automatisch nur Kalenderwochen. **Im Mailprogramm öffnen** öffnet ihn auf dem Handy. Erst dort wird versendet. Eigene Notizen werden zunächst nicht übernommen. Näheres einschließlich Quellen und älterem Grenzdatenstand: [MAIL-MELDUNGEN.md](MAIL-MELDUNGEN.md).

@@ -3,4 +3,14 @@
     <item name="ride_start_status" type="id" />
     <item name="ride_start_button" type="id" />
     <item name="sensitivity_slider" type="id" />
+    <item name="sensitivity_number" type="id" />
+    <item name="sensitivity_apply" type="id" />
+    <item name="mail_split" type="id" />
+    <item name="mail_name" type="id" />
+    <item name="mail_prepare" type="id" />
+    <item name="mail_group" type="id" />
+    <item name="mail_recipient" type="id" />
+    <item name="mail_subject" type="id" />
+    <item name="mail_body" type="id" />
+    <item name="mail_open" type="id" />
 </resources>

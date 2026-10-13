@@ -32,11 +32,15 @@ Sieben stabile Unebenheitskategorien ersetzen die früheren Angaben. Eindeutige 
 
 Eine begrenzte Overpass-Anbindung ergänzt OSM-Verkehrsfläche und Oberfläche mit Cache und vorsichtiger räumlicher Zuordnung. Mehrdeutige Wege bleiben unbekannt. Manuelle Korrekturen werden bei späteren Antworten erhalten. Die neue Bearbeitung verwendet aufklappbare optionale Bereiche; Karte und Fundstellen zeigen Intensität farblich und textlich. Der Export führt Messmethode, Herkunft und OSM-Attribution mit. Details und Einschränkungen: [KLASSIFIZIERUNG-OSM.md](KLASSIFIZIERUNG-OSM.md).
 
+## Version 0.4: Meldung über das Mailprogramm
+
+Der Sensitivitätsregler steigt numerisch nach rechts; zusätzlich ist eine Zahleneingabe vorhanden. Aus ausgewählten freigegebenen Einträgen entstehen bearbeitbare Mailentwürfe mit ISO-Kalenderwoche statt genauem Messzeitpunkt. Bezirksvorschläge nutzen einen gebündelten älteren Polygonbestand (2013); zwölf aktuelle, auf Berlin.de veröffentlichte Mailkontakte sind mit Quellen hinterlegt. Manuelle Korrektur, Aufteilung nach Bezirk und Übergabe per `ACTION_SENDTO` sind umgesetzt. Die App sendet keine Nachricht selbst und bestätigt keinen Versand. Dokumentation: [MAIL-MELDUNGEN.md](MAIL-MELDUNGEN.md).
+
 ## Nächste Schritte nach echten Fahrdaten
 
 1. Bekannte Stellen und glatte Vergleichsabschnitte erfassen; Fehlalarme und Auslassungen nachvollziehen. Halterung, Reifendruck und Geschwindigkeit berücksichtigen.
 2. Die integrierte Karte im Fahrtest prüfen; Zusammenführung benachbarter Fundstellen und Fotoanhänge hinzufügen; eigene Messpositionen korrigierbar machen.
-3. Berliner Zuständigkeiten und aktuelle Meldewege verifizieren; menschenlesbare Einzelberichte und Bearbeitungsstatus entwickeln.
+3. Aktuelle amtliche Bezirksgrenzen und konkrete Straßenbaulast verifizieren; Fotoanhänge, Zusammenführung wiederholter Treffer und Bearbeitungsstatus entwickeln.
 4. Unterschiedliche Android-Geräte, Berechtigungsverläufe, Batterieeinstellungen und längere Fahrten testen.
 5. Erst danach: öffentliche Testversion, signiertes Release, Datenschutzinformationen, barrierearme Bedienung, Übersetzungen und Wartungsprozess.
 

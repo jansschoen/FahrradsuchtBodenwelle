@@ -11,19 +11,34 @@ import java.util.List;
 
 public final class FindingStore extends SQLiteOpenHelper {
     private static final java.util.concurrent.atomic.AtomicLong CHANGES = new java.util.concurrent.atomic.AtomicLong();
-    public FindingStore(Context context) { super(context, "findings.db", null, 4); }
+    public FindingStore(Context context) { super(context, "findings.db", null, 5); }
 
     @Override public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE findings (id INTEGER PRIMARY KEY AUTOINCREMENT, time_ms INTEGER NOT NULL, latitude REAL NOT NULL, longitude REAL NOT NULL, accuracy REAL NOT NULL, speed REAL, peak REAL, threshold REAL, source TEXT NOT NULL, category TEXT NOT NULL DEFAULT 'Ungeklärt', note TEXT NOT NULL DEFAULT '', reviewed INTEGER NOT NULL DEFAULT 0, location_age_ms INTEGER NOT NULL)");
         createRouteTable(db);
         addPositionColumns(db);
         addClassification(db);
+        addMailColumn(db);
     }
 
     @Override public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (oldVersion < 2) createRouteTable(db);
         if (oldVersion < 3) addPositionColumns(db);
         if (oldVersion < 4) addClassification(db);
+        if (oldVersion < 5) addMailColumn(db);
+    }
+    private static void addMailColumn(SQLiteDatabase db) {
+        db.execSQL("ALTER TABLE findings ADD COLUMN report_district TEXT NOT NULL DEFAULT ''");
+    }
+    public String reportDistrict(long id) {
+        try (Cursor c = getReadableDatabase().rawQuery("SELECT report_district FROM findings WHERE id = ?", new String[]{Long.toString(id)})) {
+            return c.moveToFirst() ? c.getString(0) : "";
+        }
+    }
+    public void reportDistrict(long id, String district) {
+        if (!district.isEmpty() && !district.matches("0[1-9]|1[0-2]")) throw new IllegalArgumentException("Unknown Berlin district");
+        ContentValues values = new ContentValues(); values.put("report_district", district);
+        getWritableDatabase().update("findings", values, "id = ?", new String[]{Long.toString(id)}); CHANGES.incrementAndGet();
     }
 
     private static void addClassification(SQLiteDatabase db) {

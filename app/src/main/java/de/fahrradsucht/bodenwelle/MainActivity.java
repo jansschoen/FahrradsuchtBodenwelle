@@ -202,6 +202,8 @@ public final class MainActivity extends Activity {
         } else {
             Button export = button(content, "Geprüfte Stellen als Datei speichern", true, this::confirmExport);
             export.setEnabled(reviewed > 0);
+            Button mail = button(content, "Meldung an die Verwaltung vorbereiten", true, () -> startActivity(new Intent(this, MailReportActivity.class)));
+            mail.setEnabled(reviewed > 0);
             addText(content, reviewed > 0
                     ? "Du erhältst eine Tabelle (CSV). An die Verwaltung wird noch nichts gesendet."
                     : "Öffne eine Fundstelle, prüfe sie und gib sie frei. Danach kannst du sie als Datei speichern.", 14, INK, false);
@@ -365,7 +367,7 @@ public final class MainActivity extends Activity {
         new AlertDialog.Builder(this).setTitle("Deine erste Fahrt")
                 .setMessage("1. Vor der Fahrt\nBefestige das Handy fest am Lenker, tippe auf „Fahrt starten“ und erlaube den genauen Standort. Warte draußen, bis die App die Position gefunden hat.\n\n"
                         + "2. Unterwegs\nDie Karte zeigt deinen Standort und die Fahrtspur. Mit „Mein Standort“ folgt sie dir, mit „Karte vergrößern“ nutzt du den ganzen Bildschirm. Die App erfasst mögliche Unebenheiten automatisch. Du kannst das Display ausschalten. Für eine eigene Markierung erst sicher anhalten und „Stelle markieren“ wählen.\n\n"
-                        + "3. Nach der Fahrt\nBeende die Fahrt. Sieh dir die Fundstellen an, beschreibe sie und gib passende Einträge frei. Erst dann kannst du sie als Datei speichern. Es wird nichts automatisch versendet.")
+                        + "3. Nach der Fahrt\nBeende die Fahrt. Sieh dir die Fundstellen an, beschreibe sie und gib passende Einträge frei. Dann kannst du eine Datei speichern oder eine Meldung an die Verwaltung vorbereiten. Der Mailentwurf enthält Kalenderwochen und bleibt bearbeitbar. Erst in deinem Mailprogramm versendest du die Nachricht.")
                 .setPositiveButton("Los geht’s", null).show();
     }
 

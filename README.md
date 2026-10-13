@@ -2,11 +2,11 @@
 
 Android-Prototyp für Fahrradfahrten in Berlin: auf einer integrierten OpenStreetMap-Karte den eigenen Standort und die Fahrtspur sehen, auffällige Erschütterungen erfassen, nach der Fahrt prüfen und nur freigegebene Fundstellen exportieren.
 
-Die App misst die Reaktion des montierten Smartphones. **Sie misst keine Bodenwellenhöhe und bewertet keine Rechtskonformität.** Fundstellen und die letzte Fahrtspur bleiben auf dem Handy. Die App lädt OSM-Kartenkacheln über HTTPS und übermittelt dafür angefragte Kartenausschnitte und die IP-Adresse an den Kartenanbieter. Sie versendet keine Schadensmeldungen oder Streckendateien.
+Die App misst die Reaktion des montierten Smartphones. **Sie misst keine Bodenwellenhöhe und bewertet keine Rechtskonformität.** Fundstellen und die letzte Fahrtspur bleiben auf dem Handy. Die App lädt OSM-Kartenkacheln über HTTPS und übermittelt dafür angefragte Kartenausschnitte und die IP-Adresse an den Kartenanbieter. Sie versendet keine Schadensmeldungen oder Streckendateien automatisch. Geprüfte Fundstellen lassen sich als Mailentwurf an dein Mailprogramm übergeben.
 
 ## Karte und Fahrtspur (Version 0.2)
 
-Die Startseite enthält eine zoombare native OSM-Karte. **Mein Standort** aktiviert die Standortnachführung; Verschieben der Karte unterbricht die Nachführung. **Fahrtspur ansehen** zeigt die gesamte gespeicherte Spur, **Karte vergrößern** öffnet die Vollbildansicht. Fundstellen sind als farbige Punkte sichtbar; im Stillstand lassen sie sich auf der Startseitenkarte antippen und prüfen. Die Karte zeigt höchstens die neuesten 500 Fundstellen, der Export enthält weiterhin alle freigegebenen Fundstellen.
+Die Startseite enthält eine zoombare native OSM-Karte. **Mein Standort** aktiviert die Standortnachführung; Verschieben der Karte unterbricht die Nachführung. **Fahrtspur ansehen** zeigt die gesamte gespeicherte Spur, **Karte vergrößern** öffnet die Vollbildansicht. Fundstellen sind als nach Intensität farbige Punkte sichtbar; im Stillstand lassen sie sich auf der Startseitenkarte antippen und prüfen. Die Karte zeigt höchstens die neuesten 500 Fundstellen, der Export enthält weiterhin alle freigegebenen Fundstellen.
 
 Die Fahrtspur beginnt mit einer bewusst gestarteten Aufzeichnung. GPS-Lücken über 15 Sekunden werden als getrennte Abschnitte dargestellt; unplausible GPS-Sprünge werden verworfen. Nach Fahrtende bleibt die Spur lokal sichtbar. Die nächste bestätigte Fahrt ersetzt diese Spur, nicht die Fundstellen. Die Spur lässt sich separat löschen und wird nicht mit dem CSV-Fundstellenexport weitergegeben.
 
@@ -16,9 +16,17 @@ Für eine spätere breite öffentliche Veröffentlichung ist die aktuelle [OSM-K
 
 ## Auf dem Fairphone ausprobieren
 
-**[Android-Testversion 0.3.0 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.3.0.apk)**
+**[Android-Testversion 0.4.0 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.4.0.apk)**
 
-Öffne die heruntergeladene APK auf deinem Android-Handy. Falls Android danach fragt, erlaube die Installation aus dieser Quelle. Die [kurze Installationsanleitung](downloads/INSTALLATION.md) und die [SHA-256-Prüfsummen](downloads/SHA256SUMS) liegen neben der APK. Version 0.3.0 verwendet dieselbe App-ID und Signatur wie die vorherigen Testversionen und ist als Update über die vorhandene Installation vorgesehen. Eine Deinstallation würde die lokalen Daten löschen. Dies ist eine Debug-Testversion; die Korrekturen müssen auf dem Fairphone noch praktisch überprüft werden.
+Öffne die heruntergeladene APK auf deinem Android-Handy. Falls Android danach fragt, erlaube die Installation aus dieser Quelle. Die [kurze Installationsanleitung](downloads/INSTALLATION.md) und die [SHA-256-Prüfsummen](downloads/SHA256SUMS) liegen neben der APK. Version 0.4.0 verwendet dieselbe App-ID und Signatur wie die vorherigen Testversionen und ist als Update über die vorhandene Installation vorgesehen. Eine Deinstallation würde die lokalen Daten löschen. Dies ist eine Debug-Testversion; die Korrekturen müssen auf dem Fairphone noch praktisch überprüft werden.
+
+### Bedienung und Mailentwürfe in 0.4.0
+
+Der Schieberegler ist umgedreht: **links kleinere Werte und mehr Treffer, rechts größere Werte und weniger Treffer**. Eine ganze Zahl von 5 bis 100 m/s² lässt sich auch direkt eingeben und über **Übernehmen** anwenden; der Standard bleibt 40.
+
+**Meldung an die Verwaltung vorbereiten** erstellt aus ausgewählten freigegebenen Fundstellen bearbeitbare Mailentwürfe. Automatische Messzeitangaben enthalten ausschließlich die Berliner ISO-Kalenderwoche und das Wochenjahr. Der geografische Bezirksvorschlag lässt sich prüfen und korrigieren; bei mehreren Bezirken gibt es getrennte Entwürfe. Zwölf auf offiziellen Berlin.de-Seiten geprüfte Kontaktadressen sind hinterlegt. Der gebündelte Grenzdatensatz stammt allerdings aus 2013 und ist ausdrücklich ein Vorschlag; Grenznähe und besondere Straßen erfordern eigene Prüfung.
+
+Die Mail ist persönlich formuliert, wahlweise mit kurzem Hinweis auf Bodenwelle. Eigene Notizen bleiben zunächst aus. Der Entwurf enthält keine Fahrtspur oder Rohdatenanhänge. **Im Mailprogramm öffnen** übergibt ihn an das Handy-Mailprogramm, in dem du selbst versendest. Dokumentation, Quellen und Grenzen: [MAIL-MELDUNGEN.md](docs/MAIL-MELDUNGEN.md).
 
 ### Klassifizierung und OSM-Ergänzung in 0.3.0
 
@@ -28,12 +36,12 @@ Für eine spätere breite öffentliche Veröffentlichung ist die aktuelle [OSM-K
 - Verkehrsfläche und Oberfläche werden nach Möglichkeit aus OSM-Weggeometrien und Tags ergänzt. Mehrdeutige parallele Wege bleiben unbekannt; eine Benutzungspflicht wird nicht aus einem bloßen Radweg-Tag abgeleitet. OSM-Vorschläge enthalten Quelle, Originaltags, Zeitpunkt und Sicherheit; manuelle Korrekturen bleiben geschützt.
 - Die abschaltbare OSM-Ergänzung fragt über HTTPS `overpass-api.de` nach dem Gebiet um Fundstellen. Der Anbieter sieht Ausschnitt und IP-Adresse, keine Notizen oder Sensorwerte. Begrenzte Abfragen und lokaler Cache reduzieren Netzverkehr; Aufzeichnung bleibt auch offline verfügbar und fehlende Angaben können später ergänzt werden.
 
-Die [Dokumentation zu Klassifizierung und OSM](docs/KLASSIFIZIERUNG-OSM.md) beschreibt Kategorien, Testgrenzen, räumliche Zuordnung, Export und verbleibende Einschränkungen. **Der Live-Overpass-Abruf ist aus dieser Cloud durch den Proxy blockiert und muss auf dem Fairphone geprüft werden.** Die Logik ist mit kontrollierten OSM-Antworten getestet. 100 automatisierte Tests, Android-Build, Lint ohne Fehler und die APK-Signatur sind geprüft.
+Die [Dokumentation zu Klassifizierung und OSM](docs/KLASSIFIZIERUNG-OSM.md) beschreibt Kategorien, Testgrenzen, räumliche Zuordnung, Export und verbleibende Einschränkungen. **Der Live-Overpass-Abruf ist aus dieser Cloud durch den Proxy blockiert und muss auf dem Fairphone geprüft werden.** Die Logik ist mit kontrollierten OSM-Antworten getestet. Die Klassifizierungs- und OSM-Logik ist automatisiert geprüft; die jeweils aktuelle Gesamtprüfung steht in der [Installationsanleitung](downloads/INSTALLATION.md).
 
 ### Erkennung und Empfindlichkeit in 0.2.2
 
 - Die feste Auslöseschwelle startet bei **40 m/s²**. Gemeint ist der Betrag der gefilterten vertikalen Sensorreaktion nach Abzug der geschätzten Schwerkraft, nicht die Höhe einer Bodenwelle.
-- **Empfindlichkeit einstellen** an der Karte öffnet einen Schieberegler von 5 bis 100 m/s²: links weniger Treffer, rechts mehr Treffer. Die Einstellung wird gespeichert und gilt auch während einer laufenden Fahrt sofort für neue Messungen. Jede Fundstelle speichert ihre damalige Schwelle. Bediene das Telefon nur im sicheren Stand.
+- **Empfindlichkeit einstellen** an der Karte öffnet einen Schieberegler von 5 bis 100 m/s²: links mehr Treffer, rechts weniger Treffer. Die Einstellung wird gespeichert und gilt auch während einer laufenden Fahrt sofort für neue Messungen. Jede Fundstelle speichert ihre damalige Schwelle. Bediene das Telefon nur im sicheren Stand.
 - Automatische Fundstellen verwenden den Zeitpunkt der stärksten Reaktion im 250-ms-Erkennungsfenster. Aus Geschwindigkeit, GPS-Fahrtrichtung und dem zeitlichen Abstand zur GPS-Messung wird die Position für diesen Zeitpunkt geschätzt. Eine ältere GPS-Messung wird entlang der Fahrtrichtung verschoben, eine spätere zurückgerechnet.
 - Fehlen brauchbare Bewegungsdaten, bleibt die ursprüngliche GPS-Position erhalten. Die Korrektur setzt gleichbleibende Geschwindigkeit und Richtung voraus und beseitigt keine GPS-Messfehler. Ursprüngliche Koordinaten und Korrektur bleiben in Messdetails und Export nachvollziehbar. Bestehende Fundstellen bleiben unverändert.
 
@@ -82,7 +90,7 @@ Der Bootstrap prüft die heruntergeladenen Werkzeuge anhand festgelegter Herstel
 
 ## Datenmodell
 
-Lokale SQLite-Fundstellen enthalten zusätzlich strukturierte Klassifizierungs- und OSM-Metadaten einschließlich manueller Herkunftskennzeichen und optionaler bestätigter Höhenmessung. Ein separater, begrenzter Cache speichert öffentliche OSM-Ausschnitte. Sie enthalten außerdem Ereigniszeit, Koordinaten, GPS-Genauigkeit, Zeitabstand zwischen GPS-Fix und Ereignis, gegebenenfalls Geschwindigkeit, Sensor-Spitzenwert und Erkennungsschwelle sowie Quelle, Kategorie, Notiz und Freigabestatus. Die zuletzt gestartete Fahrt wird zusätzlich als lokale GPS-Spur mit getrennten Abschnitten gespeichert. Die Datenbankmigration erhält vorhandene Fundstellen und Fahrtspuren. Neue automatische Einträge enthalten zusätzlich ursprüngliche GPS-Koordinaten, Fahrtrichtung, geschätzte Verschiebung und Korrekturmethode. Die Erkennungsversion wird je Fundstelle gespeichert. Rohsensorzeitreihen werden nicht gespeichert. Manuelle Einträge enthalten keine erfundenen Sensorwerte. Der Fundstellenexport verwendet UTC-Zeitpunkte und dokumentierte SI-Einheiten beziehungsweise km/h und enthält keine Fahrtspur.
+Lokale SQLite-Fundstellen enthalten zusätzlich strukturierte Klassifizierungs- und OSM-Metadaten einschließlich manueller Herkunftskennzeichen und optionaler bestätigter Höhenmessung. Ein separater, begrenzter Cache speichert öffentliche OSM-Ausschnitte. Sie enthalten außerdem Ereigniszeit, Koordinaten, GPS-Genauigkeit, Zeitabstand zwischen GPS-Fix und Ereignis, gegebenenfalls Geschwindigkeit, Sensor-Spitzenwert und Erkennungsschwelle sowie Quelle, Kategorie, Notiz und Freigabestatus. Die zuletzt gestartete Fahrt wird zusätzlich als lokale GPS-Spur mit getrennten Abschnitten gespeichert. Die Datenbankmigration erhält vorhandene Fundstellen und Fahrtspuren. Schema 5 speichert zusätzlich eine optionale manuelle Bezirkszuordnung für Meldungen. Neue automatische Einträge enthalten zusätzlich ursprüngliche GPS-Koordinaten, Fahrtrichtung, geschätzte Verschiebung und Korrekturmethode. Die Erkennungsversion wird je Fundstelle gespeichert. Rohsensorzeitreihen werden nicht gespeichert. Manuelle Einträge enthalten keine erfundenen Sensorwerte. Der Fundstellenexport verwendet UTC-Zeitpunkte und dokumentierte SI-Einheiten beziehungsweise km/h und enthält keine Fahrtspur.
 
 ## Verwendete Kartenbibliothek
 

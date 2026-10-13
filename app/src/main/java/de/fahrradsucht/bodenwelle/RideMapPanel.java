@@ -64,7 +64,7 @@ public final class RideMapPanel extends LinearLayout {
         IConfigurationProvider config = Configuration.getInstance();
         config.setOsmdroidBasePath(base);
         config.setOsmdroidTileCache(cache);
-        config.setUserAgentValue("Bodenwelle/0.3.0 (de.fahrradsucht.bodenwelle; https://github.com/jansschoen/FahrradsuchtBodenwelle)");
+        config.setUserAgentValue("Bodenwelle/0.4.0 (de.fahrradsucht.bodenwelle; https://github.com/jansschoen/FahrradsuchtBodenwelle)");
         config.setTileDownloadThreads((short) 2);
         config.setTileFileSystemCacheMaxBytes(60 * 1024 * 1024L);
         config.setTileFileSystemCacheTrimBytes(48 * 1024 * 1024L);

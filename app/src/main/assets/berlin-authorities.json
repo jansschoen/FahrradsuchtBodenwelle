@@ -1,0 +1,112 @@
+{
+  "authorities": [
+    {
+      "id": "01",
+      "name": "Mitte",
+      "office": "Straßen- und Grünflächenamt",
+      "email": "sga@ba-mitte.berlin.de",
+      "source": "https://www.berlin.de/ba-mitte/politik-und-verwaltung/aemter/strassen-und-gruenflaechenamt/",
+      "checked_at": "2026-10-13",
+      "source_sha256": "72386fb1ec8c9f27a7cee2567b84f2747cec8a03b82a50b0653eb692dcc0da4d"
+    },
+    {
+      "id": "02",
+      "name": "Friedrichshain-Kreuzberg",
+      "office": "Straßen- und Grünflächenamt",
+      "email": "tiefgruen@ba-fk.berlin.de",
+      "source": "https://www.berlin.de/ba-friedrichshain-kreuzberg/politik-und-verwaltung/aemter/strassen-und-gruenflaechenamt/kontakte/",
+      "checked_at": "2026-10-13",
+      "source_sha256": "2b1925c9f2fcaec576356c9cf434da175e3e157c387c7b0f937b6d9523d33207"
+    },
+    {
+      "id": "03",
+      "name": "Pankow",
+      "office": "Straßen- und Grünflächenamt",
+      "email": "sga.allgemein@ba-pankow.berlin.de",
+      "source": "https://www.berlin.de/ba-pankow/politik-und-verwaltung/aemter/strassen-und-gruenflaechenamt/",
+      "checked_at": "2026-10-13",
+      "source_sha256": "f1f385cc3a83439acb67814e7c603677a74d5762c427b5a434f8f8b6b5299eb2"
+    },
+    {
+      "id": "04",
+      "name": "Charlottenburg-Wilmersdorf",
+      "office": "Straßen- und Grünflächenamt · Tiefbau",
+      "email": "tiefbau@charlottenburg-wilmersdorf.de",
+      "source": "https://www.berlin.de/ba-charlottenburg-wilmersdorf/verwaltung/aemter/strassen-und-gruenflaechen/tiefbau/",
+      "checked_at": "2026-10-13",
+      "source_sha256": "e8183410fef1b043f1e8b9db4053525765c56728695ea05293d00c2b5477e3d3"
+    },
+    {
+      "id": "05",
+      "name": "Spandau",
+      "office": "Straßen- und Grünflächenamt",
+      "email": "sga@ba-spandau.berlin.de",
+      "source": "https://www.berlin.de/ba-spandau/politik-und-verwaltung/aemter/strassen-und-gruenflaechenamt/",
+      "checked_at": "2026-10-13",
+      "source_sha256": "a2aa5c5fa34c87231ee596cb75091e0fb6153292f64783027aef77b9f1704d39"
+    },
+    {
+      "id": "06",
+      "name": "Steglitz-Zehlendorf",
+      "office": "Straßen- und Grünflächenamt · Tiefbau",
+      "email": "tiefbauamt@ba-sz.berlin.de",
+      "source": "https://www.berlin.de/ba-steglitz-zehlendorf/politik-und-verwaltung/aemter/strassen-und-gruenflaechenamt/",
+      "checked_at": "2026-10-13",
+      "source_sha256": "f5d17e7929623bcfb6ab7a673f9e48a94dd44ddd8f538bb9aa79ce7db77ea186"
+    },
+    {
+      "id": "07",
+      "name": "Tempelhof-Schöneberg",
+      "office": "Straßen- und Grünflächenamt · Fachbereich Straßen",
+      "email": "fb-strassen@ba-ts.berlin.de",
+      "source": "https://www.berlin.de/ba-tempelhof-schoeneberg/politik-und-verwaltung/aemter/strassen-und-gruenflaechenamt/unsere-fachbereiche/strassen/",
+      "checked_at": "2026-10-13",
+      "source_sha256": "881f080415730f9a6bb997261645dc16fbe88dbced5737dc8c4291939c88eb33"
+    },
+    {
+      "id": "08",
+      "name": "Neukölln",
+      "office": "Straßen- und Grünflächenamt",
+      "email": "sga@bezirksamt-neukoelln.de",
+      "source": "https://www.berlin.de/ba-neukoelln/politik-und-verwaltung/aemter/strassen-und-gruenflaechenamt/",
+      "checked_at": "2026-10-13",
+      "source_sha256": "2736abf960a8ffa438fdec570714881052f9ca4d1166cd611d0dcec8f9ebb80f"
+    },
+    {
+      "id": "09",
+      "name": "Treptow-Köpenick",
+      "office": "Straßen- und Grünflächenamt · Tiefbau",
+      "email": "SGA-Tief@ba-tk.berlin.de",
+      "source": "https://www.berlin.de/ba-treptow-koepenick/politik-und-verwaltung/aemter/strassen-und-gruenflaechenamt/artikel.28034.php",
+      "checked_at": "2026-10-13",
+      "source_sha256": "d5bd9ad73b704d72a261a23b2277afd2845be17c6142c3e3107cd4815f60cdba"
+    },
+    {
+      "id": "10",
+      "name": "Marzahn-Hellersdorf",
+      "office": "Straßen- und Grünflächenamt · Fachbereich Straßen",
+      "email": "SGA-Strassen@ba-mh.berlin.de",
+      "source": "https://www.berlin.de/ba-marzahn-hellersdorf/politik-und-verwaltung/aemter/strassen-und-gruenflaechenamt/",
+      "checked_at": "2026-10-13",
+      "source_sha256": "5f699acd069e42c5f9c005b276ea1a15679cf639ac3e73c2f8d29fb0763e7d02"
+    },
+    {
+      "id": "11",
+      "name": "Lichtenberg",
+      "office": "Straßen- und Grünflächenamt",
+      "email": "sga@lichtenberg.berlin.de",
+      "source": "https://www.berlin.de/ba-lichtenberg/politik-und-verwaltung/behoerdenwegweiser/artikel.250475.php",
+      "checked_at": "2026-10-13",
+      "source_sha256": "ae41f3a4da7475e8e274e413e9b4aa8c6e6fd399bff0931d144f4585bcfcf897"
+    },
+    {
+      "id": "12",
+      "name": "Reinickendorf",
+      "office": "Straßen- und Grünflächenamt",
+      "email": "sga@reinickendorf.berlin.de",
+      "source": "https://www.berlin.de/ba-reinickendorf/politik-und-verwaltung/aemter/strassen-und-gruenflaechenamt/strassenbau/",
+      "checked_at": "2026-10-13",
+      "source_sha256": "72dd27ba921a8c286de7e06822dfd251b4921883a29492873fb6c9e5bfda37ff"
+    }
+  ]
+}
