@@ -19,13 +19,10 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
 import android.view.WindowInsets;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import java.io.OutputStream;
@@ -40,7 +37,8 @@ public final class MainActivity extends Activity {
     private static final int PERMISSIONS = 10;
     private static final int EXPORT = 11;
     private static final int MAP_LOCATION = 12;
-    private static final int PHOTO_PICK = 13, PHOTO_CAPTURE = 14;
+    private static final int PHOTO_PICK = 13;
+    private static final int PHOTO_CAPTURE = 14;
     private long pendingPhotoFinding;
     private String pendingCapture = "";
     private PhotoPanel activePhotoPanel;
@@ -77,7 +75,10 @@ public final class MainActivity extends Activity {
         }
         if (Build.VERSION.SDK_INT >= 30) getWindow().setDecorFitsSystemWindows(false);
         render();
-        if (state != null) { pendingPhotoFinding=state.getLong("photoFinding");pendingCapture=state.getString("photoCapture",""); }
+        if (state != null) {
+            pendingPhotoFinding = state.getLong("photoFinding");
+            pendingCapture = state.getString("photoCapture", "");
+        }
         if (state == null) PhotoFiles.cleanup(this);
     }
 
@@ -86,7 +87,8 @@ public final class MainActivity extends Activity {
         state.putBoolean("openMapAfterStart", openMapAfterStart);
         state.putBoolean("startWhenResumed", startWhenResumed);
         state.putLong("serviceRequestedAt", serviceRequestedAt);
-        state.putLong("photoFinding",pendingPhotoFinding);state.putString("photoCapture",pendingCapture);
+        state.putLong("photoFinding", pendingPhotoFinding);
+        state.putString("photoCapture", pendingCapture);
         super.onSaveInstanceState(state);
     }
 
@@ -198,12 +200,13 @@ public final class MainActivity extends Activity {
     }
 
     private void renderFindings() {
-        List<Finding> findings = store.all();
-        long reviewed = findings.stream().filter(Finding::reviewed).count();
+        List<FindingBundle> bundles = store.bundles();
+        int findingCount = bundles.stream().mapToInt(b -> b.observations().size()).sum();
+        long reviewed = bundles.stream().mapToLong(FindingBundle::reviewedCount).sum();
         space(content, 24);
         addText(content, "Nach der Fahrt prüfen", 24, INK, true);
-        addText(content, reviewed + " geprüft · " + (findings.size() - reviewed) + " offen", 15, GREEN, true);
-        if (findings.isEmpty()) {
+        addText(content, reviewed + " geprüft · " + (findingCount - reviewed) + " offen", 15, GREEN, true);
+        if (findingCount == 0) {
             LinearLayout empty = card(content);
             addText(empty, "Hier ist Platz für deine ersten Fundstellen", 18, INK, true);
             addText(empty, "Starte oben eine Fahrt. Danach erscheinen hier mögliche Unebenheiten. Du kannst sie ansehen, beschreiben und Fehlalarme löschen.", 16, INK, false);
@@ -216,10 +219,11 @@ public final class MainActivity extends Activity {
                     ? "Du erhältst eine Tabelle (CSV). An die Verwaltung wird noch nichts gesendet."
                     : "Öffne eine Fundstelle, prüfe sie und gib sie frei. Danach kannst du sie als Datei speichern.", 14, INK, false);
         }
-        if (findings.size()>1) button(content,"Mehrfachtreffer bündeln",false,()->startActivity(new Intent(this,BundleActivity.class))).setId(R.id.bundle_open);
+        if (findingCount > 1) button(content, "Mehrfachtreffer bündeln", false,
+                () -> startActivity(new Intent(this, BundleActivity.class))).setId(R.id.bundle_open);
         int shown = 0;
-        for (FindingBundle bundle : store.bundles()) {
-            Finding f=bundle.representative();
+        for (FindingBundle bundle : bundles) {
+            Finding f = bundle.representative();
             if (shown++ >= 100) break;
             LinearLayout item = card(content);
             String category = bundle.title();
@@ -236,6 +240,12 @@ public final class MainActivity extends Activity {
             else addText(item, "Ergänze, was du an dieser Stelle gesehen hast.", 15, INK, false);
             button(item, "Auf der Karte ansehen", false, () -> openMap(f));
             button(item, bundle.observations().size()>1?"Beobachtungen prüfen und Fotos ergänzen":"Stelle prüfen und Fotos ergänzen", true, () -> review(f));
+            Button delete = button(item, "Löschen", false, () -> deleteObservation(f));
+            delete.setId(R.id.finding_delete);
+            delete.setTag(f.id());
+            delete.setContentDescription(bundle.observations().size() > 1
+                    ? "Eine Messung dieser Fundstelle löschen"
+                    : "Messung vom " + DATE.format(Instant.ofEpochMilli(f.timeMillis())) + " löschen");
             LinearLayout details = column();
             details.setVisibility(View.GONE);
             addText(details, String.format(Locale.GERMANY, "Angezeigte Position: %.5f, %.5f\nUrsprüngliche GPS-Position: %.5f, %.5f\nGenauigkeit der GPS-Messung: ± %.0f m\nGPS-Messung: %.2f s %s dem Ereignis", f.latitude(), f.longitude(),
@@ -266,8 +276,8 @@ public final class MainActivity extends Activity {
             });
             item.addView(details);
         }
-        if (store.bundles().size() > 100) addText(content, "Die Liste zeigt die neuesten 100 Fundstellen. Der Export enthält alle geprüften Beobachtungen.", 14, INK, false);
-        if (!findings.isEmpty()) button(content, "Alle Fundstellen löschen", false, () -> new AlertDialog.Builder(this)
+        if (bundles.size() > 100) addText(content, "Die Liste zeigt die neuesten 100 Fundstellen. Der Export enthält alle geprüften Beobachtungen.", 14, INK, false);
+        if (findingCount > 0) button(content, "Alle Fundstellen löschen", false, () -> new AlertDialog.Builder(this)
                 .setTitle("Alle Fundstellen löschen?").setMessage("Die Beobachtungen, Bündelungen und zugehörigen Fotos werden aus der App entfernt. Bereits exportierte Dateien und vorbereitete Mailkopien bleiben erhalten; lokale Mailkopien werden beim nächsten Start nach sieben Tagen bereinigt.")
                 .setNegativeButton("Abbrechen", null).setPositiveButton("Löschen", (dialog, which) -> { store.deleteAll(); render(); }).show());
     }
@@ -346,26 +356,54 @@ public final class MainActivity extends Activity {
     }
 
     private void review(Finding f) {
-        List<Finding> members=new java.util.ArrayList<>();for(Finding x:store.all())if(x.bundleKey()==f.bundleKey())members.add(x);
-        if(members.size()<2){reviewObservation(f);return;}
-        String[] labels=new String[members.size()];for(int i=0;i<labels.length;i++){Finding x=members.get(i);labels[i]=(x.reviewed()?"✓ ":"Offen · ")+DATE.format(Instant.ofEpochMilli(x.timeMillis()))+" · "+Classification.label(Classification.BUMPS,x.category());}
-        new AlertDialog.Builder(this).setTitle("Beobachtung auswählen").setItems(labels,(d,index)->reviewObservation(members.get(index)))
-                .setNegativeButton("Schließen",null).setNeutralButton("Bündelung auflösen",(d,w)->{store.separateBundle(f.bundleKey());render();}).show();
+        List<Finding> members = store.observations(f.bundleKey());
+        if (members.isEmpty()) { render(); return; }
+        if (members.size() == 1) { reviewObservation(members.get(0)); return; }
+        new AlertDialog.Builder(this).setTitle("Beobachtung auswählen")
+                .setItems(observationLabels(members), (d, index) -> reviewObservation(members.get(index)))
+                .setNegativeButton("Schließen", null)
+                .setNeutralButton("Bündelung auflösen", (d, w) -> { store.separateBundle(f.bundleKey()); render(); }).show();
     }
+
+    private String[] observationLabels(List<Finding> members) {
+        return members.stream().map(f -> (f.reviewed() ? "✓ " : "Offen · ")
+                + DATE.format(Instant.ofEpochMilli(f.timeMillis())) + " · "
+                + Classification.label(Classification.BUMPS, f.category()) + " · Messung #" + f.id())
+                .toArray(String[]::new);
+    }
+
+    private void deleteObservation(Finding f) {
+        List<Finding> members = store.observations(f.bundleKey());
+        if (members.isEmpty()) { render(); return; }
+        if (members.size() == 1) { confirmDelete(members.get(0)); return; }
+        new AlertDialog.Builder(this).setTitle("Welche Messung löschen?")
+                .setItems(observationLabels(members), (d, index) -> confirmDelete(members.get(index)))
+                .setNegativeButton("Abbrechen", null).show();
+    }
+
+    private void confirmDelete(Finding f) {
+        String message = "Messung #" + f.id() + " vom " + DATE.format(Instant.ofEpochMilli(f.timeMillis()))
+                + "\n" + Classification.label(Classification.BUMPS, f.category())
+                + "\n\nDiese Messung und ihre Fotos werden aus der App gelöscht."
+                + (f.bundleId() > 0 ? " Weitere Messungen dieser Fundstelle bleiben erhalten." : "")
+                + " Bereits exportierte Kopien bleiben erhalten.";
+        new AlertDialog.Builder(this).setTitle("Messung löschen?").setMessage(message)
+                .setNegativeButton("Abbrechen", null)
+                .setPositiveButton("Löschen", (d, w) -> { store.delete(f.id()); render(); toast("Messung gelöscht."); }).show();
+    }
+
     private void reviewObservation(Finding f) {
         FindingReviewForm form = new FindingReviewForm(this, f);
-        activePhotoPanel=new PhotoPanel(this,store,f.id(),new PhotoPanel.Actions(){
-            @Override public void pick(long id){pickPhoto(id);}
-            @Override public void capture(long id){capturePhoto(id);}
+        activePhotoPanel = new PhotoPanel(this, store, f.id(), new PhotoPanel.Actions() {
+            @Override public void pick(long id) { pickPhoto(id); }
+            @Override public void capture(long id) { capturePhoto(id); }
         });
-        PhotoPanel panel=activePhotoPanel;panel.root.setVisibility(View.GONE);
-        Button photoToggle=new Button(this);photoToggle.setText(R.string.photos_section);photoToggle.setAllCaps(false);
-        form.root.addView(photoToggle,5);form.root.addView(panel.root,6);photoToggle.setOnClickListener(v->panel.root.setVisibility(panel.root.getVisibility()==View.VISIBLE?View.GONE:View.VISIBLE));
+        PhotoPanel panel = activePhotoPanel;
+        form.photos.addView(panel.root);
         ScrollView scroll = new ScrollView(this); scroll.addView(form.root);
         AlertDialog dialog = new AlertDialog.Builder(this).setTitle("Fundstelle prüfen").setView(scroll)
                 .setNegativeButton("Abbrechen", null)
-                .setNeutralButton("Löschen", (d, w) -> new AlertDialog.Builder(this).setTitle("Fundstelle löschen?")
-                        .setNegativeButton("Abbrechen", null).setPositiveButton("Löschen", (dd, ww) -> { store.delete(f.id()); render(); }).show())
+                .setNeutralButton("Löschen", (d, w) -> confirmDelete(f))
                 .setPositiveButton("Speichern", null).create();
         dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             try {
@@ -373,7 +411,7 @@ public final class MainActivity extends Activity {
                 dialog.dismiss(); render();
             } catch (IllegalArgumentException e) { form.height.setError(e.getMessage()); toast(e.getMessage()); }
         }));
-        dialog.setOnDismissListener(d->{if(activePhotoPanel==panel)activePhotoPanel=null;});
+        dialog.setOnDismissListener(d -> { if (activePhotoPanel == panel) activePhotoPanel = null; });
         dialog.show();
     }
 

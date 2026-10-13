@@ -14,6 +14,7 @@ import android.widget.TextView;
 /** Collapsible optional sections keep everyday review short. */
 public final class FindingReviewForm {
     public final LinearLayout root;
+    public final LinearLayout photos;
     private final Spinner bump, road, surface;
     public final EditText note, height;
     public final CheckBox release, heightMeasured, roadManual, surfaceManual;
@@ -30,6 +31,7 @@ public final class FindingReviewForm {
         note.setMinLines(2); note.setMaxLines(6);
         note.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
         root.addView(note);
+        photos = section(c.getString(R.string.photos_section));
         LinearLayout risk = section("Zusätzliche Gefährdungsmerkmale (optional)");
         for (int i = 0; i < hazards.length; i++) hazards[i] = check(risk, Classification.HAZARDS[i].label(), (f.details().hazards() & (1 << i)) != 0);
         LinearLayout geo = section("Verkehrsfläche und Oberfläche prüfen");

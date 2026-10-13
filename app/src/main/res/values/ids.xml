@@ -1,4 +1,5 @@
 <resources>
+    <item name="finding_delete" type="id" />
     <item name="photo_pick" type="id" />
     <item name="photo_capture" type="id" />
     <item name="bundle_open" type="id" />

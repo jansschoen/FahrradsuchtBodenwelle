@@ -3,7 +3,6 @@ package de.fahrradsucht.bodenwelle;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
 /** Conservative local association, not navigation map matching or a legal survey. */
 public final class OsmMatcher {

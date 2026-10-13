@@ -147,6 +147,18 @@ public final class FindingStore extends SQLiteOpenHelper {
         return result;
     }
 
+    /** Read only the original observations belonging to one displayed place. */
+    public List<Finding> observations(long bundleKey) {
+        List<Finding> result = new ArrayList<>();
+        String where = bundleKey > 0 ? "bundle_id = ?" : "id = ? AND bundle_id IS NULL";
+        long id = bundleKey > 0 ? bundleKey : -bundleKey;
+        try (Cursor c = getReadableDatabase().rawQuery("SELECT * FROM findings WHERE " + where + " ORDER BY id DESC",
+                new String[]{Long.toString(id)})) {
+            while (c.moveToNext()) result.add(readFinding(c));
+        }
+        return result;
+    }
+
     private static Finding readFinding(Cursor c) {
         return new Finding(c.getLong(0), c.getLong(1), c.getDouble(2),
                     c.getDouble(3), c.getFloat(4), c.isNull(5) ? null : c.getFloat(5),
@@ -269,15 +281,33 @@ public final class FindingStore extends SQLiteOpenHelper {
     }
 
     public void delete(long id) {
-        SQLiteDatabase db=getWritableDatabase(); db.beginTransaction(); List<FindingPhoto> files;
-        try { files=photos(id); db.delete("findings","id = ?",new String[]{Long.toString(id)}); removeEmptyBundles(db); db.setTransactionSuccessful(); }
-        finally { db.endTransaction(); }
-        for(FindingPhoto photo:files) PhotoFiles.localFile(context,photo.filename()).delete(); CHANGES.incrementAndGet();
+        SQLiteDatabase db = getWritableDatabase();
+        db.beginTransaction();
+        List<FindingPhoto> files;
+        try {
+            files = photos(id);
+            db.delete("findings", "id = ?", new String[]{Long.toString(id)});
+            removeEmptyBundles(db);
+            db.setTransactionSuccessful();
+        } finally { db.endTransaction(); }
+        removeLocalPhotos(files);
+        CHANGES.incrementAndGet();
     }
     public void deleteAll() {
-        SQLiteDatabase db=getWritableDatabase(); db.beginTransaction(); List<FindingPhoto> files=new ArrayList<>();
-        try { for(Finding f:all()) files.addAll(photos(f.id())); db.delete("findings",null,null); db.delete("finding_bundles",null,null); db.setTransactionSuccessful(); }
-        finally { db.endTransaction(); }
-        for(FindingPhoto photo:files) PhotoFiles.localFile(context,photo.filename()).delete(); CHANGES.incrementAndGet();
+        SQLiteDatabase db = getWritableDatabase();
+        db.beginTransaction();
+        List<FindingPhoto> files = new ArrayList<>();
+        try {
+            for (Finding f : all()) files.addAll(photos(f.id()));
+            db.delete("findings", null, null);
+            db.delete("finding_bundles", null, null);
+            db.setTransactionSuccessful();
+        } finally { db.endTransaction(); }
+        removeLocalPhotos(files);
+        CHANGES.incrementAndGet();
+    }
+
+    private void removeLocalPhotos(List<FindingPhoto> photos) {
+        for (FindingPhoto photo : photos) PhotoFiles.localFile(context, photo.filename()).delete();
     }
 }

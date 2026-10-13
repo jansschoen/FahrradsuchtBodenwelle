@@ -82,3 +82,9 @@ Wähle nach dem Freigeben **Meldung an die Verwaltung vorbereiten**. Prüfe die 
 Unter **Stelle prüfen und Fotos ergänzen** öffnest du **Fotos ansehen und ergänzen**. Wähle ein Bild oder nimm im sicheren Stand ein Foto auf. Tippe die Vorschau an und prüfe Bildinhalte. Die gespeicherte Kopie enthält keine ursprünglichen EXIF-Orts-/Zeitangaben; dein Albumoriginal bleibt erhalten.
 
 Erzeuge eine Mail mit den gewünschten freigegebenen Beobachtungen. Wiederholungen erscheinen zusammen mit Anzahl und Kalenderwochen. Prüfe Fotoauswahl und Nummerierung und danach im Mailprogramm die tatsächlichen Anhänge. Versende erst nach Prüfung. Weitere Anleitung und Grenzen: [BUENDELUNG-FOTOS.md](BUENDELUNG-FOTOS.md).
+
+### Einzelne Messung löschen (0.6.0)
+
+1. Nach Fahrtende an einer Fundstelle direkt **Löschen** antippen. Zuerst **Abbrechen** wählen: Messung und Fotos müssen erhalten bleiben.
+2. Erneut **Löschen** wählen und bestätigen: Diese Messung und ihre lokalen Fotos verschwinden aus Liste, Karte und künftigen Exporten. Die Fahrtspur bleibt erhalten.
+3. Bei einer gebündelten Fundstelle eine einzelne Messung auswählen und löschen. Die übrigen Beobachtungen samt Fotos und Freigaben müssen erhalten bleiben. Beim letzten Treffer verschwindet die Fundstelle vollständig. Bereits exportierte Dateien oder übergebene Mailanhänge bleiben eigenständige Kopien.

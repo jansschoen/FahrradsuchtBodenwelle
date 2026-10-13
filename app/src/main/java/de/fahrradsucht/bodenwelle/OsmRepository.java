@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import java.io.IOException;
 import java.util.Locale;
-import java.util.Map;
 import java.util.function.LongSupplier;
 
 /** Local bounded cache; at most one network request/minute, five-minute backoff after failure. */
