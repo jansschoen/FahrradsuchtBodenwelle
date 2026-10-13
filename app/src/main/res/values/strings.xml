@@ -1,0 +1,25 @@
+<resources>
+    <string name="map_description">OpenStreetMap-Karte mit Standort, Fahrtspur und Fundstellen</string>
+    <string name="map_waiting">Aktuelle Position wird gesucht. Bitte draußen kurz warten.</string>
+    <string name="map_permission">Tippe auf „Mein Standort“, um den genauen Standort zu erlauben.</string>
+    <string name="map_stale">Kein aktueller Standort. Die letzte angezeigte Position kann veraltet sein.</string>
+    <string name="map_current">Die Standortmarkierung zeigt deine Position. Der Kreis zeigt die GPS-Unsicherheit.</string>
+    <string name="my_location">Mein Standort</string>
+    <string name="show_route">Fahrtspur ansehen</string>
+    <string name="map_legend">Türkis: Fahrtspur · Orange: ungeprüft · Grün: geprüft</string>
+    <string name="osm_attribution">© OpenStreetMap contributors · Lizenz ansehen</string>
+    <string name="route_empty">Die Fahrtspur beginnt, sobald du eine Fahrt startest und GPS verfügbar ist.</string>
+    <string name="route_running">Deine aktuelle Fahrt wird lokal aufgezeichnet. GPS-Lücken bleiben unterbrochen.</string>
+    <string name="route_saved">Die letzte Fahrtspur bleibt sichtbar, bis du sie löschst oder eine neue Fahrt startest.</string>
+    <string name="back_to_ride">Zurück zur Fahrt</string>
+    <string name="mark_place">Stelle markieren</string>
+    <string name="stop_ride">Fahrt beenden</string>
+    <string name="route_not_recording">Keine laufende Fahrt. Die Karte bleibt zum Ansehen verfügbar.</string>
+    <string name="review_release">Stelle geprüft und für den Export freigegeben</string>
+    <string name="show_details">Messdetails anzeigen</string>
+    <string name="hide_details">Messdetails ausblenden</string>
+    <plurals name="finding_count">
+        <item quantity="one">%d Fundstelle auf diesem Handy</item>
+        <item quantity="other">%d Fundstellen auf diesem Handy</item>
+    </plurals>
+</resources>
