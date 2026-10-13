@@ -26,6 +26,7 @@ public class FindingPositionTest {
         app = RuntimeEnvironment.getApplication(); app.deleteDatabase("findings.db");
         new DetectionPreferences(app).setThreshold(40);
         RecordingService.running = false;
+        OsmEnricher.enabled(RuntimeEnvironment.getApplication(), false);
         ShadowSystemClock.advanceBy(Duration.ofSeconds(10));
     }
     private Location fix(long elapsed, float bearing) {
@@ -42,7 +43,10 @@ public class FindingPositionTest {
         try (FindingStore store = new FindingStore(app)) {
             store.insert(fix(now - 3250, 0), new BumpDetector.Detection(now - 250, 60, 40));
             Finding f = store.all().get(0);
-            assertEquals(wall - 250, f.timeMillis());
+            // Wall time can advance by a millisecond while SQLite is opened. Bound the
+            // timestamp by both clock reads, still requiring the 250-ms peak offset.
+            assertTrue(f.timeMillis() >= wall - 250);
+            assertTrue(f.timeMillis() <= System.currentTimeMillis() - 250);
             assertEquals(3000, f.locationAgeMillis()); assertTrue(f.position().projected());
             assertEquals(18, f.position().distanceMeters(), 0);
             assertEquals(52.5, f.position().gpsLatitude(), 0); assertTrue(f.latitude() > 52.5);

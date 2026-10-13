@@ -16,9 +16,19 @@ Für eine spätere breite öffentliche Veröffentlichung ist die aktuelle [OSM-K
 
 ## Auf dem Fairphone ausprobieren
 
-**[Android-Testversion 0.2.2 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.2.2.apk)**
+**[Android-Testversion 0.3.0 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.3.0.apk)**
 
-Öffne die heruntergeladene APK auf deinem Android-Handy. Falls Android danach fragt, erlaube die Installation aus dieser Quelle. Die [kurze Installationsanleitung](downloads/INSTALLATION.md) und die [SHA-256-Prüfsummen](downloads/SHA256SUMS) liegen neben der APK. Version 0.2.2 verwendet dieselbe App-ID und Signatur wie 0.2.0 und 0.2.1 und ist als Update über die vorhandene Installation vorgesehen. Eine Deinstallation würde die lokalen Daten löschen. Dies ist eine Debug-Testversion; die Korrekturen müssen auf dem Fairphone noch praktisch überprüft werden.
+Öffne die heruntergeladene APK auf deinem Android-Handy. Falls Android danach fragt, erlaube die Installation aus dieser Quelle. Die [kurze Installationsanleitung](downloads/INSTALLATION.md) und die [SHA-256-Prüfsummen](downloads/SHA256SUMS) liegen neben der APK. Version 0.3.0 verwendet dieselbe App-ID und Signatur wie die vorherigen Testversionen und ist als Update über die vorhandene Installation vorgesehen. Eine Deinstallation würde die lokalen Daten löschen. Dies ist eine Debug-Testversion; die Korrekturen müssen auf dem Fairphone noch praktisch überprüft werden.
+
+### Klassifizierung und OSM-Ergänzung in 0.3.0
+
+- Sieben Unebenheitsarten: Wurzelaufbruch, Schlagloch, Querrille, Längsrille, Pflasterversatz, langgezogene Bodenwelle und sonstige Unebenheit. Alte allgemeine Angaben bleiben nachvollziehbar erhalten.
+- Fünf farbige Intensitätsklassen mit getrennten Grundlagen: selbst vor Ort gemessene und bestätigte Millimeterwerte verwenden die projektinternen Höhenklassen; Sensorwerte erhalten ausschließlich eine als vorläufig gekennzeichnete Beschleunigungsskala. Es gibt keine automatische Millimeterumrechnung und keine gesetzlichen Grenzwerte.
+- Fünf unabhängige Gefährdungsmerkmale, optionale gemessene Höhe und manuelle Verkehrsflächen-/Oberflächenkorrekturen liegen in aufklappbaren Bereichen der Bearbeitung. Gefährdungsmerkmale verändern keine Messwerte.
+- Verkehrsfläche und Oberfläche werden nach Möglichkeit aus OSM-Weggeometrien und Tags ergänzt. Mehrdeutige parallele Wege bleiben unbekannt; eine Benutzungspflicht wird nicht aus einem bloßen Radweg-Tag abgeleitet. OSM-Vorschläge enthalten Quelle, Originaltags, Zeitpunkt und Sicherheit; manuelle Korrekturen bleiben geschützt.
+- Die abschaltbare OSM-Ergänzung fragt über HTTPS `overpass-api.de` nach dem Gebiet um Fundstellen. Der Anbieter sieht Ausschnitt und IP-Adresse, keine Notizen oder Sensorwerte. Begrenzte Abfragen und lokaler Cache reduzieren Netzverkehr; Aufzeichnung bleibt auch offline verfügbar und fehlende Angaben können später ergänzt werden.
+
+Die [Dokumentation zu Klassifizierung und OSM](docs/KLASSIFIZIERUNG-OSM.md) beschreibt Kategorien, Testgrenzen, räumliche Zuordnung, Export und verbleibende Einschränkungen. **Der Live-Overpass-Abruf ist aus dieser Cloud durch den Proxy blockiert und muss auf dem Fairphone geprüft werden.** Die Logik ist mit kontrollierten OSM-Antworten getestet. 100 automatisierte Tests, Android-Build, Lint ohne Fehler und die APK-Signatur sind geprüft.
 
 ### Erkennung und Empfindlichkeit in 0.2.2
 
@@ -72,7 +82,7 @@ Der Bootstrap prüft die heruntergeladenen Werkzeuge anhand festgelegter Herstel
 
 ## Datenmodell
 
-Lokale SQLite-Fundstellen enthalten Ereigniszeit, Koordinaten, GPS-Genauigkeit, Zeitabstand zwischen GPS-Fix und Ereignis, gegebenenfalls Geschwindigkeit, Sensor-Spitzenwert und Erkennungsschwelle sowie Quelle, Kategorie, Notiz und Freigabestatus. Die zuletzt gestartete Fahrt wird zusätzlich als lokale GPS-Spur mit getrennten Abschnitten gespeichert. Die Datenbankmigration erhält vorhandene Fundstellen und Fahrtspuren. Neue automatische Einträge enthalten zusätzlich ursprüngliche GPS-Koordinaten, Fahrtrichtung, geschätzte Verschiebung und Korrekturmethode. Die Erkennungsversion wird je Fundstelle gespeichert. Rohsensorzeitreihen werden nicht gespeichert. Manuelle Einträge enthalten keine erfundenen Sensorwerte. Der Fundstellenexport verwendet UTC-Zeitpunkte und dokumentierte SI-Einheiten beziehungsweise km/h und enthält keine Fahrtspur.
+Lokale SQLite-Fundstellen enthalten zusätzlich strukturierte Klassifizierungs- und OSM-Metadaten einschließlich manueller Herkunftskennzeichen und optionaler bestätigter Höhenmessung. Ein separater, begrenzter Cache speichert öffentliche OSM-Ausschnitte. Sie enthalten außerdem Ereigniszeit, Koordinaten, GPS-Genauigkeit, Zeitabstand zwischen GPS-Fix und Ereignis, gegebenenfalls Geschwindigkeit, Sensor-Spitzenwert und Erkennungsschwelle sowie Quelle, Kategorie, Notiz und Freigabestatus. Die zuletzt gestartete Fahrt wird zusätzlich als lokale GPS-Spur mit getrennten Abschnitten gespeichert. Die Datenbankmigration erhält vorhandene Fundstellen und Fahrtspuren. Neue automatische Einträge enthalten zusätzlich ursprüngliche GPS-Koordinaten, Fahrtrichtung, geschätzte Verschiebung und Korrekturmethode. Die Erkennungsversion wird je Fundstelle gespeichert. Rohsensorzeitreihen werden nicht gespeichert. Manuelle Einträge enthalten keine erfundenen Sensorwerte. Der Fundstellenexport verwendet UTC-Zeitpunkte und dokumentierte SI-Einheiten beziehungsweise km/h und enthält keine Fahrtspur.
 
 ## Verwendete Kartenbibliothek
 

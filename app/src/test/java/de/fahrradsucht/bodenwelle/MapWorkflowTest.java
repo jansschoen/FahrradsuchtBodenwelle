@@ -29,6 +29,7 @@ public class MapWorkflowTest {
         context = RuntimeEnvironment.getApplication();
         context.deleteDatabase("findings.db");
         RecordingService.running = false;
+        OsmEnricher.enabled(RuntimeEnvironment.getApplication(), false);
     }
     @After public void after() { context.deleteDatabase("findings.db"); }
 

@@ -42,7 +42,6 @@ public final class MainActivity extends Activity {
     private static final int MAP_LOCATION = 12;
     private static final int GREEN = Color.rgb(8, 127, 115);
     private static final int INK = Color.rgb(27, 48, 46);
-    private static final String[] CATEGORIES = {"Ungeklärt", "Bodenwelle", "Wurzel", "Schiefe Bodenplatte", "Straßenschaden", "Sonstiges"};
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy · HH:mm").withZone(ZoneId.of("Europe/Berlin"));
     private final Handler handler = new Handler(Looper.getMainLooper());
     private FindingStore store;
@@ -52,6 +51,7 @@ public final class MainActivity extends Activity {
     private TextView lastAction;
     private boolean displayedRunning;
     private int displayedCount = -1;
+    private long displayedRevision = -1;
     private boolean pendingStart;
     private RideMapPanel mapPanel;
     private boolean openMapAfterStart;
@@ -86,6 +86,7 @@ public final class MainActivity extends Activity {
         super.onResume(); resumed = true;
         if (mapPanel != null) mapPanel.resume();
         handler.post(tick); handler.post(this::startIfResumed);
+        OsmEnricher.pending(this);
     }
     @Override public void onPause() {
         resumed = false; handler.removeCallbacks(tick);
@@ -96,7 +97,7 @@ public final class MainActivity extends Activity {
     private final Runnable tick = new Runnable() {
         @Override public void run() {
             int count = store.count();
-            if (displayedRunning != RecordingService.running || (!RecordingService.running && count != displayedCount)) render();
+            if (displayedRunning != RecordingService.running || (!RecordingService.running && (count != displayedCount || displayedRevision != store.revision()))) render();
             rideStatus.setText(RecordingService.status);
             rideCount.setText(getResources().getQuantityString(R.plurals.finding_count, count, count));
             lastAction.setText(RecordingService.lastAction);
@@ -118,6 +119,7 @@ public final class MainActivity extends Activity {
         if (mapPanel != null) mapPanel.destroy();
         displayedRunning = RecordingService.running;
         displayedCount = store.count();
+        displayedRevision = store.revision();
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
         scroll.setBackgroundColor(Color.rgb(244, 247, 245));
@@ -175,6 +177,15 @@ public final class MainActivity extends Activity {
                 () -> new AlertDialog.Builder(this).setTitle("Fahrtspur löschen?")
                         .setMessage("Die gespeicherte Strecke wird von diesem Handy entfernt. Deine Fundstellen bleiben erhalten.")
                         .setNegativeButton("Abbrechen", null).setPositiveButton("Löschen", (d, w) -> { store.clearRoute(); render(); }).show());
+        CheckBox geodata = new CheckBox(this);
+        geodata.setText(R.string.geodata_toggle);
+        geodata.setChecked(OsmEnricher.enabled(this)); privacy.addView(geodata);
+        geodata.setOnCheckedChangeListener((box, enabled) -> { OsmEnricher.enabled(this, enabled); if (enabled) OsmEnricher.pending(this); });
+        addText(privacy, "Geodatenabfragen senden den Kartenausschnitt um eine Fundstelle und deine IP-Adresse an overpass-api.de. Keine Notizen oder Sensorwerte werden übertragen. OSM-Angaben sind Vorschläge, keine rechtliche Bewertung.", 14, INK, false);
+        button(privacy, "Fehlende OSM-Angaben ergänzen", false, () -> {
+            if (!OsmEnricher.enabled(this)) { toast("Bitte die OSM-Ergänzung einschalten."); return; }
+            OsmEnricher.pending(this); toast("OSM-Ergänzung angefragt. Offline bleibt alles auf dem Handy gespeichert.");
+        });
         addText(privacy, "Die Erkennung ist noch im Test. Sie misst weder die Höhe einer Bodenwelle noch, ob ein Regelverstoß vorliegt.", 14, INK, false);
     }
 
@@ -199,10 +210,14 @@ public final class MainActivity extends Activity {
         for (Finding f : findings) {
             if (shown++ >= 100) break;
             LinearLayout item = card(content);
-            String category = "Ungeklärt".equals(f.category()) ? "Noch nicht zugeordnet" : f.category();
+            String category = Classification.label(Classification.BUMPS, f.category());
             addText(item, (f.reviewed() ? "✓ Geprüft · " : "Offen · ") + category, 18, INK, true);
             addText(item, DATE.format(Instant.ofEpochMilli(f.timeMillis())), 14, INK, false);
             addText(item, "manual".equals(f.source()) ? "Von dir markiert" : "Automatisch erfasst – bitte vor Ort zuordnen", 14, INK, false);
+            Intensity intensity = f.details().intensity();
+            TextView rating = addText(item, intensity.label(), 15, intensity.level() <= 1 || intensity.level() == 5 ? Color.WHITE : INK, true);
+            rating.setBackgroundColor(intensity.color()); rating.setPadding(dp(8), dp(6), dp(8), dp(6));
+            addText(item, GeodataDescription.summary(f.details()), 14, INK, false);
             if (f.position().projected()) addText(item, "Position auf den Zeitpunkt der Erschütterung geschätzt", 14, GREEN, false);
             if (!f.note().isEmpty()) addText(item, f.note(), 15, INK, false);
             else addText(item, "Ergänze, was du an dieser Stelle gesehen hast.", 15, INK, false);
@@ -219,6 +234,14 @@ public final class MainActivity extends Activity {
             } else if ("automatic".equals(f.source()) && !"legacy_gps".equals(f.position().method())) {
                 addText(details, "Die ursprüngliche GPS-Position bleibt erhalten: keine zeitliche Verschiebung nötig oder keine brauchbare Richtung/Geschwindigkeit verfügbar.", 14, INK, false);
             }
+            if (!f.details().legacyCategory().isEmpty()) addText(details, "Frühere Angabe: " + f.details().legacyCategory(), 14, INK, false);
+            Intensity score = f.details().intensity();
+            addText(details, "Bewertungsgrundlage: " + (score.value() == null ? "keine Messung" : score.value() + " " + score.unit()) + " · " + score.method(), 14, INK, false);
+            for (int i = 0; i < Classification.HAZARDS.length; i++) if ((f.details().hazards() & (1 << i)) != 0)
+                addText(details, "Zusatzmerkmal: " + Classification.HAZARDS[i].label(), 14, INK, false);
+            addText(details, GeodataDescription.details(f.details()), 14, INK, false);
+            if (f.details().osm().queriedAt() > 0 && System.currentTimeMillis() - f.details().osm().queriedAt() > 7L * 24 * 60 * 60 * 1000)
+                addText(details, "OSM-Cache älter als sieben Tage; Angaben können veraltet sein.", 14, INK, false);
             String measurement = f.peak() == null ? "Manuelle Markierung" : String.format(Locale.GERMANY, "Sensorreaktion: %.1f m/s²", f.peak());
             if (f.speed() != null) measurement += String.format(Locale.GERMANY, " · %.1f km/h", f.speed() * 3.6f);
             addText(details, measurement, 14, INK, false);
@@ -310,37 +333,20 @@ public final class MainActivity extends Activity {
     }
 
     private void review(Finding f) {
-        LinearLayout form = column();
-        form.setPadding(dp(20), dp(12), dp(20), 0);
-        addText(form, "Was hast du dort gesehen?", 16, INK, true);
-        Spinner category = new Spinner(this);
-        category.setMinimumHeight(dp(48));
-        category.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, CATEGORIES));
-        for (int i = 0; i < CATEGORIES.length; i++) if (CATEGORIES[i].equals(f.category())) category.setSelection(i);
-        form.addView(category);
-        addText(form, "Beschreibung der Stelle", 16, INK, true);
-        EditText note = new EditText(this);
-        note.setHint("Straße, Fahrtrichtung, sichtbarer Schaden …");
-        note.setText(f.note());
-        note.setMinLines(3);
-        note.setMaxLines(6);
-        note.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE | android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
-        form.addView(note);
-        CheckBox checked = new CheckBox(this);
-        checked.setText(R.string.review_release);
-        checked.setChecked(f.reviewed());
-        form.addView(checked);
-        addText(form, "Nur bestätigen, wenn du die Stelle zuordnen und die Beobachtung beschreiben kannst. Ein Sensorwert allein belegt keinen Schaden.", 14, INK, false);
-        ScrollView scroll = new ScrollView(this);
-        scroll.addView(form);
-        new AlertDialog.Builder(this).setTitle("Fundstelle prüfen").setView(scroll)
+        FindingReviewForm form = new FindingReviewForm(this, f);
+        ScrollView scroll = new ScrollView(this); scroll.addView(form.root);
+        AlertDialog dialog = new AlertDialog.Builder(this).setTitle("Fundstelle prüfen").setView(scroll)
                 .setNegativeButton("Abbrechen", null)
-                .setNeutralButton("Löschen", (dialog, which) -> new AlertDialog.Builder(this).setTitle("Fundstelle löschen?")
-                        .setNegativeButton("Abbrechen", null).setPositiveButton("Löschen", (d, w) -> { store.delete(f.id()); render(); }).show())
-                .setPositiveButton("Speichern", (dialog, which) -> {
-                    store.review(f.id(), category.getSelectedItem().toString(), note.getText().toString().trim(), checked.isChecked());
-                    render();
-                }).show();
+                .setNeutralButton("Löschen", (d, w) -> new AlertDialog.Builder(this).setTitle("Fundstelle löschen?")
+                        .setNegativeButton("Abbrechen", null).setPositiveButton("Löschen", (dd, ww) -> { store.delete(f.id()); render(); }).show())
+                .setPositiveButton("Speichern", null).create();
+        dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            try {
+                store.review(f.id(), form.category(), form.note.getText().toString().trim(), form.release.isChecked(), form.details(f));
+                dialog.dismiss(); render();
+            } catch (IllegalArgumentException e) { form.height.setError(e.getMessage()); toast(e.getMessage()); }
+        }));
+        dialog.show();
     }
 
     private void confirmExport() {

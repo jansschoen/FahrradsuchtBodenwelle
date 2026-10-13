@@ -39,7 +39,7 @@ Neue automatische Fundstellen berücksichtigen die GPS-Fahrtrichtung, Geschwindi
 
 Über **So funktioniert’s** kannst du die drei Schritte jederzeit in der App nachlesen.
 
-Beende die Fahrt. **Auf der Karte ansehen** zeigt die Fundstelle direkt in der integrierten Vollbildkarte. **Fahrtspur ansehen** zeigt den gespeicherten Streckenverlauf. Im Stillstand kannst du die Fundstellen auf der Startseitenkarte antippen, um sie zu prüfen. Orange bedeutet ungeprüft, Grün geprüft. Technische Angaben wie Koordinaten und Sensorwerte findest du unter **Messdetails anzeigen**.
+Beende die Fahrt. **Auf der Karte ansehen** zeigt die Fundstelle direkt in der integrierten Vollbildkarte. **Fahrtspur ansehen** zeigt den gespeicherten Streckenverlauf. Im Stillstand kannst du die Fundstellen auf der Startseitenkarte antippen, um sie zu prüfen. Die Punktfarbe zeigt die Intensitätsklasse von Grün bis Rot; Grau bedeutet keine Messgrundlage. Im Text steht, ob ein Eintrag geprüft ist. Sensorfarben sind nur vorläufige Reaktionsklassen und keine Höhen- oder Gefahrenmessung. Technische Angaben wie Koordinaten und Sensorwerte findest du unter **Messdetails anzeigen**.
 
 Öffne **Stelle prüfen** bei jeder relevanten Stelle. Ergänze Straße, Fahrtrichtung, Bezugspunkt und eine sachliche Beschreibung des sichtbaren Mangels. Entferne Fehlalarme. Aktiviere die Freigabe nur für nachvollziehbare Einträge.
 
@@ -49,9 +49,19 @@ Fundstellen und die zuletzt gestartete Fahrtspur bleiben im privaten App-Speiche
 
 Die Fahrtspur bleibt nach Fahrtende erhalten. Eine neue bestätigte Fahrt ersetzt sie; **Gespeicherte Fahrtspur löschen** entfernt sie separat. Fundstellen bleiben dabei erhalten. Durch Deinstallation gehen die lokalen Einträge verloren. **Alle Fundstellen löschen** entfernt die Fundstellen aus der App, nicht aus bereits exportierten Dateien oder die separat gespeicherte Fahrtspur.
 
+## Neue Klassifizierung und OSM prüfen
+
+Unter **Stelle prüfen** wählst du eine der sieben Unebenheitsarten. Zusätzliche Gefährdungsmerkmale lassen sich einzeln im aufklappbaren Bereich markieren. Eine tatsächlich vor Ort gemessene Höhe kannst du separat in Millimetern ergänzen und ausdrücklich bestätigen. Ohne diese Bestätigung bewertet die App ausschließlich die Sensorreaktion, vorläufig und ohne Höhenumrechnung.
+
+Verkehrsfläche und Oberfläche erscheinen als **OSM-Vorschlag** mit Zuordnungssicherheit. Prüfe gerade bei parallelen Wegen, ob die Fläche plausibel ist. Unter **Verkehrsfläche und Oberfläche prüfen** kannst du beide Angaben unabhängig manuell festlegen. Solche Änderungen bleiben bei späteren OSM-Antworten erhalten. Angaben zur Benutzungspflicht sind Vorschläge aus Kartentags; entscheidend ist die Beschilderung vor Ort, nicht allein OSM.
+
+Auf der Startseite kannst du die automatische Ergänzung abschalten oder **Fehlende OSM-Angaben ergänzen** wählen. Ohne Internet bleiben alle Aufzeichnungen erhalten. Der Geodatenanbieter erhält den Ausschnitt um Fundstellen und deine IP-Adresse. OSM-Abfragen sind begrenzt; bei vielen neuen Gebieten kann die Ergänzung weitere Durchläufe brauchen. Bei „mehrdeutig“ ist eine manuelle Prüfung sinnvoll. Der Live-Abruf wurde aus der Cloud blockiert und muss auf dem Fairphone praktisch überprüft werden.
+
+Mehr zu Skalen, gespeicherten Originaltags und Grenzen steht in [KLASSIFIZIERUNG-OSM.md](KLASSIFIZIERUNG-OSM.md).
+
 ## Nach diesem ersten Versuch
 
-### Update auf 0.2.2
+### Update auf 0.3.0
 
 Installiere die neue APK über die vorhandene Version, damit deine gespeicherten Einträge erhalten bleiben. Prüfe danach draußen **Mein Standort** und die Meterangabe. Tippe auf **Fahrt starten**: Ein Startstatus soll sofort erscheinen, dann die große Karte. Beim Stehen kann die Fahrt bereits laufen, während die automatische Stoßerkennung noch auf Fahrgeschwindigkeit wartet. Manuelle Markierungen sind bei ausreichender aktueller Position möglich.
 

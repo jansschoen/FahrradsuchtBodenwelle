@@ -1,4 +1,5 @@
 <resources>
+    <string name="geodata_toggle">OSM-Verkehrsfläche und Oberfläche automatisch ergänzen</string>
     <string name="sensitivity_summary">Empfindlichkeit einstellen · ab %1$d m/s²</string>
     <string name="sensitivity_hint">Links: weniger Treffer · rechts: mehr Treffer. Die Änderung gilt sofort. Bitte nur im sicheren Stand bedienen.</string>
     <string name="sensitivity_description">Empfindlichkeit: nach rechts wird die Auslöseschwelle niedriger</string>
@@ -12,7 +13,7 @@
     <string name="map_permission">Tippe auf „Mein Standort“, um den genauen Standort zu erlauben.</string>
     <string name="my_location">Mein Standort</string>
     <string name="show_route">Fahrtspur ansehen</string>
-    <string name="map_legend">Türkis: Fahrtspur · Orange: ungeprüft · Grün: geprüft</string>
+    <string name="map_legend">Türkis: Fahrtspur · Punkte: Intensität von Grün bis Rot, Grau ohne Messung. Sensorbewertung vorläufig; keine Höhenmessung.</string>
     <string name="osm_attribution">© OpenStreetMap contributors · Lizenz ansehen</string>
     <string name="route_empty">Die Fahrtspur beginnt, sobald du eine Fahrt startest und GPS verfügbar ist.</string>
     <string name="route_running">Deine aktuelle Fahrt wird lokal aufgezeichnet. GPS-Lücken bleiben unterbrochen.</string>

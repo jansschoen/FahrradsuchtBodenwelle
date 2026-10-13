@@ -45,6 +45,7 @@ public final class RideMapPanel extends LinearLayout {
     private final Runnable requestLocation;
     private final Consumer<Finding> review;
     private final SensitivityControl sensitivity;
+    private long shownRevision = -1;
     private final List<Polyline> lines = new ArrayList<>();
     private final List<Marker> markers = new ArrayList<>();
     private List<RoutePoint> points = new ArrayList<>();
@@ -63,7 +64,7 @@ public final class RideMapPanel extends LinearLayout {
         IConfigurationProvider config = Configuration.getInstance();
         config.setOsmdroidBasePath(base);
         config.setOsmdroidTileCache(cache);
-        config.setUserAgentValue("Bodenwelle/0.2.2 (de.fahrradsucht.bodenwelle; https://github.com/jansschoen/FahrradsuchtBodenwelle)");
+        config.setUserAgentValue("Bodenwelle/0.3.0 (de.fahrradsucht.bodenwelle; https://github.com/jansschoen/FahrradsuchtBodenwelle)");
         config.setTileDownloadThreads((short) 2);
         config.setTileFileSystemCacheMaxBytes(60 * 1024 * 1024L);
         config.setTileFileSystemCacheTrimBytes(48 * 1024 * 1024L);
@@ -165,7 +166,8 @@ public final class RideMapPanel extends LinearLayout {
             }
         }
         int findings = store.count();
-        if (shownFindingCount != findings) {
+        if (shownFindingCount != findings || shownRevision != store.revision()) {
+            shownRevision = store.revision();
             shownFindingCount = findings;
             for (Marker marker : markers) { marker.closeInfoWindow(); marker.onDetach(map); }
             map.getOverlays().removeAll(markers); markers.clear();
@@ -178,11 +180,11 @@ public final class RideMapPanel extends LinearLayout {
                 GradientDrawable icon = new GradientDrawable();
                 icon.setShape(GradientDrawable.OVAL);
                 icon.setSize(dp(20), dp(20));
-                icon.setColor(finding.reviewed() ? Color.rgb(22, 109, 56) : Color.rgb(189, 87, 10));
+                icon.setColor(finding.details().intensity().color());
                 icon.setStroke(dp(2), Color.WHITE);
                 marker.setIcon(icon);
                 marker.setTitle(finding.reviewed() ? "Geprüfte Fundstelle" : "Ungeprüfte Fundstelle");
-                marker.setSnippet(finding.category() + (finding.note().isEmpty() ? "" : " · " + finding.note()));
+                marker.setSnippet(Classification.label(Classification.BUMPS, finding.category()) + " · " + finding.details().intensity().label() + (finding.note().isEmpty() ? "" : " · " + finding.note()));
                 marker.setOnMarkerClickListener((m, view) -> {
                     if (review != null && !RecordingService.running) review.accept(finding);
                     else m.showInfoWindow();

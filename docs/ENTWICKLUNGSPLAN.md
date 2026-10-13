@@ -26,6 +26,12 @@ Neue automatische Positionen werden über eine geodätische Projektion aus GPS-K
 
 Die aktuelle App speichert keine Rohsensorzeitreihen und berechnet keine Bodenwellenhöhe. Anforderungen an einen späteren Kalibrierungsmodus beschreibt [HOEHENMESSUNG.md](HOEHENMESSUNG.md).
 
+## Version 0.3: Klassifizierung und Geodaten
+
+Sieben stabile Unebenheitskategorien ersetzen die früheren Angaben. Eindeutige alte Kategorien werden zugeordnet; bei allgemeinen oder unbekannten Angaben bleibt der ursprüngliche Text zusätzlich erhalten. Intensität verwendet entweder ausdrücklich bestätigte Vor-Ort-Höhenmessungen in Millimetern oder eine getrennte vorläufige Sensorreaktionsskala. Gefährdungsmerkmale werden unabhängig gespeichert.
+
+Eine begrenzte Overpass-Anbindung ergänzt OSM-Verkehrsfläche und Oberfläche mit Cache und vorsichtiger räumlicher Zuordnung. Mehrdeutige Wege bleiben unbekannt. Manuelle Korrekturen werden bei späteren Antworten erhalten. Die neue Bearbeitung verwendet aufklappbare optionale Bereiche; Karte und Fundstellen zeigen Intensität farblich und textlich. Der Export führt Messmethode, Herkunft und OSM-Attribution mit. Details und Einschränkungen: [KLASSIFIZIERUNG-OSM.md](KLASSIFIZIERUNG-OSM.md).
+
 ## Nächste Schritte nach echten Fahrdaten
 
 1. Bekannte Stellen und glatte Vergleichsabschnitte erfassen; Fehlalarme und Auslassungen nachvollziehen. Halterung, Reifendruck und Geschwindigkeit berücksichtigen.

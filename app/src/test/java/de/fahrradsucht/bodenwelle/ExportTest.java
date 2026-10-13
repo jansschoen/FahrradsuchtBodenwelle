@@ -31,6 +31,7 @@ public class ExportTest {
         Finding f = new Finding(2, 0, 52.5, 13.4, 5, null, null, null, "manual", "Straßenschaden", "", true, 500);
         String csv = FindingCsv.exportReviewed(List.of(f));
         assertTrue(csv.contains(",500,,,,\"manual\""));
-        assertFalse(csv.contains("height"));
+        assertEquals(null, f.details().heightMm());
+        assertEquals("sensor_peak_provisional_v1", finding(true, "").details().intensity().method());
     }
 }

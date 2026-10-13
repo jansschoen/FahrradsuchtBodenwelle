@@ -45,6 +45,7 @@ public class RecordingWorkflowTest {
         app.deleteDatabase("findings.db");
         new DetectionPreferences(app).setThreshold(40);
         RecordingService.running = false;
+        OsmEnricher.enabled(RuntimeEnvironment.getApplication(), false);
         RecordingService.status = "Noch keine Fahrt gestartet.";
         RecordingService.lastAction = "";
         RecordingService.startFailure = "";

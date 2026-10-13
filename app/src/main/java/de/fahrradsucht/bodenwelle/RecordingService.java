@@ -69,7 +69,8 @@ public final class RecordingService extends Service implements SensorEventListen
         if (intent != null && MARK.equals(intent.getAction())) {
             if (running && usableLocation()) {
                 try {
-                    store.insert(latest, null);
+                    long id = store.insert(latest, null);
+                    OsmEnricher.enqueue(this, id);
                     lastAction = "Stelle markiert – bitte nach der Fahrt prüfen.";
                 } catch (RuntimeException e) {
                     lastAction = "Speichern fehlgeschlagen. Bitte verfügbaren Speicher prüfen.";
@@ -171,7 +172,8 @@ public final class RecordingService extends Service implements SensorEventListen
         BumpDetector.Detection detection = detector.accept(event.timestamp / 1_000_000L, vertical, eligible());
         if (detection != null && latest != null) {
             try {
-                store.insert(latest, detection);
+                long id = store.insert(latest, detection);
+                OsmEnricher.enqueue(this, id);
                 lastAction = "Verdachtsstelle erfasst – noch ungeprüft.";
             } catch (RuntimeException e) {
                 status = "Speichern fehlgeschlagen. Aufzeichnung beendet; Speicher prüfen.";
