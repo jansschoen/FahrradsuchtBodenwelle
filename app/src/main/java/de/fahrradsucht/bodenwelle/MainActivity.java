@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -54,6 +55,11 @@ public final class MainActivity extends Activity {
     private boolean pendingStart;
     private RideMapPanel mapPanel;
     private boolean openMapAfterStart;
+    private boolean resumed;
+    private boolean startWhenResumed;
+    private long serviceRequestedAt;
+    private TextView startStatus;
+    private Button startButton;
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -61,6 +67,8 @@ public final class MainActivity extends Activity {
         if (state != null) {
             pendingStart = state.getBoolean("pendingStart");
             openMapAfterStart = state.getBoolean("openMapAfterStart");
+            startWhenResumed = state.getBoolean("startWhenResumed");
+            serviceRequestedAt = state.getLong("serviceRequestedAt");
         }
         if (Build.VERSION.SDK_INT >= 30) getWindow().setDecorFitsSystemWindows(false);
         render();
@@ -69,11 +77,20 @@ public final class MainActivity extends Activity {
     @Override public void onSaveInstanceState(Bundle state) {
         state.putBoolean("pendingStart", pendingStart);
         state.putBoolean("openMapAfterStart", openMapAfterStart);
+        state.putBoolean("startWhenResumed", startWhenResumed);
+        state.putLong("serviceRequestedAt", serviceRequestedAt);
         super.onSaveInstanceState(state);
     }
 
-    @Override public void onResume() { super.onResume(); if (mapPanel != null) mapPanel.resume(); handler.post(tick); }
-    @Override public void onPause() { handler.removeCallbacks(tick); if (mapPanel != null) mapPanel.pause(); super.onPause(); }
+    @Override public void onResume() {
+        super.onResume(); resumed = true;
+        if (mapPanel != null) mapPanel.resume();
+        handler.post(tick); handler.post(this::startIfResumed);
+    }
+    @Override public void onPause() {
+        resumed = false; handler.removeCallbacks(tick);
+        if (mapPanel != null) mapPanel.pause(); super.onPause();
+    }
     @Override public void onDestroy() { if (mapPanel != null) mapPanel.destroy(); store.close(); super.onDestroy(); }
 
     private final Runnable tick = new Runnable() {
@@ -83,10 +100,15 @@ public final class MainActivity extends Activity {
             rideStatus.setText(RecordingService.status);
             rideCount.setText(getResources().getQuantityString(R.plurals.finding_count, count, count));
             lastAction.setText(RecordingService.lastAction);
+            startStatus.setText(RecordingService.status);
             if (mapPanel != null) mapPanel.refresh();
             if (openMapAfterStart && RecordingService.running) {
                 openMapAfterStart = false;
                 startActivity(new Intent(MainActivity.this, MapActivity.class));
+            } else if (openMapAfterStart && !RecordingService.startFailure.isEmpty()) {
+                showStartFailure(RecordingService.startFailure);
+            } else if (openMapAfterStart && android.os.SystemClock.elapsedRealtime() - serviceRequestedAt > 10_000) {
+                showStartFailure("Android hat den Start noch nicht bestätigt. Bitte die App geöffnet lassen und erneut versuchen.");
             }
             handler.postDelayed(this, 1_000);
         }
@@ -115,15 +137,19 @@ public final class MainActivity extends Activity {
         addText(content, "BERLIN · ERSTER FAHRTEST", 12, GREEN, true);
         addText(content, "Bodenwelle", 36, INK, true);
         addText(content, "Unebenheiten aufzeichnen und nach der Fahrt in Ruhe prüfen.", 17, INK, false);
-        if (!displayedRunning) button(content, "Fahrt starten", true, this::confirmStart);
-        else button(content, "Zur Live-Karte", true, () -> startActivity(new Intent(this, MapActivity.class)));
+        if (!displayedRunning) startButton = button(content, "Fahrt starten", true, this::confirmStart);
+        else startButton = button(content, "Zur Live-Karte", true, () -> startActivity(new Intent(this, MapActivity.class)));
+        startButton.setId(R.id.ride_start_button);
+        startStatus = addText(content, RecordingService.status, 15, INK, false);
+        startStatus.setId(R.id.ride_start_status);
+        startStatus.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
         space(content, 12);
         LinearLayout mapCard = card(content);
         addText(mapCard, "Deine Karte", 21, INK, true);
         mapPanel = new RideMapPanel(this, store, () -> requestPermissions(new String[]{
                 Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, MAP_LOCATION), this::review, false);
         mapCard.addView(mapPanel);
-        mapPanel.resume();
+        if (resumed) mapPanel.resume();
         button(mapCard, "Karte vergrößern", false, () -> startActivity(new Intent(this, MapActivity.class)));
         addText(mapCard, "Karten werden aus dem Internet geladen. Deine Fahrtspur bleibt auf diesem Handy.", 14, INK, false);
         LinearLayout ride = card(content);
@@ -236,11 +262,42 @@ public final class MainActivity extends Activity {
     }
 
     private void startRide() {
+        startWhenResumed = true;
+        handler.post(this::startIfResumed);
+    }
+
+    private void startIfResumed() {
+        if (!startWhenResumed || !resumed) return;
+        startWhenResumed = false;
+        if (DeviceLocationSource.enabledProviders(getSystemService(LocationManager.class)).isEmpty()) {
+            RecordingService.status = "Der Standort ist am Handy ausgeschaltet. Bitte einschalten und erneut starten.";
+            startStatus.setText(RecordingService.status);
+            new AlertDialog.Builder(this).setTitle("Standort einschalten")
+                    .setMessage(RecordingService.status).setNegativeButton("Später", null)
+                    .setPositiveButton("Einstellungen öffnen", (d, w) -> startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS))).show();
+            return;
+        }
+        RecordingService.prepareStart();
+        startStatus.setText(RecordingService.status);
+        startButton.setEnabled(false);
         try {
             startForegroundService(new Intent(this, RecordingService.class));
             openMapAfterStart = true;
+            serviceRequestedAt = android.os.SystemClock.elapsedRealtime();
         }
-        catch (RuntimeException e) { toast("Aufzeichnung konnte nicht gestartet werden. Bitte App erneut öffnen und Berechtigungen prüfen."); }
+        catch (RuntimeException e) {
+            showStartFailure("Android konnte die Aufzeichnung nicht starten (" + e.getClass().getSimpleName()
+                    + "). Bitte die App geöffnet lassen und den genauen Standort erlauben.");
+        }
+    }
+
+    private void showStartFailure(String message) {
+        openMapAfterStart = false;
+        RecordingService.status = message;
+        startStatus.setText(message);
+        startButton.setEnabled(true);
+        new AlertDialog.Builder(this).setTitle("Fahrt konnte nicht starten").setMessage(message)
+                .setPositiveButton("Verstanden", null).show();
     }
 
     private void review(Finding f) {

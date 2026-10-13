@@ -9,6 +9,7 @@ Dieser Prototyp sammelt **Verdachtsstellen**. Er bestimmt weder eine Bodenwellen
    Die integrierte OpenStreetMap-Karte zeigt zunächst Berlin. **Mein Standort** erlaubt die genaue Position und folgt dir. **Karte vergrößern** öffnet die Vollbildansicht. Das Laden neuer Kartenausschnitte benötigt Internet; der Kartenanbieter sieht die Anfragen und deine IP-Adresse.
 3. Tippe vor der Fahrt oben auf **Fahrt starten**. Erlaube den **genauen** Standort während der Nutzung und nach Möglichkeit Benachrichtigungen. Die große Kartenansicht öffnet sich nach erfolgreichem Start automatisch. Darin stehen auch **Stelle markieren** und **Fahrt beenden** bereit. Es werden weder ein Konto noch Hintergrund-Standortberechtigung benötigt.
 4. Warte draußen auf eine ausreichend genaue Position. Die Automatik wird erst ab etwa 5 km/h aktiv. Die Anzeige erklärt, wenn GPS oder Geschwindigkeit nicht ausreichen.
+   Unter dem Startknopf steht sofort, ob die Fahrt startet, läuft oder nicht gestartet werden konnte. Die Karte zeigt **Genauigkeit (geschätzt): ± … m** und das Alter der Messung. Die Anzeige aktualisiert sich bei neuen Android-Positionsmessungen; deren Häufigkeit hängt vom Gerät und Empfang ab. Ein kleinerer Meterwert bedeutet eine präzisere Android-Schätzung. „Position veraltet“ bezeichnet eine alte Messung, keine weiterhin garantierte Genauigkeit.
 5. Nach dem Start kann das Display ausgeschaltet werden. Die laufende Aufzeichnung ist über eine Android-Benachrichtigung erkennbar und lässt sich dort beenden. Eine aktive Aufzeichnung verbraucht durch GPS und Sensoren zusätzlichen Strom; sie endet spätestens nach sechs Stunden. Nach Prozessabbruch oder Handy-Neustart startet sie nicht selbstständig erneut.
 
 ## Vergleich statt gefährlicher Testmanöver
@@ -41,5 +42,11 @@ Fundstellen und die zuletzt gestartete Fahrtspur bleiben im privaten App-Speiche
 Die Fahrtspur bleibt nach Fahrtende erhalten. Eine neue bestätigte Fahrt ersetzt sie; **Gespeicherte Fahrtspur löschen** entfernt sie separat. Fundstellen bleiben dabei erhalten. Durch Deinstallation gehen die lokalen Einträge verloren. **Alle Fundstellen löschen** entfernt die Fundstellen aus der App, nicht aus bereits exportierten Dateien oder die separat gespeicherte Fahrtspur.
 
 ## Nach diesem ersten Versuch
+
+### Update von 0.2.0 auf 0.2.1
+
+Installiere die neue APK über die vorhandene Version, damit deine gespeicherten Einträge erhalten bleiben. Prüfe danach draußen **Mein Standort** und die Meterangabe. Tippe auf **Fahrt starten**: Ein Startstatus soll sofort erscheinen, dann die große Karte. Beim Stehen kann die Fahrt bereits laufen, während die automatische Stoßerkennung noch auf Fahrgeschwindigkeit wartet. Manuelle Markierungen sind bei ausreichender aktueller Position möglich.
+
+Falls der Start weiter scheitert, notiere den genauen Text direkt unter dem Startknopf oder im Fehlerdialog. Diese Rückmeldung hilft, die Ursache auf dem Fairphone zu bestimmen. Bitte keine Deinstallation als ersten Diagnoseversuch durchführen, da sie lokale Fundstellen und die Fahrtspur löschen würde.
 
 Für die nächste Entwicklungsrunde brauchen wir vor allem konkrete Fehlalarme und verpasste Stellen aus normalen Fahrten. Die Erschütterungswerte dienen dem Vergleich unter ähnlichen Bedingungen. Eine Zentimeterangabe würde zusätzliche Referenzmessungen und ein validiertes Modell für Reifen, Fahrrad und Befestigung voraussetzen; allein aus Beschleunigung und GPS-Geschwindigkeit ist sie nicht zuverlässig ableitbar.

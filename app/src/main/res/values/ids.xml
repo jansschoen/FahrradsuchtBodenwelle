@@ -1,0 +1,5 @@
+<resources>
+    <item name="location_accuracy" type="id" />
+    <item name="ride_start_status" type="id" />
+    <item name="ride_start_button" type="id" />
+</resources>

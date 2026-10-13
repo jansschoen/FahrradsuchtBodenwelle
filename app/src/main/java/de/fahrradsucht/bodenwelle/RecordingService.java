@@ -8,6 +8,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ServiceInfo;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -16,6 +17,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -29,6 +31,7 @@ public final class RecordingService extends Service implements SensorEventListen
     public static volatile boolean running;
     public static volatile String status = "Noch keine Fahrt gestartet.";
     public static volatile String lastAction = "";
+    public static volatile String startFailure = "";
     private static final String CHANNEL = "ride";
     private final AccelerationProjector projector = new AccelerationProjector();
     private final BumpDetector detector = new BumpDetector();
@@ -36,6 +39,7 @@ public final class RecordingService extends Service implements SensorEventListen
     private final Handler handler = new Handler(Looper.getMainLooper());
     private SensorManager sensors;
     private LocationManager locations;
+    private DeviceLocationSource locationSource;
     private FindingStore store;
     private Location latest;
     private PowerManager.WakeLock wakeLock;
@@ -48,12 +52,14 @@ public final class RecordingService extends Service implements SensorEventListen
         store = new FindingStore(this);
         sensors = getSystemService(SensorManager.class);
         locations = getSystemService(LocationManager.class);
+        locationSource = new DeviceLocationSource(this, this::onLocationChanged);
         getSystemService(NotificationManager.class).createNotificationChannel(
                 new NotificationChannel(CHANNEL, "Fahrtaufzeichnung", NotificationManager.IMPORTANCE_LOW));
     }
 
     @Override public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && STOP.equals(intent.getAction())) {
+            running = false;
             status = "Fahrt beendet. Fundstellen bleiben auf diesem Handy.";
             stopSelf();
             return START_NOT_STICKY;
@@ -72,39 +78,47 @@ public final class RecordingService extends Service implements SensorEventListen
             return START_NOT_STICKY;
         }
         if (running) return START_NOT_STICKY;
+        startFailure = "";
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            status = "Für die Aufzeichnung ist genauer Standortzugriff erforderlich.";
-            stopSelf();
-            return START_NOT_STICKY;
-        }
-        startForeground(1, notification("GPS wird gesucht …"));
-        Sensor accelerometer = sensors.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        if (accelerometer == null || !sensors.registerListener(this, accelerometer, 10_000)) {
-            status = "Kein nutzbarer Beschleunigungssensor gefunden.";
-            stopSelf();
+            failStart("Für die Aufzeichnung ist genauer Standortzugriff erforderlich.");
             return START_NOT_STICKY;
         }
         try {
-            if (!locations.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                status = "Bitte den Standort / GPS am Handy einschalten.";
-                stopSelf();
+            if (Build.VERSION.SDK_INT >= 29)
+                startForeground(1, notification("Fahrt wird gestartet …"), ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
+            else startForeground(1, notification("Fahrt wird gestartet …"));
+        } catch (RuntimeException e) {
+            failStart("Android konnte die Aufzeichnung nicht starten (" + e.getClass().getSimpleName() + "). Bitte die App geöffnet lassen und erneut versuchen.");
+            return START_NOT_STICKY;
+        }
+        Sensor accelerometer = sensors.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        if (accelerometer == null || !sensors.registerListener(this, accelerometer, 10_000)) {
+            failStart("Kein nutzbarer Beschleunigungssensor gefunden.");
+            return START_NOT_STICKY;
+        }
+        try {
+            if (DeviceLocationSource.enabledProviders(locations).isEmpty()) {
+                failStart("Der Standort ist am Handy ausgeschaltet. Bitte einschalten und erneut starten.");
                 return START_NOT_STICKY;
             }
-            locations.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1_000, 0, this, Looper.getMainLooper());
         } catch (SecurityException | IllegalArgumentException e) {
-            status = "GPS konnte nicht gestartet werden. Standortberechtigung prüfen.";
-            stopSelf();
+            failStart("Der Standortzugriff ist nicht verfügbar. Bitte den genauen Standort für Bodenwelle erlauben.");
             return START_NOT_STICKY;
         }
         try { store.clearRoute(); }
         catch (RuntimeException e) {
-            status = "Fahrtspur konnte nicht vorbereitet werden. Bitte Speicher prüfen.";
-            stopSelf(); return START_NOT_STICKY;
+            failStart("Fahrtspur konnte nicht vorbereitet werden. Bitte Speicher prüfen.");
+            return START_NOT_STICKY;
         }
         running = true;
         startedAt = SystemClock.elapsedRealtime();
-        status = "GPS wird gesucht …";
+        status = "Fahrt läuft · Standort wird gesucht …";
         lastAction = "";
+        if (!locationSource.start()) {
+            running = false;
+            failStart("Keine Standortquelle konnte gestartet werden. Bitte Standort und Berechtigungen prüfen.");
+            return START_NOT_STICKY;
+        }
         wakeLock = getSystemService(PowerManager.class).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Bodenwelle:ride");
         // Screen-off sensor sampling; bounded recording to avoid forgotten battery use.
         wakeLock.acquire(6 * 60 * 60 * 1_000L);
@@ -139,11 +153,11 @@ public final class RecordingService extends Service implements SensorEventListen
     }
 
     private void refreshStatus() {
-        if (latest == null) status = "GPS wird gesucht – draußen kurz warten.";
-        else if (!usableLocation()) status = "Automatik pausiert: GPS zu ungenau oder veraltet.";
+        if (latest == null) status = "Fahrt läuft · Standort wird gesucht. Draußen kurz warten.";
+        else if (!usableLocation()) status = "Fahrt läuft · Automatik wartet auf einen aktuellen, genaueren Standort.";
         else if (SystemClock.elapsedRealtime() - startedAt > 3_000 && SystemClock.elapsedRealtime() - lastSensorAt > 3_000)
-            status = "Automatik pausiert: keine aktuellen Sensordaten.";
-        else if (!eligible()) status = "Automatik pausiert: Geschwindigkeit fehlt, ist ungenau oder unter 5 km/h.";
+            status = "Fahrt läuft · Automatik wartet auf Sensordaten.";
+        else if (!eligible()) status = "Fahrt läuft · Automatik wird bei genauer Position und Fahrgeschwindigkeit ab etwa 5 km/h aktiv.";
         else status = String.format(Locale.GERMANY, "Aufzeichnung · %.1f km/h · GPS ± %.0f m", latest.getSpeed() * 3.6, latest.getAccuracy());
     }
 
@@ -207,11 +221,18 @@ public final class RecordingService extends Service implements SensorEventListen
         running = false;
         handler.removeCallbacksAndMessages(null);
         if (sensors != null) sensors.unregisterListener(this);
-        if (locations != null) locations.removeUpdates(this);
+        if (locationSource != null) locationSource.stop();
         if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
         if (store != null) store.close();
         stopForeground(STOP_FOREGROUND_REMOVE);
         super.onDestroy();
+    }
+    private void failStart(String message) {
+        status = message; startFailure = message; stopSelf();
+    }
+
+    public static void prepareStart() {
+        startFailure = ""; status = "Fahrt wird gestartet …";
     }
     @Override public IBinder onBind(Intent intent) { return null; }
 }

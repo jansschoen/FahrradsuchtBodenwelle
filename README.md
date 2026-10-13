@@ -16,9 +16,16 @@ Für eine spätere breite öffentliche Veröffentlichung ist die aktuelle [OSM-K
 
 ## Auf dem Fairphone ausprobieren
 
-**[Android-Testversion 0.2.0 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.2.0.apk)**
+**[Android-Testversion 0.2.1 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.2.1.apk)**
 
-Öffne die heruntergeladene APK auf deinem Android-Handy. Falls Android danach fragt, erlaube die Installation aus dieser Quelle. Die [kurze Installationsanleitung](downloads/INSTALLATION.md) und die [SHA-256-Prüfsumme](downloads/SHA256SUMS) liegen neben der APK. Dies ist eine Debug-Testversion; eine reale Funktionsprüfung auf dem Fairphone steht noch aus.
+Öffne die heruntergeladene APK auf deinem Android-Handy. Falls Android danach fragt, erlaube die Installation aus dieser Quelle. Die [kurze Installationsanleitung](downloads/INSTALLATION.md) und die [SHA-256-Prüfsummen](downloads/SHA256SUMS) liegen neben der APK. Version 0.2.1 verwendet dieselbe App-ID und Signatur wie 0.2.0 und ist als Update über die vorhandene Installation vorgesehen. Eine Deinstallation würde die lokalen Daten löschen. Dies ist eine Debug-Testversion; die Korrekturen müssen auf dem Fairphone noch praktisch überprüft werden.
+
+### Korrekturen in 0.2.1
+
+- Karte und Aufzeichnung verwenden dieselbe Auswahl von GPS-, Netz- und verfügbaren kombinierten Android-Standortquellen. Nur aktuelle zwischengespeicherte Positionen werden übernommen; grobe Netzpositionen verdrängen keine aktuelle präzisere GPS-Position.
+- Die Karte zeigt die geschätzte Genauigkeit in Metern sowie das Alter der Messung an. Neue Positionsmessungen aktualisieren die Anzeige unmittelbar; fehlende, ungefähre und veraltete Messungen werden unterschieden.
+- Der Startzustand steht direkt unter dem Startknopf. Ausgeschalteter Standort und Startfehler werden sichtbar erklärt. Nach einem Berechtigungsdialog wartet die Startanforderung darauf, dass die App wieder im Vordergrund ist.
+- Erweiterte Robolectric-Tests auf Android 9 und Android 15 prüfen den Weg vom Startknopf zum Dienst und zur Karte sowie echte Standort- und Sensorkallbacks bis zur SQLite-Speicherung. Das simulierte Android-Framework ersetzt keinen Gerätetest; die genaue Ursache des ursprünglich gemeldeten Fairphone-Verhaltens ist ohne Gerätelogs nicht nachgewiesen.
 
 Installierbare Testdatei nach dem Build: `app/build/outputs/apk/debug/app-debug.apk`.
 

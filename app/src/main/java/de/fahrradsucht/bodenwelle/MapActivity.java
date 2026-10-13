@@ -63,9 +63,8 @@ public final class MapActivity extends Activity {
     private final Runnable tick = new Runnable() {
         @Override public void run() {
             panel.refresh();
-            status.setText(RecordingService.running ? RecordingService.status
-                    + (RecordingService.lastAction.isEmpty() ? "" : "\n" + RecordingService.lastAction)
-                    : getString(R.string.route_not_recording));
+            status.setText(!RecordingService.running || RecordingService.lastAction.isEmpty()
+                    ? RecordingService.status : getString(R.string.ride_status_with_action, RecordingService.status, RecordingService.lastAction));
             rideControls.setVisibility(RecordingService.running ? View.VISIBLE : View.GONE);
             handler.postDelayed(this, 1_000);
         }

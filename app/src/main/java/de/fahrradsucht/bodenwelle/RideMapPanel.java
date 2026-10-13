@@ -8,6 +8,7 @@ import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.location.Location;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.SystemClock;
 import android.view.MotionEvent;
@@ -25,7 +26,6 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.Polyline;
-import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 import java.io.File;
 import java.util.ArrayList;
@@ -39,6 +39,7 @@ public final class RideMapPanel extends LinearLayout {
     private final FindingStore store;
     private final MapView map;
     private final MyLocationNewOverlay position;
+    private final MapLocationProvider provider;
     private final TextView locationStatus;
     private final TextView routeStatus;
     private final Runnable requestLocation;
@@ -61,7 +62,7 @@ public final class RideMapPanel extends LinearLayout {
         IConfigurationProvider config = Configuration.getInstance();
         config.setOsmdroidBasePath(base);
         config.setOsmdroidTileCache(cache);
-        config.setUserAgentValue("Bodenwelle/0.2.0 (de.fahrradsucht.bodenwelle; https://github.com/jansschoen/FahrradsuchtBodenwelle)");
+        config.setUserAgentValue("Bodenwelle/0.2.1 (de.fahrradsucht.bodenwelle; https://github.com/jansschoen/FahrradsuchtBodenwelle)");
         config.setTileDownloadThreads((short) 2);
         config.setTileFileSystemCacheMaxBytes(60 * 1024 * 1024L);
         config.setTileFileSystemCacheTrimBytes(48 * 1024 * 1024L);
@@ -85,13 +86,14 @@ public final class RideMapPanel extends LinearLayout {
         };
         frame.addView(map, new FrameLayout.LayoutParams(-1, -1));
         addView(frame, fullScreen ? new LayoutParams(-1, 0, 1) : new LayoutParams(-1, dp(280)));
-        GpsMyLocationProvider provider = new GpsMyLocationProvider(activity);
-        provider.setLocationUpdateMinTime(1_000);
+        provider = new MapLocationProvider(activity, () -> post(this::refreshPositionStatus));
         position = new MyLocationNewOverlay(provider, map);
         position.setDrawAccuracyEnabled(true);
         position.enableFollowLocation();
         map.getOverlays().add(position);
         locationStatus = text(activity.getString(R.string.map_waiting), 14);
+        locationStatus.setId(R.id.location_accuracy);
+        locationStatus.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
         routeStatus = text("", 14);
         LinearLayout controls = new LinearLayout(activity);
         controls.setOrientation(HORIZONTAL);
@@ -116,7 +118,8 @@ public final class RideMapPanel extends LinearLayout {
     public void destroy() { pause(); map.onDetach(); }
 
     private void enablePosition() {
-        if (activity.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (activity.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                || activity.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             try { position.enableMyLocation(); }
             catch (SecurityException e) { locationStatus.setText(R.string.map_permission); }
         } else locationStatus.setText(R.string.map_permission);
@@ -129,7 +132,7 @@ public final class RideMapPanel extends LinearLayout {
         enablePosition();
         position.enableFollowLocation();
         map.getController().setZoom(17.0);
-        Location fix = position.getLastFix();
+        Location fix = provider.getLastKnownLocation();
         if (fix != null && age(fix) <= 10_000) map.getController().animateTo(new GeoPoint(fix));
         else locationStatus.setText(R.string.map_waiting);
     }
@@ -184,16 +187,31 @@ public final class RideMapPanel extends LinearLayout {
                 markers.add(marker); map.getOverlays().add(marker);
             }
         }
-        Location fix = position.getLastFix();
-        if (activity.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-            locationStatus.setText(R.string.map_permission);
-        else if (fix == null) locationStatus.setText(R.string.map_waiting);
-        else if (age(fix) < 0 || age(fix) > 10_000) locationStatus.setText(R.string.map_stale);
-        else locationStatus.setText(R.string.map_current);
+        refreshPositionStatus();
         routeStatus.setText(points.isEmpty() ? R.string.route_empty : (RecordingService.running ? R.string.route_running : R.string.route_saved));
         // Draw the position over the route and finding markers.
         map.getOverlays().remove(position); map.getOverlays().add(position);
         map.invalidate();
+    }
+
+    private void refreshPositionStatus() {
+        if (locationStatus == null) return;
+        boolean fine = activity.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+        boolean coarse = activity.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+        Location fix = provider.getLastKnownLocation();
+        locationStatus.setTextColor(Color.rgb(27, 48, 46));
+        if (!fine && !coarse) locationStatus.setText(R.string.map_permission);
+        else if (DeviceLocationSource.enabledProviders(activity.getSystemService(LocationManager.class)).isEmpty())
+            locationStatus.setText(R.string.map_location_disabled);
+        else if (fix == null) locationStatus.setText(R.string.map_waiting);
+        else if (age(fix) < 0 || age(fix) > 10_000) {
+            locationStatus.setText(activity.getString(R.string.map_accuracy_stale, fix.getAccuracy(), Math.max(0, age(fix) / 1000.0)));
+            locationStatus.setTextColor(Color.rgb(143, 72, 7));
+        } else {
+            locationStatus.setText(activity.getString(fine ? R.string.map_accuracy_live : R.string.map_accuracy_approximate,
+                    fix.getAccuracy(), age(fix) / 1000.0));
+            locationStatus.setTextColor(fix.getAccuracy() <= 25 ? TEAL : Color.rgb(143, 72, 7));
+        }
     }
 
     private void addLine(List<GeoPoint> segment) {

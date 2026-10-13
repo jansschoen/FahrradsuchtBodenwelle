@@ -1,9 +1,11 @@
 <resources>
     <string name="map_description">OpenStreetMap-Karte mit Standort, Fahrtspur und Fundstellen</string>
-    <string name="map_waiting">Aktuelle Position wird gesucht. Bitte draußen kurz warten.</string>
+    <string name="map_waiting">Genauigkeit: noch keine Messung. Standort wird gesucht; draußen kurz warten.</string>
+    <string name="map_location_disabled">Standort am Handy ausgeschaltet. Bitte in den Einstellungen einschalten.</string>
+    <string name="map_accuracy_live">Genauigkeit (geschätzt): ± %1$.0f m · Messung vor %2$.0f s</string>
+    <string name="map_accuracy_stale">Position veraltet · letzte Genauigkeit: ± %1$.0f m · vor %2$.0f s</string>
+    <string name="map_accuracy_approximate">Nur ungefährer Standort: ± %1$.0f m · vor %2$.0f s. Für eine Fahrt bitte den genauen Standort erlauben.</string>
     <string name="map_permission">Tippe auf „Mein Standort“, um den genauen Standort zu erlauben.</string>
-    <string name="map_stale">Kein aktueller Standort. Die letzte angezeigte Position kann veraltet sein.</string>
-    <string name="map_current">Die Standortmarkierung zeigt deine Position. Der Kreis zeigt die GPS-Unsicherheit.</string>
     <string name="my_location">Mein Standort</string>
     <string name="show_route">Fahrtspur ansehen</string>
     <string name="map_legend">Türkis: Fahrtspur · Orange: ungeprüft · Grün: geprüft</string>
@@ -14,7 +16,7 @@
     <string name="back_to_ride">Zurück zur Fahrt</string>
     <string name="mark_place">Stelle markieren</string>
     <string name="stop_ride">Fahrt beenden</string>
-    <string name="route_not_recording">Keine laufende Fahrt. Die Karte bleibt zum Ansehen verfügbar.</string>
+    <string name="ride_status_with_action">%1$s\n%2$s</string>
     <string name="review_release">Stelle geprüft und für den Export freigegeben</string>
     <string name="show_details">Messdetails anzeigen</string>
     <string name="hide_details">Messdetails ausblenden</string>
