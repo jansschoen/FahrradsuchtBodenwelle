@@ -247,6 +247,34 @@ public class RecordingWorkflowTest {
         }
     }
 
+    @Test public void switchingTabsKeepsTheNativeRecorderAndPreventsBulkDeletionDuringTheRide() {
+        RecordingService recording = start(); recording.onLocationChanged(fix(LocationManager.GPS_PROVIDER, 5));
+        try (ActivityController<MainActivity> controller = Robolectric.buildActivity(MainActivity.class).setup()) {
+            controller.get().findViewById(R.id.nav_more).performClick(); controller.get().findViewById(R.id.menu_data).performClick();
+            android.app.AlertDialog menu = org.robolectric.shadows.ShadowAlertDialog.getLatestAlertDialog();
+            assertFalse(menu.findViewById(R.id.delete_route).isEnabled()); assertFalse(menu.findViewById(R.id.delete_all).isEnabled());
+            assertTrue(RecordingService.running); assertTrue(Shadows.shadowOf(sensors).hasListener(recording)); menu.dismiss();
+            controller.get().findViewById(R.id.nav_ride).performClick();
+            findButton(controller.get().findViewById(android.R.id.content), "Stelle markieren").performClick();
+            Intent mark = Shadows.shadowOf(app).getNextStartedService(); assertEquals(RecordingService.MARK, mark.getAction());
+            recording.onStartCommand(mark, 0, 2);
+            try (FindingStore store = new FindingStore(app)) { assertEquals(1, store.count()); }
+            assertTrue(RecordingService.running);
+        }
+    }
+
+    @Test public void permissionResultStartsRideEvenWhenUserHasSwitchedToMore() {
+        Shadows.shadowOf(app).denyPermissions(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION);
+        try (ActivityController<MainActivity> controller = Robolectric.buildActivity(MainActivity.class).setup()) {
+            controller.get().findViewById(R.id.ride_start_button).performClick(); controller.get().findViewById(R.id.nav_more).performClick();
+            Shadows.shadowOf(app).grantPermissions(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION);
+            controller.get().onRequestPermissionsResult(10, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, new int[]{android.content.pm.PackageManager.PERMISSION_GRANTED});
+            Shadows.shadowOf(Looper.getMainLooper()).idle();
+            assertNotNull(Shadows.shadowOf(app).getNextStartedService());
+            controller.get().findViewById(R.id.nav_ride).performClick(); assertFalse(controller.get().findViewById(R.id.ride_start_button).isEnabled());
+        }
+    }
+
     private Button findButton(View view, String text) {
         if (view instanceof Button && text.contentEquals(((Button) view).getText())) return (Button) view;
         if (view instanceof ViewGroup) {

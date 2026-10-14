@@ -51,7 +51,7 @@ public class PhotoWorkflowTest {
     @Test public void cameraRequestUsesScopedOutputAndCancellationRemovesRawCapture()throws Exception {
         try(FindingStore s=new FindingStore(app)){finding(s,52.52);}
         try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
-            reviewButton(c.get().findViewById(android.R.id.content)).performClick();AlertDialog dialog=ShadowAlertDialog.getLatestAlertDialog();dialog.findViewById(R.id.photo_capture).performClick();
+            c.get().findViewById(R.id.nav_findings).performClick();reviewButton(c.get().findViewById(android.R.id.content)).performClick();AlertDialog dialog=ShadowAlertDialog.getLatestAlertDialog();dialog.findViewById(R.id.photo_capture).performClick();
             org.robolectric.shadows.ShadowActivity.IntentForResult request=Shadows.shadowOf(c.get()).getNextStartedActivityForResult();assertEquals(android.provider.MediaStore.ACTION_IMAGE_CAPTURE,request.intent.getAction());
             android.net.Uri uri=request.intent.getParcelableExtra(android.provider.MediaStore.EXTRA_OUTPUT);assertEquals("content",uri.getScheme());assertTrue((request.intent.getFlags()&Intent.FLAG_GRANT_WRITE_URI_PERMISSION)!=0);assertEquals(uri,request.intent.getClipData().getItemAt(0).getUri());
             try(java.io.OutputStream out=app.getContentResolver().openOutputStream(uri,"w")){out.write(new byte[]{1,2,3});}c.get().onActivityResult(request.requestCode,android.app.Activity.RESULT_CANCELED,null);assertFalse(PhotoFiles.captureFile(app,uri.getLastPathSegment()).exists());
@@ -61,7 +61,7 @@ public class PhotoWorkflowTest {
     @Test public void photoPickerUsesUserSelectedImagesWithoutBroadPhotoLibraryPermission() {
         try(FindingStore s=new FindingStore(app)){finding(s,52.52);}
         try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
-            reviewButton(c.get().findViewById(android.R.id.content)).performClick();AlertDialog dialog=ShadowAlertDialog.getLatestAlertDialog();dialog.findViewById(R.id.photo_pick).performClick();
+            c.get().findViewById(R.id.nav_findings).performClick();reviewButton(c.get().findViewById(android.R.id.content)).performClick();AlertDialog dialog=ShadowAlertDialog.getLatestAlertDialog();dialog.findViewById(R.id.photo_pick).performClick();
             Intent intent=Shadows.shadowOf(c.get()).getNextStartedActivityForResult().intent;assertEquals(Intent.ACTION_OPEN_DOCUMENT,intent.getAction());assertEquals("image/*",intent.getType());assertTrue(intent.getBooleanExtra(Intent.EXTRA_ALLOW_MULTIPLE,false));dialog.dismiss();
         }
     }
@@ -72,7 +72,7 @@ public class PhotoWorkflowTest {
         }
     }
     private CheckBox photoCheckbox(View v){if(v instanceof CheckBox b&&b.getText().toString().startsWith("Stelle-01-Foto-01"))return b;if(v instanceof ViewGroup group)for(int i=0;i<group.getChildCount();i++){CheckBox b=photoCheckbox(group.getChildAt(i));if(b!=null)return b;}return null;}
-    private Button reviewButton(View v){return button(v,"Stelle prüfen und Fotos ergänzen");}
+    private Button reviewButton(View v){return button(v,"Prüfen & Fotos");}
     private Button confirmButton(View v){return button(v,"Als dieselbe Fundstelle bestätigen");}
     private Button button(View v,String label){if(v instanceof Button b&&label.contentEquals(b.getText()))return b;if(v instanceof ViewGroup group)for(int i=0;i<group.getChildCount();i++){Button b=button(group.getChildAt(i),label);if(b!=null)return b;}return null;}
 }

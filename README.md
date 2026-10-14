@@ -6,7 +6,7 @@ Die App misst die Reaktion des montierten Smartphones. **Sie misst keine Bodenwe
 
 ## Karte und Fahrtspur
 
-Die Startseite enthält eine zoombare native OSM-Karte. GPS-Genauigkeit und Alter der Position werden laufend angezeigt; fehlende und veraltete Messungen werden gekennzeichnet. **Mein Standort** aktiviert die Standortnachführung; Verschieben der Karte unterbricht die Nachführung. **Fahrtspur ansehen** zeigt die gesamte gespeicherte Spur, **Karte vergrößern** öffnet die Vollbildansicht. Fundstellen sind als nach Intensität farbige Punkte sichtbar; im Stillstand lassen sie sich auf der Startseitenkarte antippen und prüfen. Die Karte zeigt höchstens die neuesten 500 Fundstellen, der Export enthält weiterhin alle freigegebenen Fundstellen.
+Die Startseite enthält eine zoombare native OSM-Karte. GPS-Genauigkeit und Alter der Position werden laufend angezeigt; fehlende und veraltete Messungen werden gekennzeichnet. **Mein Standort** aktiviert die Standortnachführung; Verschieben der Karte unterbricht die Nachführung. **Kartenoptionen → Fahrtspur ansehen** zeigt die gesamte gespeicherte Spur, **Karte vergrößern** öffnet die Vollbildansicht. Fundstellen sind als nach Intensität farbige Punkte sichtbar; im Stillstand lassen sie sich auf der Startseitenkarte antippen und prüfen. Die Karte zeigt höchstens die neuesten 500 Fundstellen, der Export enthält weiterhin alle freigegebenen Fundstellen.
 
 Die Fahrtspur beginnt mit einer bewusst gestarteten Aufzeichnung. GPS-Lücken über 15 Sekunden werden als getrennte Abschnitte dargestellt; unplausible GPS-Sprünge werden verworfen. Nach Fahrtende bleibt die Spur lokal sichtbar. Die nächste bestätigte Fahrt ersetzt diese Spur, nicht die Fundstellen. Die Spur lässt sich separat löschen und wird nicht mit dem CSV-Fundstellenexport weitergegeben.
 
@@ -14,19 +14,23 @@ Kartenanbieter: `https://tile.openstreetmap.org/`, © OpenStreetMap contributors
 
 Für eine spätere breite öffentliche Veröffentlichung ist die aktuelle [OSM-Kachelnutzungsrichtlinie](https://operations.osmfoundation.org/policies/tiles/) zu prüfen und gegebenenfalls ein passender Kartenanbieter einzusetzen. Die Cloud-Prüfung ersetzt keinen Gerätetest der Kartenverbindung.
 
+## Navigation
+
+Die untere Leiste trennt **Fahrt**, **Fundstellen** und **Mehr**. Die Fahrtansicht enthält Karte und Aufzeichnung. Fundstellen erscheinen als kompakte Karten mit **Prüfen & Fotos**, **Löschen** und **Details & Karte**; Filter zeigen alle, offene oder freigegebene Einträge. **Meldung vorbereiten** und **Weitere Aktionen** öffnen Mail, Bündelung und CSV. Im Bereich **Mehr** liegen Messungseinstellungen, Geodaten, Datenverwaltung, Datenschutz und Hilfe. An beiden Karten öffnet **Kartenoptionen** Fahrtspuransicht, Empfindlichkeit, Neukalibrierung und Legende. GPS-Genauigkeit bleibt direkt sichtbar.
+
 ## Auf dem Fairphone ausprobieren
 
-**[Android-Testversion 0.7.0 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.7.0.apk)**
+**[Android-Testversion 0.8.0 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.8.0.apk)**
 
-Öffne die heruntergeladene APK auf deinem Android-Handy. Falls Android danach fragt, erlaube die Installation aus dieser Quelle. Die [kurze Installationsanleitung](downloads/INSTALLATION.md) und die [SHA-256-Prüfsummen](downloads/SHA256SUMS) liegen neben der APK. Version 0.7.0 verwendet dieselbe App-ID und Signatur wie die vorherigen Testversionen und ist als Update über die vorhandene Installation vorgesehen. Eine Deinstallation würde die lokalen Daten löschen. Dies ist eine Debug-Testversion; die Korrekturen müssen auf dem Fairphone noch praktisch überprüft werden.
+Öffne die heruntergeladene APK auf deinem Android-Handy. Falls Android danach fragt, erlaube die Installation aus dieser Quelle. Die [kurze Installationsanleitung](downloads/INSTALLATION.md) und die [SHA-256-Prüfsummen](downloads/SHA256SUMS) liegen neben der APK. Version 0.8.0 verwendet dieselbe App-ID und Signatur wie die vorherigen Testversionen und ist als Update über die vorhandene Installation vorgesehen. Eine Deinstallation würde die lokalen Daten löschen. Dies ist eine Debug-Testversion; die Korrekturen müssen auf dem Fairphone noch praktisch überprüft werden.
 
 ### Messungen prüfen, löschen und bündeln
 
 **Löschen** steht direkt an jeder Fundstelle in der Liste. Nach einer kurzen Bestätigung wird die einzelne Messung mit ihren lokalen Fotos entfernt. Bei gebündelten Treffern wählst du zuerst die betroffene Messung; andere Beobachtungen und die Fahrtspur bleiben erhalten. Bereits exportierte Kopien werden nicht zurückgezogen.
 
-**Zusammenfassbar** gruppiert Vorschläge unter zwei Metern, auch vor der Freigabe. **Mehrfachtreffer bündeln** öffnet die Prüfung; GPS-Ungenauigkeit kann größer als der Abstand sein. Nach deiner Bestätigung erscheinen sie als gemeinsame Fundstelle in Liste und Karte. Alle Originalmessungen und Freigaben bleiben erhalten; die Bündelung lässt sich auflösen. Du kannst bei ungenauem GPS auch selbst auswählen.
+**Zusammenfassbar** gruppiert Vorschläge unter vier Metern, auch vor der Freigabe. **Mehrfachtreffer bündeln** öffnet die Prüfung; GPS-Ungenauigkeit kann größer als der Abstand sein. Nach deiner Bestätigung erscheinen sie als gemeinsame Fundstelle in Liste und Karte. Alle Originalmessungen und Freigaben bleiben erhalten; die Bündelung lässt sich auflösen. Du kannst bei ungenauem GPS auch selbst auswählen.
 
-Unter **Stelle prüfen und Fotos ergänzen** lassen sich Bilder auswählen oder über die Kamera aufnehmen. Bis zu fünf lokale Fotokopien je Beobachtung werden verkleinert und ohne ursprüngliche EXIF-Orts-/Zeitangaben gespeichert. Originale im Album bleiben erhalten. Prüfe Bildinhalte selbst vor dem Weitergeben.
+Unter **Prüfen & Fotos** lassen sich Bilder auswählen oder über die Kamera aufnehmen. Bis zu fünf lokale Fotokopien je Beobachtung werden verkleinert und ohne ursprüngliche EXIF-Orts-/Zeitangaben gespeichert. Originale im Album bleiben erhalten. Prüfe Bildinhalte selbst vor dem Weitergeben.
 
 Die Mail fasst bestätigte Wiederholungen zu einer Fundstelle mit Anzahl, Kalenderwochen und Wertebereichen zusammen. Nur ausgewählte freigegebene Beobachtungen und ihre ausgewählten Fotos werden übernommen. Bis zu 20 Fundstellen je Mail und zehn Fotos / 10 MB je Entwurf sind möglich. Fotos tragen zur Textnummer passende Namen; erst im externen Mailprogramm wird versendet. Den aktuellen Prüfstand beschreibt die [Installationsanleitung](downloads/INSTALLATION.md). Kamera und Anhänge brauchen noch einen praktischen Fairphone-Test. Anleitung und Grenzen: [BUENDELUNG-FOTOS.md](docs/BUENDELUNG-FOTOS.md).
 
@@ -50,14 +54,14 @@ Die [Dokumentation zu Klassifizierung und OSM](docs/KLASSIFIZIERUNG-OSM.md) besc
 
 ### Erkennung und Positionskorrektur
 
-Nach Fahrtbeginn zwei Sekunden im Stand ruhig halten, bis **Kalibriert** erscheint. Die Erkennung verwendet ausschließlich die auf die kalibrierte Vertikale projizierte Beschleunigung nach Abzug der Ruheschwerkraft. Androids Lagesensor führt, sofern verfügbar, die Orientierung mit; die Beschleunigung beim Fahren passt die Achse nicht mehr laufend an. **Im Stand neu kalibrieren** steht während der Fahrt an der Karte zur Verfügung.
+Nach Fahrtbeginn zwei Sekunden im Stand ruhig halten, bis **Kalibriert** erscheint. Die Erkennung verwendet ausschließlich die auf die kalibrierte Vertikale projizierte Beschleunigung nach Abzug der Ruheschwerkraft. Androids Lagesensor führt, sofern verfügbar, die Orientierung mit; die Beschleunigung beim Fahren passt die Achse nicht mehr laufend an. **Kartenoptionen → Im Stand neu kalibrieren** steht während der Fahrt an der Karte zur Verfügung.
 
 Anhaltende Schwingungen werden nach mindestens drei Sekunden und zehn geschätzten Metern als **Unebener Straßenabschnitt** erfasst, mit Anfang, Ende und geschätzter Länge. Kandidaten innerhalb desselben Abschnitts erscheinen nicht zusätzlich als Einzelpunkte. Eine orange Verbindung markiert die ungefähren Endpunkte. [Algorithmus, Bedienung und Grenzen](docs/KALIBRIERUNG-ABSCHNITTE.md).
 
 Auf beiden Karten öffnen Punkte und Abschnittslinien ein Menü zum Prüfen, Ergänzen von Fotos und Löschen.
 
 - Die feste Auslöseschwelle startet bei **40 m/s²**. Gemeint ist der Betrag der gefilterten vertikalen Sensorreaktion nach Abzug der geschätzten Schwerkraft, nicht die Höhe einer Bodenwelle.
-- **Empfindlichkeit einstellen** an der Karte öffnet einen Schieberegler von 5 bis 100 m/s²: links mehr Treffer, rechts weniger Treffer. Die Einstellung wird gespeichert und gilt auch während einer laufenden Fahrt sofort für neue Messungen. Jede Fundstelle speichert ihre damalige Schwelle. Bediene das Telefon nur im sicheren Stand.
+- **Kartenoptionen → Empfindlichkeit einstellen** an der Karte öffnet einen Schieberegler von 5 bis 100 m/s²: links mehr Treffer, rechts weniger Treffer. Die Einstellung wird gespeichert und gilt auch während einer laufenden Fahrt sofort für neue Messungen. Jede Fundstelle speichert ihre damalige Schwelle. Bediene das Telefon nur im sicheren Stand.
 - Automatische Fundstellen verwenden den Zeitpunkt der stärksten Reaktion im 250-ms-Erkennungsfenster. Aus Geschwindigkeit, GPS-Fahrtrichtung und dem zeitlichen Abstand zur GPS-Messung wird die Position für diesen Zeitpunkt geschätzt. Eine ältere GPS-Messung wird entlang der Fahrtrichtung verschoben, eine spätere zurückgerechnet.
 - Fehlen brauchbare Bewegungsdaten, bleibt die ursprüngliche GPS-Position erhalten. Die Korrektur setzt gleichbleibende Geschwindigkeit und Richtung voraus und beseitigt keine GPS-Messfehler. Ursprüngliche Koordinaten und Korrektur bleiben in Messdetails und Export nachvollziehbar. Bestehende Fundstellen bleiben unverändert.
 

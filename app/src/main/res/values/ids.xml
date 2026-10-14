@@ -1,4 +1,23 @@
 <resources>
+    <item name="page_scroll" type="id" />
+    <item name="nav_ride" type="id" />
+    <item name="nav_findings" type="id" />
+    <item name="nav_more" type="id" />
+    <item name="filter_all" type="id" />
+    <item name="filter_open" type="id" />
+    <item name="filter_reviewed" type="id" />
+    <item name="finding_review" type="id" />
+    <item name="finding_details" type="id" />
+    <item name="findings_mail" type="id" />
+    <item name="findings_actions" type="id" />
+    <item name="menu_measurement" type="id" />
+    <item name="menu_geodata" type="id" />
+    <item name="menu_data" type="id" />
+    <item name="menu_privacy" type="id" />
+    <item name="geodata_toggle" type="id" />
+    <item name="delete_route" type="id" />
+    <item name="delete_all" type="id" />
+    <item name="map_options" type="id" />
     <item name="calibration_status" type="id" />
     <item name="recalibrate" type="id" />
     <item name="finding_delete" type="id" />

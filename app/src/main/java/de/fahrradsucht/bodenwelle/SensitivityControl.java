@@ -13,6 +13,7 @@ public final class SensitivityControl extends LinearLayout {
     private final Button summary;
     private final SeekBar slider;
     private final EditText number;
+    private final LinearLayout settings;
     public SensitivityControl(Context context) {
         super(context);
         setOrientation(VERTICAL);
@@ -21,7 +22,7 @@ public final class SensitivityControl extends LinearLayout {
         summary.setAllCaps(false);
         summary.setText(context.getString(R.string.sensitivity_summary, preferences.threshold()));
         addView(summary);
-        LinearLayout settings = new LinearLayout(context);
+        settings = new LinearLayout(context);
         settings.setOrientation(VERTICAL);
         settings.setVisibility(GONE);
         addView(settings);
@@ -74,6 +75,7 @@ public final class SensitivityControl extends LinearLayout {
         int progress = preferences.threshold() - DetectionPreferences.MIN;
         if (slider.getProgress() != progress) slider.setProgress(progress);
     }
+    public void expand() { settings.setVisibility(VISIBLE); }
     private void applyInput() {
         try {
             int value = Integer.parseInt(number.getText().toString().trim());

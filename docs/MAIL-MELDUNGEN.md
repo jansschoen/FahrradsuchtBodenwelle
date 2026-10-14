@@ -3,7 +3,7 @@
 ## Bedienung
 
 1. Beende die Fahrt, prüfe Fundstellen und gib nachvollziehbare Einträge frei.
-2. Wähle auf der Startseite **Meldung an die Verwaltung vorbereiten**.
+2. Wähle unter **Fundstellen** die Schaltfläche **Meldung vorbereiten**.
 3. Unter **Stellen und Bezirke prüfen** kannst du Einträge abwählen und Bezirksvorschläge manuell korrigieren. Bei unklaren Zuordnungen ist dieser Bereich zunächst geöffnet.
 4. **Nach Bezirk aufteilen** erstellt getrennte Entwürfe; ohne Häkchen wird die gesamte Auswahl zusammengestellt. Große Auswahlen werden vollständig auf Teile mit höchstens 20 Fundstellen aufgeteilt. Ab 0.5.0 werden bestätigte Wiederholungen als gemeinsame Fundstelle gezählt.
 5. Wähle, ob ein kurzer Hinweis auf Bodenwelle ergänzt werden soll. Ohne den Hinweis bleibt die gleiche sachliche Mail in persönlicher Form. Du kannst optional deinen Namen ergänzen. Eigene Notizen werden zunächst nicht übernommen, weil sie Namen und genaue Zeitangaben enthalten können.

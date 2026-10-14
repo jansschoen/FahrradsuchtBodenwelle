@@ -1,4 +1,8 @@
 <resources>
+    <string name="map_options">Kartenoptionen</string>
+    <string name="section_sensitivity_hint">Einzelstöße verwenden die eingestellte Schwelle. Anhaltende Vibrationen können auch darunter als Straßenabschnitt erfasst werden.</string>
+    <string name="calibration_start_hint">Nach dem Fahrtstart zwei Sekunden im Stand kalibrieren.</string>
+    <string name="route_summary_empty">Noch keine Fahrtspur</string>
     <string name="recalibrate">Im Stand neu kalibrieren</string>
     <string name="photos_hint">Bis zu fünf Fotos pro Beobachtung. Kopien werden verkleinert; EXIF-Orts- und Zeitangaben werden entfernt. Bitte Bildinhalte wie Gesichter und Kennzeichen vor dem Weitergeben prüfen. Nur im sicheren Stand fotografieren.</string>
     <string name="photos_section">Fotos ansehen und ergänzen</string>
@@ -28,15 +32,13 @@
     <string name="map_legend">Türkis: Fahrtspur · Orange: geschätzte Verbindung zwischen Anfang und Ende eines unebenen Abschnitts · Punkte: Intensität von Grün bis Rot, Grau ohne Messung. Sensorbewertung vorläufig; keine Höhenmessung.</string>
     <string name="osm_attribution">© OpenStreetMap contributors · Lizenz ansehen</string>
     <string name="route_empty">Die Fahrtspur beginnt, sobald du eine Fahrt startest und GPS verfügbar ist.</string>
-    <string name="route_running">Deine aktuelle Fahrt wird lokal aufgezeichnet. GPS-Lücken bleiben unterbrochen.</string>
-    <string name="route_saved">Die letzte Fahrtspur bleibt sichtbar, bis du sie löschst oder eine neue Fahrt startest.</string>
+    <string name="route_running">Aktuelle Fahrtspur</string>
+    <string name="route_saved">Gespeicherte Fahrtspur</string>
     <string name="back_to_ride">Zurück zur Fahrt</string>
     <string name="mark_place">Stelle markieren</string>
     <string name="stop_ride">Fahrt beenden</string>
     <string name="ride_status_with_action">%1$s\n%2$s</string>
     <string name="review_release">Stelle geprüft und für den Export freigegeben</string>
-    <string name="show_details">Messdetails anzeigen</string>
-    <string name="hide_details">Messdetails ausblenden</string>
     <plurals name="finding_count">
         <item quantity="one">%d Fundstelle auf diesem Handy</item>
         <item quantity="other">%d Fundstellen auf diesem Handy</item>

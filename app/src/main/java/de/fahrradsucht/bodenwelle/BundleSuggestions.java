@@ -5,7 +5,7 @@ import java.util.List;
 
 /** Conservative suggestions only. No sensor event is automatically merged. */
 public final class BundleSuggestions {
-    public static final double MAX_DISTANCE_METERS = 2;
+    public static final double MAX_DISTANCE_METERS = 4;
     private BundleSuggestions() {}
     public static double distance(Finding a, Finding b) {
         double lat = Math.toRadians(b.latitude() - a.latitude()), lon = Math.toRadians(b.longitude() - a.longitude());

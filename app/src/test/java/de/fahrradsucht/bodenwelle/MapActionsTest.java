@@ -59,7 +59,7 @@ public class MapActionsTest {
     private void editor(Class<? extends Activity> type) {
         try (ActivityController<? extends Activity> controller = Robolectric.buildActivity(type).setup(); FindingStore store = new FindingStore(app)) {
             tapMarker(controller.get());
-            assertEquals("Stelle prüfen und Fotos ergänzen", ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).getText().toString());
+            assertEquals("Prüfen & Fotos", ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).getText().toString());
             clickDialog(AlertDialog.BUTTON_POSITIVE);
             AlertDialog editor = ShadowAlertDialog.getLatestAlertDialog();
             assertNotNull(editor.findViewById(R.id.photo_pick)); assertNotNull(editor.findViewById(R.id.photo_capture));
@@ -87,7 +87,8 @@ public class MapActionsTest {
             controller.get().onActivityResult(request.requestCode, Activity.RESULT_CANCELED, null);
             ShadowAlertDialog.getLatestAlertDialog().dismiss();
             RecordingService.running = true;
-            controller.get().findViewById(R.id.recalibrate).performClick();
+            controller.get().findViewById(R.id.map_options).performClick();
+            ShadowAlertDialog.getLatestAlertDialog().findViewById(R.id.recalibrate).performClick();
             assertEquals(RecordingService.CALIBRATE, Shadows.shadowOf(app).getNextStartedService().getAction());
             RecordingService.running = false;
         }

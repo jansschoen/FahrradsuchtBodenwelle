@@ -37,9 +37,9 @@ Neue automatische Fundstellen berücksichtigen die GPS-Fahrtrichtung, Geschwindi
 
 ## Prüfen und exportieren
 
-Über **So funktioniert’s** kannst du die drei Schritte jederzeit in der App nachlesen.
+Über **Mehr → Hilfe** kannst du die drei Schritte jederzeit in der App nachlesen.
 
-Beende die Fahrt. **Auf der Karte ansehen** zeigt die Fundstelle direkt in der integrierten Vollbildkarte. **Fahrtspur ansehen** zeigt den gespeicherten Streckenverlauf. Im Stillstand kannst du die Fundstellen auf der Startseitenkarte antippen, um sie zu prüfen. Die Punktfarbe zeigt die Intensitätsklasse von Grün bis Rot; Grau bedeutet keine Messgrundlage. Im Text steht, ob ein Eintrag geprüft ist. Sensorfarben sind nur vorläufige Reaktionsklassen und keine Höhen- oder Gefahrenmessung. Technische Angaben wie Koordinaten und Sensorwerte findest du unter **Messdetails anzeigen**.
+Beende die Fahrt. **Auf der Karte ansehen** zeigt die Fundstelle direkt in der integrierten Vollbildkarte. **Fahrtspur ansehen** zeigt den gespeicherten Streckenverlauf. Im Stillstand kannst du die Fundstellen auf der Karte im Bereich **Fahrt** antippen, um sie zu prüfen. Die Punktfarbe zeigt die Intensitätsklasse von Grün bis Rot; Grau bedeutet keine Messgrundlage. Im Text steht, ob ein Eintrag geprüft ist. Sensorfarben sind nur vorläufige Reaktionsklassen und keine Höhen- oder Gefahrenmessung. Technische Angaben wie Koordinaten und Sensorwerte findest du unter **Messdetails anzeigen**.
 
 Öffne **Stelle prüfen** bei jeder relevanten Stelle. Ergänze Straße, Fahrtrichtung, Bezugspunkt und eine sachliche Beschreibung des sichtbaren Mangels. Entferne Fehlalarme. Aktiviere die Freigabe nur für nachvollziehbare Einträge.
 
@@ -51,11 +51,11 @@ Die Fahrtspur bleibt nach Fahrtende erhalten. Eine neue bestätigte Fahrt ersetz
 
 ## Neue Klassifizierung und OSM prüfen
 
-Unter **Stelle prüfen** wählst du eine der acht Unebenheitsarten. Zusätzliche Gefährdungsmerkmale lassen sich einzeln im aufklappbaren Bereich markieren. Eine tatsächlich vor Ort gemessene Höhe kannst du separat in Millimetern ergänzen und ausdrücklich bestätigen. Ohne diese Bestätigung bewertet die App ausschließlich die Sensorreaktion, vorläufig und ohne Höhenumrechnung.
+Unter **Prüfen & Fotos** wählst du eine der acht Unebenheitsarten. Zusätzliche Gefährdungsmerkmale lassen sich einzeln im aufklappbaren Bereich markieren. Eine tatsächlich vor Ort gemessene Höhe kannst du separat in Millimetern ergänzen und ausdrücklich bestätigen. Ohne diese Bestätigung bewertet die App ausschließlich die Sensorreaktion, vorläufig und ohne Höhenumrechnung.
 
 Verkehrsfläche und Oberfläche erscheinen als **OSM-Vorschlag** mit Zuordnungssicherheit. Prüfe gerade bei parallelen Wegen, ob die Fläche plausibel ist. Unter **Verkehrsfläche und Oberfläche prüfen** kannst du beide Angaben unabhängig manuell festlegen. Solche Änderungen bleiben bei späteren OSM-Antworten erhalten. Angaben zur Benutzungspflicht sind Vorschläge aus Kartentags; entscheidend ist die Beschilderung vor Ort, nicht allein OSM.
 
-Auf der Startseite kannst du die automatische Ergänzung abschalten oder **Fehlende OSM-Angaben ergänzen** wählen. Ohne Internet bleiben alle Aufzeichnungen erhalten. Der Geodatenanbieter erhält den Ausschnitt um Fundstellen und deine IP-Adresse. OSM-Abfragen sind begrenzt; bei vielen neuen Gebieten kann die Ergänzung weitere Durchläufe brauchen. Bei „mehrdeutig“ ist eine manuelle Prüfung sinnvoll. Der Live-Abruf wurde aus der Cloud blockiert und muss auf dem Fairphone praktisch überprüft werden.
+Unter **Mehr → Karte & Geodaten** kannst du die automatische Ergänzung abschalten oder **Fehlende OSM-Angaben ergänzen** wählen. Ohne Internet bleiben alle Aufzeichnungen erhalten. Der Geodatenanbieter erhält den Ausschnitt um Fundstellen und deine IP-Adresse. OSM-Abfragen sind begrenzt; bei vielen neuen Gebieten kann die Ergänzung weitere Durchläufe brauchen. Bei „mehrdeutig“ ist eine manuelle Prüfung sinnvoll. Der Live-Abruf wurde aus der Cloud blockiert und muss auf dem Fairphone praktisch überprüft werden.
 
 Mehr zu Skalen, gespeicherten Originaltags und Grenzen steht in [KLASSIFIZIERUNG-OSM.md](KLASSIFIZIERUNG-OSM.md).
 
@@ -79,7 +79,7 @@ Wähle nach dem Freigeben **Meldung an die Verwaltung vorbereiten**. Prüfe die 
 
 Öffne **Mehrfachtreffer bündeln** und bestätige nur dieselbe tatsächliche Unebenheit. Prüfe insbesondere benachbarte Schäden und die Straßenseite. Die bestätigte Fundstelle erscheint einmal mit ihrer Beobachtungsanzahl; Auflösen erhält die einzelnen Messungen.
 
-Unter **Stelle prüfen und Fotos ergänzen** öffnest du **Fotos ansehen und ergänzen**. Wähle ein Bild oder nimm im sicheren Stand ein Foto auf. Tippe die Vorschau an und prüfe Bildinhalte. Die gespeicherte Kopie enthält keine ursprünglichen EXIF-Orts-/Zeitangaben; dein Albumoriginal bleibt erhalten.
+Unter **Prüfen & Fotos** öffnest du **Fotos ansehen und ergänzen**. Wähle ein Bild oder nimm im sicheren Stand ein Foto auf. Tippe die Vorschau an und prüfe Bildinhalte. Die gespeicherte Kopie enthält keine ursprünglichen EXIF-Orts-/Zeitangaben; dein Albumoriginal bleibt erhalten.
 
 Erzeuge eine Mail mit den gewünschten freigegebenen Beobachtungen. Wiederholungen erscheinen zusammen mit Anzahl und Kalenderwochen. Prüfe Fotoauswahl und Nummerierung und danach im Mailprogramm die tatsächlichen Anhänge. Versende erst nach Prüfung. Weitere Anleitung und Grenzen: [BUENDELUNG-FOTOS.md](BUENDELUNG-FOTOS.md).
 
@@ -94,7 +94,16 @@ Erzeuge eine Mail mit den gewünschten freigegebenen Beobachtungen. Wiederholung
 1. Handy befestigen, Fahrt starten, im Stand zwei Sekunden bis **Kalibriert** warten. Die Fortschrittsanzeige prüfen. Nach einer Halterungsänderung im Stand erneut kalibrieren.
 2. Auf einer bekannten glatten Strecke vorsichtig beschleunigen und bremsen; horizontale Bewegung sollte keine zusätzlichen Treffer erzeugen. Mit mehreren sicheren Wiederholungsfahrten prüfen, ob bekannte Unebenheiten weiterhin erfasst werden.
 3. Auf einer bekannten längeren unebenen Strecke prüfen, ob ein **Unebener Straßenabschnitt** mit plausiblen Endpunkten statt vieler Einzelpunkte entsteht. Ende der Störung und Fahrtende sollen den Abschnitt abschließen. Die Heuristik muss im Fahrtest abgestimmt werden.
-4. Nach Fahrtende Vorschläge unter zwei Metern prüfen. Vor Bestätigung müssen Originale und individuelle Freigaben erhalten bleiben.
+4. Nach Fahrtende Vorschläge unter vier Metern prüfen. Vor Bestätigung müssen Originale und individuelle Freigaben erhalten bleiben.
 5. Auf beiden Karten einen Punkt antippen, Fotos/Bearbeitung öffnen und das Löschen zuerst abbrechen, anschließend an einem Testeintrag bestätigen. Abschnittslinien ebenfalls antippen.
 
 [Details und Testparameter](KALIBRIERUNG-ABSCHNITTE.md).
+
+### Übersichtliche Bedienung (0.8.0)
+
+1. Die drei Bereiche **Fahrt**, **Fundstellen** und **Mehr** ausprobieren. Eine laufende Fahrt soll beim Wechsel weiter aufzeichnen.
+2. Unter **Fundstellen** zwischen **Alle**, **Offen** und **Freigegeben** wechseln. Teilweise freigegebene Bündel können in beiden Filtern vorkommen; jede Messung behält ihre eigene Freigabe. Bereich und Filter sollen beim Drehen erhalten bleiben.
+3. **Prüfen & Fotos**, **Löschen** und **Details & Karte** testen. Lange Notizen stehen vollständig in den Details. Die Listenübersicht zeigt höchstens zwei Notizzeilen.
+4. **Weitere Aktionen** für CSV und manuelles Bündeln öffnen. Die Vorschläge gelten jetzt für jedes Messpunktpaar mit Abstand streng unter vier Metern.
+5. **Kartenoptionen** für Schieberegler, Neukalibrierung, Fahrtspuransicht und Legende öffnen. Standortgenauigkeit bleibt auf der Karte sichtbar.
+6. Unter **Mehr → Daten verwalten** das Löschen erst abbrechen. Gesamtlöschung und Fahrtspurlöschung sind während einer laufenden Fahrt deaktiviert.

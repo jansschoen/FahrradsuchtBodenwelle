@@ -73,6 +73,7 @@ public class DeletionWorkflowTest {
             long id = finding(store, "Behalten");
             File photo = photo(store, id);
             try (ActivityController<MainActivity> controller = Robolectric.buildActivity(MainActivity.class).setup()) {
+                controller.get().findViewById(R.id.nav_findings).performClick();
                 Button delete = deleteButton(controller.get().findViewById(android.R.id.content), id);
                 assertNotNull(delete);
                 assertEquals("Löschen", delete.getText().toString());
@@ -92,6 +93,7 @@ public class DeletionWorkflowTest {
             File keptPhoto = photo(store, kept), removedPhoto = photo(store, removed);
             store.insertRoutePoint(new RoutePoint(1000, 500, 52.52, 13.405, 5, 0));
             try (ActivityController<MainActivity> controller = Robolectric.buildActivity(MainActivity.class).setup()) {
+                controller.get().findViewById(R.id.nav_findings).performClick();
                 deleteButton(controller.get().findViewById(android.R.id.content), removed).performClick();
                 clickDialog(AlertDialog.BUTTON_POSITIVE);
                 assertNull(store.get(removed));
@@ -116,6 +118,7 @@ public class DeletionWorkflowTest {
             File keptPhoto = photo(store, kept), removedPhoto = photo(store, removed);
             long bundle = store.mergeBundles(List.of(-kept, -removed));
             try (ActivityController<MainActivity> controller = Robolectric.buildActivity(MainActivity.class).setup()) {
+                controller.get().findViewById(R.id.nav_findings).performClick();
                 deleteButton(controller.get().findViewById(android.R.id.content), removed).performClick();
                 AlertDialog selection = ShadowAlertDialog.getLatestAlertDialog();
                 assertEquals(2, selection.getListView().getAdapter().getCount());
@@ -141,6 +144,7 @@ public class DeletionWorkflowTest {
             assertTrue(store.observations(-first).isEmpty());
             store.delete(first);
             try (ActivityController<MainActivity> controller = Robolectric.buildActivity(MainActivity.class).setup()) {
+                controller.get().findViewById(R.id.nav_findings).performClick();
                 deleteButton(controller.get().findViewById(android.R.id.content), last).performClick();
                 clickDialog(AlertDialog.BUTTON_POSITIVE);
                 assertEquals(0, store.count());

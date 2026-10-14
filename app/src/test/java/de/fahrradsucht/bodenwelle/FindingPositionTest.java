@@ -85,12 +85,14 @@ public class FindingPositionTest {
     }
     @Test public void sliderChangesPersistAcrossMapReopening() {
         try (ActivityController<MainActivity> controller = Robolectric.buildActivity(MainActivity.class).setup()) {
-            SeekBar slider = controller.get().findViewById(R.id.sensitivity_slider);
+            controller.get().findViewById(R.id.map_options).performClick();
+            SeekBar slider = org.robolectric.shadows.ShadowAlertDialog.getLatestAlertDialog().findViewById(R.id.sensitivity_slider);
             assertNotNull(slider); slider.setProgress(10);
             assertEquals(15, new DetectionPreferences(app).threshold());
         }
         try (ActivityController<MapActivity> controller = Robolectric.buildActivity(MapActivity.class).setup()) {
-            SeekBar slider = controller.get().findViewById(R.id.sensitivity_slider);
+            controller.get().findViewById(R.id.map_options).performClick();
+            SeekBar slider = org.robolectric.shadows.ShadowAlertDialog.getLatestAlertDialog().findViewById(R.id.sensitivity_slider);
             assertEquals(10, slider.getProgress());
         }
     }

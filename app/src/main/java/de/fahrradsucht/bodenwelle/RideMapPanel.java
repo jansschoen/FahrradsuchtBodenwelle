@@ -2,6 +2,7 @@ package de.fahrradsucht.bodenwelle;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
@@ -17,6 +18,7 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.ScrollView;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.config.IConfigurationProvider;
 import org.osmdroid.tileprovider.tilesource.XYTileSource;
@@ -44,9 +46,10 @@ public final class RideMapPanel extends LinearLayout {
     private final TextView routeStatus;
     private final Runnable requestLocation;
     private final Consumer<Finding> review;
-    private final SensitivityControl sensitivity;
+    private SensitivityControl sensitivity;
     private final TextView calibration;
-    private final Button recalibrate;
+    private TextView optionCalibration;
+    private AlertDialog options;
     private long shownRevision = -1;
     private final List<Polyline> lines = new ArrayList<>();
     private final List<Marker> markers = new ArrayList<>();
@@ -103,17 +106,12 @@ public final class RideMapPanel extends LinearLayout {
         LinearLayout controls = new LinearLayout(activity);
         controls.setOrientation(HORIZONTAL);
         controls.addView(control(R.string.my_location, this::followLocation), new LayoutParams(0, -2, 1));
-        controls.addView(control(R.string.show_route, this::showRoute), new LayoutParams(0, -2, 1));
+        Button optionButton = control(R.string.map_options, this::showOptions);
+        optionButton.setId(R.id.map_options);
+        controls.addView(optionButton, new LayoutParams(0, -2, 1));
         addView(controls);
-        sensitivity = new SensitivityControl(activity);
-        addView(sensitivity);
         calibration = text(RecordingService.calibrationStatus, 14);
         calibration.setId(R.id.calibration_status);
-        recalibrate = control(R.string.recalibrate, () -> activity.startService(
-                new Intent(activity, RecordingService.class).setAction(RecordingService.CALIBRATE)));
-        recalibrate.setId(R.id.recalibrate);
-        addView(recalibrate);
-        text(activity.getString(R.string.map_legend), 12);
         TextView attribution = text(activity.getString(R.string.osm_attribution), 12);
         attribution.setMinHeight(dp(40));
         attribution.setTextColor(TEAL);
@@ -128,7 +126,31 @@ public final class RideMapPanel extends LinearLayout {
         refresh();
     }
     public void pause() { position.disableMyLocation(); map.onPause(); }
-    public void destroy() { pause(); map.onDetach(); }
+    public void destroy() { if (options != null) options.dismiss(); pause(); map.onDetach(); }
+
+    private void showOptions() {
+        if (options != null && options.isShowing()) return;
+        LinearLayout content = new LinearLayout(activity); content.setOrientation(VERTICAL);
+        content.setPadding(dp(16), dp(8), dp(16), dp(12));
+        Button route = control(R.string.show_route, () -> { showRoute(); if (options != null) options.dismiss(); });
+        content.addView(route);
+        sensitivity = new SensitivityControl(activity); sensitivity.expand(); content.addView(sensitivity);
+        TextView sectionHint = new TextView(activity);
+        sectionHint.setText(R.string.section_sensitivity_hint);
+        sectionHint.setTextSize(14); content.addView(sectionHint);
+        optionCalibration = new TextView(activity); optionCalibration.setTextSize(14);
+        optionCalibration.setText(RecordingService.running ? RecordingService.calibrationStatus
+                : activity.getString(R.string.calibration_start_hint)); content.addView(optionCalibration);
+        Button calibrate = control(R.string.recalibrate, () -> activity.startService(
+                new Intent(activity, RecordingService.class).setAction(RecordingService.CALIBRATE)));
+        calibrate.setId(R.id.recalibrate); calibrate.setEnabled(RecordingService.running); content.addView(calibrate);
+        TextView legend = new TextView(activity); legend.setText(R.string.map_legend); legend.setTextSize(14);
+        legend.setPadding(0, dp(12), 0, 0); content.addView(legend);
+        ScrollView scroll = new ScrollView(activity); scroll.addView(content);
+        options = new AlertDialog.Builder(activity).setTitle("Kartenoptionen").setView(scroll).setPositiveButton("Schließen", null).create();
+        options.setOnDismissListener(d -> { if (options == d) { sensitivity = null; optionCalibration = null; options = null; } });
+        options.show();
+    }
 
     private void enablePosition() {
         if (activity.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
@@ -153,9 +175,14 @@ public final class RideMapPanel extends LinearLayout {
     private static long age(Location fix) { return (SystemClock.elapsedRealtimeNanos() - fix.getElapsedRealtimeNanos()) / 1_000_000L; }
 
     public void refresh() {
-        sensitivity.refresh();
-        if (calibration != null) calibration.setText(RecordingService.calibrationStatus);
-        if (recalibrate != null) recalibrate.setVisibility(RecordingService.running ? View.VISIBLE : View.GONE);
+        if (sensitivity != null) sensitivity.refresh();
+        if (calibration != null) {
+            String status = RecordingService.calibrationStatus;
+            calibration.setText(status.startsWith("Kalibriert") && !status.contains("wartet")
+                    ? status.contains("feste Lage") ? "Kalibriert · feste Lage" : "Kalibriert · vertikale Messung" : status);
+            calibration.setVisibility(RecordingService.running ? View.VISIBLE : View.GONE);
+        }
+        if (optionCalibration != null && RecordingService.running) optionCalibration.setText(RecordingService.calibrationStatus);
         int count = store.routeCount();
         if (shownRouteCount != count) {
             shownRouteCount = count;
@@ -217,7 +244,7 @@ public final class RideMapPanel extends LinearLayout {
             }
         }
         refreshPositionStatus();
-        routeStatus.setText(points.isEmpty() ? R.string.route_empty : (RecordingService.running ? R.string.route_running : R.string.route_saved));
+        routeStatus.setText(points.isEmpty() ? R.string.route_summary_empty : RecordingService.running ? R.string.route_running : R.string.route_saved);
         // Draw the position over the route and finding markers.
         map.getOverlays().remove(position); map.getOverlays().add(position);
         map.invalidate();

@@ -47,7 +47,7 @@ public final class FindingActions {
                 + (current.details().section() == null ? "" : "\n" + current.details().section().label())
                 + "\n\nBitte nur im sicheren Stand bearbeiten.";
         new AlertDialog.Builder(activity).setTitle("Fundstelle auf der Karte").setMessage(message)
-                .setPositiveButton("Stelle prüfen und Fotos ergänzen", (d, w) -> review(current))
+                .setPositiveButton("Prüfen & Fotos", (d, w) -> review(current))
                 .setNeutralButton("Löschen", (d, w) -> deleteObservation(current))
                 .setNegativeButton("Schließen", null).show();
     }

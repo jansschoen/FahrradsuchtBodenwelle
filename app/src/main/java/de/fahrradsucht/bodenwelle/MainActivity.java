@@ -20,7 +20,6 @@ import android.os.Looper;
 import android.view.View;
 import android.view.WindowInsets;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -38,13 +37,17 @@ public final class MainActivity extends Activity {
     private static final int EXPORT = 11;
     private static final int MAP_LOCATION = 12;
     private FindingActions findingActions;
+    private AppMenus menus;
+    private static final int RIDE = 0, FINDINGS = 1, MORE = 2;
+    private int selectedTab, renderedTab, findingFilter;
+    private final int[] scrollPositions = new int[3];
+    private ScrollView contentScroll;
     private static final int GREEN = Color.rgb(8, 127, 115);
     private static final int INK = Color.rgb(27, 48, 46);
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy · HH:mm").withZone(ZoneId.of("Europe/Berlin"));
     private final Handler handler = new Handler(Looper.getMainLooper());
     private FindingStore store;
     private LinearLayout content;
-    private TextView rideStatus;
     private TextView rideCount;
     private TextView lastAction;
     private boolean displayedRunning;
@@ -62,8 +65,15 @@ public final class MainActivity extends Activity {
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         store = new FindingStore(this);
-        findingActions = new FindingActions(this, store, this::render);
+        findingActions = new FindingActions(this, store, this::refreshCurrentPage);
         findingActions.restore(state);
+        menus = new AppMenus(this, store, this::refreshCurrentPage);
+        if (state != null) {
+            selectedTab = Math.max(0, Math.min(2, state.getInt("tab")));
+            findingFilter = Math.max(0, Math.min(2, state.getInt("findingFilter")));
+            int[] saved = state.getIntArray("scrollPositions");
+            if (saved != null && saved.length == 3) System.arraycopy(saved, 0, scrollPositions, 0, 3);
+        }
         if (state != null) {
             pendingStart = state.getBoolean("pendingStart");
             openMapAfterStart = state.getBoolean("openMapAfterStart");
@@ -81,6 +91,9 @@ public final class MainActivity extends Activity {
         state.putBoolean("startWhenResumed", startWhenResumed);
         state.putLong("serviceRequestedAt", serviceRequestedAt);
         findingActions.save(state);
+        state.putInt("tab", selectedTab); state.putInt("findingFilter", findingFilter);
+        if (contentScroll != null) scrollPositions[selectedTab] = contentScroll.getScrollY();
+        state.putIntArray("scrollPositions", scrollPositions);
         super.onSaveInstanceState(state);
     }
 
@@ -94,16 +107,19 @@ public final class MainActivity extends Activity {
         resumed = false; handler.removeCallbacks(tick);
         if (mapPanel != null) mapPanel.pause(); super.onPause();
     }
-    @Override public void onDestroy() { if (mapPanel != null) mapPanel.destroy(); store.close(); super.onDestroy(); }
+    @Override public void onDestroy() { if (mapPanel != null) mapPanel.destroy(); menus.close(); store.close(); super.onDestroy(); }
 
     private final Runnable tick = new Runnable() {
         @Override public void run() {
             int count = store.count();
-            if (displayedRunning != RecordingService.running || (!RecordingService.running && (count != displayedCount || displayedRevision != store.revision()))) render();
-            rideStatus.setText(RecordingService.status);
-            rideCount.setText(getResources().getQuantityString(R.plurals.finding_count, count, count));
-            lastAction.setText(RecordingService.lastAction);
-            startStatus.setText(RecordingService.status);
+            if (displayedRunning != RecordingService.running || (selectedTab == FINDINGS
+                    && (count != displayedCount || displayedRevision != store.revision()))) render();
+            if (rideCount != null) rideCount.setText(getResources().getQuantityString(R.plurals.finding_count, count, count));
+            if (lastAction != null) {
+                lastAction.setText(RecordingService.lastAction);
+                lastAction.setVisibility(RecordingService.lastAction.isEmpty() ? View.GONE : View.VISIBLE);
+            }
+            if (startStatus != null) startStatus.setText(RecordingService.status);
             if (mapPanel != null) mapPanel.refresh();
             if (openMapAfterStart && RecordingService.running) {
                 openMapAfterStart = false;
@@ -118,179 +134,215 @@ public final class MainActivity extends Activity {
     };
 
     private void render() {
-        if (mapPanel != null) mapPanel.destroy();
+        if (contentScroll != null) scrollPositions[renderedTab] = contentScroll.getScrollY();
+        if (mapPanel != null) { mapPanel.destroy(); mapPanel = null; }
+        startButton = null; startStatus = null; rideCount = null; lastAction = null;
         displayedRunning = RecordingService.running;
-        displayedCount = store.count();
-        displayedRevision = store.revision();
-        ScrollView scroll = new ScrollView(this);
-        scroll.setFillViewport(true);
-        scroll.setBackgroundColor(Color.rgb(244, 247, 245));
-        content = column();
-        content.setPadding(dp(24), dp(24), dp(24), dp(32));
-        content.setOnApplyWindowInsetsListener((v, insets) -> {
-            int top, bottom;
+        displayedCount = store.count(); displayedRevision = store.revision();
+        LinearLayout root = column();
+        root.setLayoutParams(new LinearLayout.LayoutParams(-1, -1));
+        root.setBackgroundColor(Color.rgb(244, 247, 245));
+        root.setOnApplyWindowInsetsListener((v, insets) -> {
             if (Build.VERSION.SDK_INT >= 30) {
                 android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars());
-                top = bars.top; bottom = bars.bottom;
-            } else { top = insets.getSystemWindowInsetTop(); bottom = insets.getSystemWindowInsetBottom(); }
-            v.setPadding(dp(24), dp(24) + top, dp(24), dp(32) + bottom);
+                v.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+            } else v.setPadding(insets.getSystemWindowInsetLeft(), insets.getSystemWindowInsetTop(),
+                    insets.getSystemWindowInsetRight(), insets.getSystemWindowInsetBottom());
             return insets;
         });
-        scroll.addView(content);
-        setContentView(scroll);
-        addText(content, "BERLIN · ERSTER FAHRTEST", 12, GREEN, true);
-        addText(content, "Bodenwelle", 36, INK, true);
-        addText(content, "Unebenheiten aufzeichnen und nach der Fahrt in Ruhe prüfen.", 17, INK, false);
-        if (!displayedRunning) startButton = button(content, "Fahrt starten", true, this::confirmStart);
-        else startButton = button(content, "Zur Live-Karte", true, () -> startActivity(new Intent(this, MapActivity.class)));
-        startButton.setId(R.id.ride_start_button);
-        startStatus = addText(content, RecordingService.status, 15, INK, false);
+        contentScroll = new ScrollView(this); contentScroll.setFillViewport(true);
+        contentScroll.setId(R.id.page_scroll);
+        content = column(); content.setPadding(dp(20), dp(20), dp(20), dp(24));
+        contentScroll.addView(content); root.addView(contentScroll, new LinearLayout.LayoutParams(-1, 0, 1));
+        if (selectedTab == RIDE) renderRide();
+        else if (selectedTab == FINDINGS) renderFindings();
+        else renderMore();
+        LinearLayout navigation = new LinearLayout(this);
+        navigation.setBackgroundColor(Color.WHITE); navigation.setPadding(dp(8), dp(8), dp(8), dp(8));
+        String[] labels = {"Fahrt", "Fundstellen", "Mehr"};
+        int[] ids = {R.id.nav_ride, R.id.nav_findings, R.id.nav_more};
+        for (int i = 0; i < labels.length; i++) {
+            final int tab = i;
+            Button nav = button(navigation, labels[i], selectedTab == i, () -> switchTab(tab));
+            nav.setId(ids[i]); nav.setSelected(selectedTab == i);
+            nav.setContentDescription(labels[i] + (selectedTab == i ? " · ausgewählt" : " öffnen"));
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, -2, 1);
+            params.setMargins(dp(3), 0, dp(3), 0); nav.setLayoutParams(params);
+        }
+        root.addView(navigation); setContentView(root);
+        renderedTab = selectedTab;
+        int y = scrollPositions[selectedTab];
+        ScrollView restored = contentScroll;
+        int tab = selectedTab;
+        restored.post(() -> { if (contentScroll == restored && selectedTab == tab) restored.scrollTo(0, y); });
+    }
+
+    private void switchTab(int tab) {
+        if (selectedTab == tab) return;
+        selectedTab = tab; render();
+    }
+
+    @Override public void onBackPressed() {
+        if (selectedTab != RIDE) switchTab(RIDE); else super.onBackPressed();
+    }
+
+    private void renderRide() {
+        addText(content, "Bodenwelle", 30, INK, true);
+        addText(content, "Berlin · Unebenheiten erfassen", 14, GREEN, false);
+        LinearLayout ride = card(content);
+        addText(ride, displayedRunning ? "Deine Fahrt läuft" : "Bereit für deine Fahrt", 21, INK, true);
+        startStatus = addText(ride, RecordingService.status, 15, INK, false);
         startStatus.setId(R.id.ride_start_status);
         startStatus.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
-        space(content, 12);
-        LinearLayout mapCard = card(content);
-        addText(mapCard, "Deine Karte", 21, INK, true);
-        mapPanel = new RideMapPanel(this, store, () -> requestPermissions(new String[]{
-                Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, MAP_LOCATION), findingActions::show, false);
-        mapCard.addView(mapPanel);
-        if (resumed) mapPanel.resume();
-        button(mapCard, "Karte vergrößern", false, () -> startActivity(new Intent(this, MapActivity.class)));
-        addText(mapCard, "Karten werden aus dem Internet geladen. Deine Fahrtspur bleibt auf diesem Handy.", 14, INK, false);
-        LinearLayout ride = card(content);
-        addText(ride, displayedRunning ? "Deine Fahrt läuft" : "Bereit für deine nächste Fahrt", 21, INK, true);
-        rideStatus = addText(ride, RecordingService.status, 16, INK, false);
+        if (!displayedRunning) {
+            startButton = button(ride, "Fahrt starten", true, this::confirmStart);
+            startButton.setEnabled(!pendingStart && !startWhenResumed && !openMapAfterStart);
+            addText(ride, "Handy befestigen. Nach dem Start zwei Sekunden im Stand bis „Kalibriert“ warten.", 14, INK, false);
+        } else {
+            LinearLayout actions = new LinearLayout(this); ride.addView(actions);
+            Button mark = button(actions, "Stelle markieren", true,
+                    () -> startService(new Intent(this, RecordingService.class).setAction(RecordingService.MARK)));
+            startButton = button(actions, "Fahrt beenden", false,
+                    () -> startService(new Intent(this, RecordingService.class).setAction(RecordingService.STOP)));
+            equalWidth(mark); equalWidth(startButton);
+        }
+        startButton.setId(R.id.ride_start_button);
         rideCount = addText(ride, getResources().getQuantityString(R.plurals.finding_count, displayedCount, displayedCount), 14, GREEN, true);
         lastAction = addText(ride, RecordingService.lastAction, 14, INK, false);
-        if (displayedRunning) {
-            button(ride, "Stelle markieren", true, () -> startService(new Intent(this, RecordingService.class).setAction(RecordingService.MARK)));
-            button(ride, "Fahrt beenden", false, () -> startService(new Intent(this, RecordingService.class).setAction(RecordingService.STOP)));
-            addText(ride, "Du kannst das Display ausschalten. Zum Markieren erst sicher anhalten.", 14, INK, false);
-        } else {
-            addText(ride, "Handy fest am Lenker befestigen. Nach dem Start zwei Sekunden im Stand ruhig halten, bis „Kalibriert“ erscheint. Dann GPS draußen abwarten. Die Automatik erkennt vertikale Erschütterungen ab etwa 5 km/h.", 14, INK, false);
-        }
-        button(content, "So funktioniert’s", false, this::showHelp);
-        if (!displayedRunning) renderFindings();
-        space(content, 20);
-        LinearLayout privacy = card(content);
-        addText(privacy, "Deine Daten bleiben bei dir", 18, INK, true);
-        addText(privacy, "Fundstellen und Fahrtspur bleiben lokal. Nur du entscheidest, welche geprüften Stellen du als Datei speicherst und anschließend weitergibst.", 15, INK, false);
-        addText(privacy, "OpenStreetMap erhält Anfragen für angezeigte Kartenausschnitte und deine IP-Adresse. Die Fahrtspur wird nicht als Datei übertragen und ist nicht Teil des Fundstellenexports.", 14, INK, false);
-        if (!displayedRunning && store.routeCount() > 0) button(privacy, "Gespeicherte Fahrtspur löschen", false,
-                () -> new AlertDialog.Builder(this).setTitle("Fahrtspur löschen?")
-                        .setMessage("Die gespeicherte Strecke wird von diesem Handy entfernt. Deine Fundstellen bleiben erhalten.")
-                        .setNegativeButton("Abbrechen", null).setPositiveButton("Löschen", (d, w) -> { store.clearRoute(); render(); }).show());
-        CheckBox geodata = new CheckBox(this);
-        geodata.setText(R.string.geodata_toggle);
-        geodata.setChecked(OsmEnricher.enabled(this)); privacy.addView(geodata);
-        geodata.setOnCheckedChangeListener((box, enabled) -> { OsmEnricher.enabled(this, enabled); if (enabled) OsmEnricher.pending(this); });
-        addText(privacy, "Geodatenabfragen senden den Kartenausschnitt um eine Fundstelle und deine IP-Adresse an overpass-api.de. Keine Notizen oder Sensorwerte werden übertragen. OSM-Angaben sind Vorschläge, keine rechtliche Bewertung.", 14, INK, false);
-        button(privacy, "Fehlende OSM-Angaben ergänzen", false, () -> {
-            if (!OsmEnricher.enabled(this)) { toast("Bitte die OSM-Ergänzung einschalten."); return; }
-            OsmEnricher.pending(this); toast("OSM-Ergänzung angefragt. Offline bleibt alles auf dem Handy gespeichert.");
-        });
-        addText(privacy, "Die Erkennung ist noch im Test. Sie misst weder die Höhe einer Bodenwelle noch, ob ein Regelverstoß vorliegt.", 14, INK, false);
+        lastAction.setVisibility(RecordingService.lastAction.isEmpty() ? View.GONE : View.VISIBLE);
+        LinearLayout mapCard = card(content);
+        addText(mapCard, "Deine Karte", 20, INK, true);
+        mapPanel = new RideMapPanel(this, store, () -> requestPermissions(new String[]{
+                Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, MAP_LOCATION), findingActions::show, false);
+        mapCard.addView(mapPanel); if (resumed) mapPanel.resume();
+        button(mapCard, "Karte vergrößern", false, () -> startActivity(new Intent(this, MapActivity.class)));
     }
 
     private void renderFindings() {
         List<FindingBundle> bundles = store.bundles();
-        int findingCount = bundles.stream().mapToInt(b -> b.observations().size()).sum();
         long reviewed = bundles.stream().mapToLong(FindingBundle::reviewedCount).sum();
-        space(content, 24);
-        addText(content, "Nach der Fahrt prüfen", 24, INK, true);
-        addText(content, reviewed + " geprüft · " + (findingCount - reviewed) + " offen", 15, GREEN, true);
-        if (findingCount == 0) {
+        int count = bundles.stream().mapToInt(b -> b.observations().size()).sum();
+        addText(content, "Fundstellen", 30, INK, true);
+        addText(content, (count - reviewed) + " offen · " + reviewed + " freigegeben", 15, GREEN, true);
+        if (displayedRunning) addText(content, "Die Fahrt läuft weiter. Bitte nur im sicheren Stand prüfen.", 14, INK, false);
+        if (count == 0) {
             LinearLayout empty = card(content);
-            addText(empty, "Hier ist Platz für deine ersten Fundstellen", 18, INK, true);
-            addText(empty, "Starte oben eine Fahrt. Danach erscheinen hier mögliche Unebenheiten. Du kannst sie ansehen, beschreiben und Fehlalarme löschen.", 16, INK, false);
-        } else {
-            Button export = button(content, "Geprüfte Stellen als Datei speichern", true, this::confirmExport);
-            export.setEnabled(reviewed > 0);
-            Button mail = button(content, "Meldung an die Verwaltung vorbereiten", true, () -> startActivity(new Intent(this, MailReportActivity.class)));
-            mail.setEnabled(reviewed > 0);
-            addText(content, reviewed > 0
-                    ? "Du erhältst eine Tabelle (CSV). An die Verwaltung wird noch nichts gesendet."
-                    : "Öffne eine Fundstelle, prüfe sie und gib sie frei. Danach kannst du sie als Datei speichern.", 14, INK, false);
+            addText(empty, "Noch keine Fundstellen", 20, INK, true);
+            addText(empty, "Starte im Bereich „Fahrt“ eine Aufzeichnung. Hier kannst du danach die Messungen prüfen.", 15, INK, false);
+            button(empty, "Zur Fahrt", true, () -> switchTab(RIDE)); return;
         }
-        if (findingCount > 1) button(content, "Mehrfachtreffer bündeln", false,
-                () -> startActivity(new Intent(this, BundleActivity.class))).setId(R.id.bundle_open);
+        Button mail = button(content, "Meldung vorbereiten", true, () -> startActivity(new Intent(this, MailReportActivity.class)));
+        mail.setId(R.id.findings_mail); mail.setEnabled(reviewed > 0);
+        if (reviewed == 0) addText(content, "Zuerst eine Fundstelle prüfen und freigeben.", 14, INK, false);
+        button(content, "Weitere Aktionen", false, () -> new AlertDialog.Builder(this).setTitle("Fundstellen verwalten")
+                .setItems(new String[]{"Mehrfachtreffer bündeln", "Geprüfte Stellen als CSV speichern"}, (d, index) -> {
+                    if (index == 0) startActivity(new Intent(this, BundleActivity.class)); else confirmExport();
+                }).setNegativeButton("Schließen", null).show()).setId(R.id.findings_actions);
         List<List<FindingBundle>> suggestions = BundleSuggestions.suggest(bundles);
         java.util.Set<Long> nearKeys = new java.util.HashSet<>();
-        for (List<FindingBundle> suggestion : suggestions) for (FindingBundle b : suggestion) nearKeys.add(b.key());
-        if (!suggestions.isEmpty()) {
-            LinearLayout nearby = card(content);
-            addText(nearby, "Zusammenfassbare Treffer", 20, INK, true);
-            int groupsShown = 0;
-            for (List<FindingBundle> group : suggestions) {
-                if (groupsShown++ >= 10) break;
-                addText(nearby, group.stream().mapToInt(b -> b.observations().size()).sum()
-                        + " Beobachtungen · unter 2 m Abstand laut GPS", 15, GREEN, true);
-            }
-            addText(nearby, "GPS kann um mehrere Meter abweichen. Bitte dieselbe Unebenheit vor dem Bündeln bestätigen; Freigaben bleiben einzeln.", 14, INK, false);
-            button(nearby, "Vorschläge prüfen", false, () -> startActivity(new Intent(this, BundleActivity.class)));
+        for (List<FindingBundle> group : suggestions) for (FindingBundle b : group) nearKeys.add(b.key());
+        if (!suggestions.isEmpty()) button(content, suggestions.size() + " zusammenfassbare Gruppe(n) · unter 4 m", false,
+                () -> startActivity(new Intent(this, BundleActivity.class))).setId(R.id.bundle_open);
+        LinearLayout filters = new LinearLayout(this); content.addView(filters);
+        String[] labels = {"Alle", "Offen", "Freigegeben"};
+        int[] ids = {R.id.filter_all, R.id.filter_open, R.id.filter_reviewed};
+        for (int i = 0; i < labels.length; i++) {
+            final int filter = i;
+            Button choice = button(filters, labels[i], findingFilter == i, () -> {
+                findingFilter = filter; contentScroll.scrollTo(0, 0); render();
+            }); choice.setId(ids[i]); choice.setSelected(findingFilter == i); equalWidth(choice); choice.setTextSize(14);
         }
-        int shown = 0;
+        int shown = 0, matches = 0;
         for (FindingBundle bundle : bundles) {
+            if (findingFilter == 1 && bundle.reviewedCount() == bundle.observations().size()) continue;
+            if (findingFilter == 2 && bundle.reviewedCount() == 0) continue;
+            matches++;
+            if (shown++ >= 100) continue;
             Finding f = bundle.representative();
-            if (shown++ >= 100) break;
             LinearLayout item = card(content);
-            String category = bundle.title();
-            if (nearKeys.contains(bundle.key())) addText(item, "Zusammenfassbar · Treffer unter 2 m", 14, GREEN, true);
-            addText(item, (bundle.reviewedCount()==bundle.observations().size() ? "✓ Geprüft · " : "Offen · ") + category, 18, INK, true);
-            if(bundle.observations().size()>1) addText(item,bundle.observations().size()+" Beobachtungen · "+bundle.reviewedCount()+" freigegeben",15,GREEN,true);
-            addText(item, DATE.format(Instant.ofEpochMilli(f.timeMillis())), 14, INK, false);
-            addText(item, "manual".equals(f.source()) ? "Von dir markiert" : "Automatisch erfasst – bitte vor Ort zuordnen", 14, INK, false);
-            if (f.details().section() != null) addText(item, f.details().section().label(), 15, GREEN, true);
+            String state = bundle.reviewedCount() == bundle.observations().size() ? "Freigegeben"
+                    : bundle.reviewedCount() == 0 ? "Offen" : "Teilweise freigegeben";
+            addText(item, state + (nearKeys.contains(bundle.key()) ? " · zusammenfassbar" : ""), 13, GREEN, true);
+            addText(item, bundle.title(), 20, INK, true);
+            addText(item, DATE.format(Instant.ofEpochMilli(f.timeMillis()))
+                    + (bundle.observations().size() > 1 ? " · " + bundle.observations().size() + " Beobachtungen" : ""), 14, INK, false);
             Intensity intensity = bundle.intensity();
-            TextView rating = addText(item, intensity.label()+(bundle.observations().size()>1?" · bisheriger Höchstwert":""), 15, intensity.level() <= 1 || intensity.level() == 5 ? Color.WHITE : INK, true);
-            rating.setBackgroundColor(intensity.color()); rating.setPadding(dp(8), dp(6), dp(8), dp(6));
-            addText(item, GeodataDescription.summary(f.details()), 14, INK, false);
-            if (f.position().projected()) addText(item, f.details().section() == null
-                    ? "Position auf den Zeitpunkt der Erschütterung geschätzt"
-                    : "Abschnittsbeginn aus der GPS-Messung geschätzt", 14, GREEN, false);
-            if (!f.note().isEmpty()) addText(item, f.note(), 15, INK, false);
-            else addText(item, "Ergänze, was du an dieser Stelle gesehen hast.", 15, INK, false);
-            button(item, "Auf der Karte ansehen", false, () -> openMap(f));
-            button(item, bundle.observations().size()>1?"Beobachtungen prüfen und Fotos ergänzen":"Stelle prüfen und Fotos ergänzen", true, () -> findingActions.review(f));
-            Button delete = button(item, "Löschen", false, () -> findingActions.deleteObservation(f));
-            delete.setId(R.id.finding_delete);
-            delete.setTag(f.id());
-            delete.setContentDescription(bundle.observations().size() > 1
-                    ? "Eine Messung dieser Fundstelle löschen"
-                    : "Messung vom " + DATE.format(Instant.ofEpochMilli(f.timeMillis())) + " löschen");
-            LinearLayout details = column();
-            details.setVisibility(View.GONE);
-            addText(details, String.format(Locale.GERMANY, "Angezeigte Position: %.5f, %.5f\nUrsprüngliche GPS-Position: %.5f, %.5f\nGenauigkeit der GPS-Messung: ± %.0f m\nGPS-Messung: %.2f s %s dem Ereignis", f.latitude(), f.longitude(),
-                    f.position().gpsLatitude(), f.position().gpsLongitude(), f.accuracy(), Math.abs(f.locationAgeMillis()) / 1000.0,
-                    f.locationAgeMillis() >= 0 ? "vor" : "nach"), 14, INK, false);
-            if (f.position().projected()) {
-                addText(details, String.format(Locale.GERMANY, "Positionskorrektur: %.1f m %s der Fahrtrichtung. Schätzung bei gleichbleibender Geschwindigkeit und Richtung; die GPS-Genauigkeit gilt für die ursprüngliche Messung.",
-                        Math.abs(f.position().distanceMeters()), f.position().distanceMeters() >= 0 ? "entlang" : "entgegen"), 14, INK, false);
-            } else if ("automatic".equals(f.source()) && !"legacy_gps".equals(f.position().method())) {
-                addText(details, "Die ursprüngliche GPS-Position bleibt erhalten: keine zeitliche Verschiebung nötig oder keine brauchbare Richtung/Geschwindigkeit verfügbar.", 14, INK, false);
+            TextView rating = addText(item, intensity.label() + (bundle.observations().size() > 1 ? " · bisheriger Höchstwert" : ""),
+                    14, intensity.level() <= 1 || intensity.level() == 5 ? Color.WHITE : INK, true);
+            GradientDrawable badge = new GradientDrawable(); badge.setColor(intensity.color()); badge.setCornerRadius(dp(8));
+            rating.setBackground(badge); rating.setPadding(dp(8), dp(6), dp(8), dp(6));
+            if (f.details().section() != null) addText(item, f.details().section().label(), 14, GREEN, false);
+            if (!f.note().isEmpty()) {
+                TextView note = addText(item, f.note(), 15, INK, false);
+                note.setMaxLines(2); note.setEllipsize(android.text.TextUtils.TruncateAt.END);
             }
-            if (!f.details().legacyCategory().isEmpty()) addText(details, "Frühere Angabe: " + f.details().legacyCategory(), 14, INK, false);
-            Intensity score = f.details().intensity();
-            addText(details, "Bewertungsgrundlage: " + (score.value() == null ? "keine Messung" : score.value() + " " + score.unit()) + " · " + score.method(), 14, INK, false);
-            for (int i = 0; i < Classification.HAZARDS.length; i++) if ((f.details().hazards() & (1 << i)) != 0)
-                addText(details, "Zusatzmerkmal: " + Classification.HAZARDS[i].label(), 14, INK, false);
-            addText(details, GeodataDescription.details(f.details()), 14, INK, false);
-            if (f.details().osm().queriedAt() > 0 && System.currentTimeMillis() - f.details().osm().queriedAt() > 7L * 24 * 60 * 60 * 1000)
-                addText(details, "OSM-Cache älter als sieben Tage; Angaben können veraltet sein.", 14, INK, false);
-            String measurement = f.peak() == null ? "Manuelle Markierung" : String.format(Locale.GERMANY, "Sensorreaktion: %.1f m/s²", f.peak());
-            if (f.speed() != null) measurement += String.format(Locale.GERMANY, " · %.1f km/h", f.speed() * 3.6f);
-            addText(details, measurement, 14, INK, false);
-            Button toggle = button(item, "Messdetails anzeigen", false, () -> {});
-            toggle.setOnClickListener(v -> {
-                boolean opening = details.getVisibility() != View.VISIBLE;
-                details.setVisibility(opening ? View.VISIBLE : View.GONE);
-                toggle.setText(opening ? R.string.hide_details : R.string.show_details);
-            });
-            item.addView(details);
+            LinearLayout actions = new LinearLayout(this); item.addView(actions);
+            Button review = button(actions, "Prüfen & Fotos", true, () -> findingActions.review(f));
+            review.setId(R.id.finding_review); review.setTag(f.id()); equalWidth(review);
+            Button delete = button(actions, "Löschen", false, () -> findingActions.deleteObservation(f));
+            delete.setId(R.id.finding_delete); delete.setTag(f.id()); equalWidth(delete);
+            delete.setContentDescription("Messung vom " + DATE.format(Instant.ofEpochMilli(f.timeMillis())) + " löschen");
+            Button details = button(item, "Details & Karte", false, () -> showFindingDetails(bundle));
+            details.setId(R.id.finding_details); details.setTag(f.id());
+            details.setBackgroundColor(Color.TRANSPARENT);
         }
-        if (bundles.size() > 100) addText(content, "Die Liste zeigt die neuesten 100 Fundstellen. Der Export enthält alle geprüften Beobachtungen.", 14, INK, false);
-        if (findingCount > 0) button(content, "Alle Fundstellen löschen", false, () -> new AlertDialog.Builder(this)
-                .setTitle("Alle Fundstellen löschen?").setMessage("Die Beobachtungen, Bündelungen und zugehörigen Fotos werden aus der App entfernt. Bereits exportierte Dateien und vorbereitete Mailkopien bleiben erhalten; lokale Mailkopien werden beim nächsten Start nach sieben Tagen bereinigt.")
-                .setNegativeButton("Abbrechen", null).setPositiveButton("Löschen", (dialog, which) -> { store.deleteAll(); render(); }).show());
+        if (matches == 0) addText(content, "Keine Fundstellen in diesem Filter.", 16, INK, false);
+        if (matches > 100) addText(content, "Die Liste zeigt die neuesten 100 passenden Fundstellen. Der Export enthält alle freigegebenen Beobachtungen.", 14, INK, false);
+    }
+
+    private void showFindingDetails(FindingBundle bundle) {
+        Finding f = bundle.representative();
+        LinearLayout details = column(); details.setPadding(dp(20), dp(8), dp(20), dp(12));
+        addText(details, bundle.title(), 20, INK, true);
+        if (!f.note().isEmpty()) addText(details, f.note(), 16, INK, false);
+        if (bundle.observations().size() > 1) addText(details, bundle.observations().size() + " Beobachtungen · "
+                + bundle.reviewedCount() + " freigegeben. Messdetails beziehen sich auf die repräsentative Beobachtung.", 14, INK, false);
+        if (f.details().section() != null) addText(details, f.details().section().label(), 15, GREEN, true);
+        addText(details, String.format(Locale.GERMANY, "Angezeigte Position: %.5f, %.5f\nUrsprüngliche GPS-Position: %.5f, %.5f\nGenauigkeit der GPS-Messung: ± %.0f m\nGPS-Messung: %.2f s %s dem Ereignis", f.latitude(), f.longitude(),
+                f.position().gpsLatitude(), f.position().gpsLongitude(), f.accuracy(), Math.abs(f.locationAgeMillis()) / 1000.0,
+                f.locationAgeMillis() >= 0 ? "vor" : "nach"), 14, INK, false);
+        if (f.position().projected()) {
+            addText(details, String.format(Locale.GERMANY, "Positionskorrektur: %.1f m %s der Fahrtrichtung. Schätzung bei gleichbleibender Geschwindigkeit und Richtung; die GPS-Genauigkeit gilt für die ursprüngliche Messung.",
+                    Math.abs(f.position().distanceMeters()), f.position().distanceMeters() >= 0 ? "entlang" : "entgegen"), 14, INK, false);
+        } else if ("automatic".equals(f.source()) && !"legacy_gps".equals(f.position().method())) {
+            addText(details, "Die ursprüngliche GPS-Position bleibt erhalten: keine zeitliche Verschiebung nötig oder keine brauchbare Richtung/Geschwindigkeit verfügbar.", 14, INK, false);
+        }
+        if (!f.details().legacyCategory().isEmpty()) addText(details, "Frühere Angabe: " + f.details().legacyCategory(), 14, INK, false);
+        Intensity score = f.details().intensity();
+        addText(details, "Bewertungsgrundlage: " + (score.value() == null ? "keine Messung" : score.value() + " " + score.unit()) + " · " + score.method(), 14, INK, false);
+        for (int i = 0; i < Classification.HAZARDS.length; i++) if ((f.details().hazards() & (1 << i)) != 0)
+            addText(details, "Zusatzmerkmal: " + Classification.HAZARDS[i].label(), 14, INK, false);
+        addText(details, GeodataDescription.details(f.details()), 14, INK, false);
+        if (f.details().osm().queriedAt() > 0 && System.currentTimeMillis() - f.details().osm().queriedAt() > 7L * 24 * 60 * 60 * 1000)
+            addText(details, "OSM-Cache älter als sieben Tage; Angaben können veraltet sein.", 14, INK, false);
+        String measurement = f.peak() == null ? "Manuelle Markierung" : String.format(Locale.GERMANY, "Sensorreaktion: %.1f m/s²", f.peak());
+        if (f.speed() != null) measurement += String.format(Locale.GERMANY, " · %.1f km/h", f.speed() * 3.6f);
+        addText(details, measurement, 14, INK, false);
+        ScrollView scroll = new ScrollView(this); scroll.addView(details);
+        new AlertDialog.Builder(this).setTitle("Messdetails").setView(scroll)
+                .setPositiveButton("Auf der Karte ansehen", (d, w) -> openMap(f))
+                .setNegativeButton("Schließen", null).show();
+    }
+
+    private void renderMore() {
+        addText(content, "Mehr", 30, INK, true);
+        addText(content, "Einstellungen, Daten und Hilfe", 15, INK, false);
+        LinearLayout menu = card(content);
+        button(menu, "Messung einstellen", false, menus::measurement).setId(R.id.menu_measurement);
+        button(menu, "Karte & Geodaten", false, menus::geodata).setId(R.id.menu_geodata);
+        button(menu, "Daten verwalten", false, menus::data).setId(R.id.menu_data);
+        button(menu, "Datenschutz", false, menus::privacy).setId(R.id.menu_privacy);
+        button(menu, "Hilfe", false, this::showHelp);
+        addText(content, "Bodenwelle " + BuildConfig.VERSION_NAME + " · Testversion", 13, GREEN, false);
+    }
+
+    private void equalWidth(Button button) {
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, -2, 1);
+        params.setMargins(dp(3), dp(8), dp(3), dp(4)); button.setLayoutParams(params);
+    }
+
+    private void refreshCurrentPage() {
+        if (selectedTab == RIDE && mapPanel != null) mapPanel.refresh(); else render();
     }
 
     private void confirmStart() {
@@ -337,15 +389,15 @@ public final class MainActivity extends Activity {
         startWhenResumed = false;
         if (DeviceLocationSource.enabledProviders(getSystemService(LocationManager.class)).isEmpty()) {
             RecordingService.status = "Der Standort ist am Handy ausgeschaltet. Bitte einschalten und erneut starten.";
-            startStatus.setText(RecordingService.status);
+            if (startStatus != null) startStatus.setText(RecordingService.status);
             new AlertDialog.Builder(this).setTitle("Standort einschalten")
                     .setMessage(RecordingService.status).setNegativeButton("Später", null)
                     .setPositiveButton("Einstellungen öffnen", (d, w) -> startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS))).show();
             return;
         }
         RecordingService.prepareStart();
-        startStatus.setText(RecordingService.status);
-        startButton.setEnabled(false);
+        if (startStatus != null) startStatus.setText(RecordingService.status);
+        if (startButton != null) startButton.setEnabled(false);
         try {
             startForegroundService(new Intent(this, RecordingService.class));
             openMapAfterStart = true;
@@ -360,8 +412,8 @@ public final class MainActivity extends Activity {
     private void showStartFailure(String message) {
         openMapAfterStart = false;
         RecordingService.status = message;
-        startStatus.setText(message);
-        startButton.setEnabled(true);
+        if (startStatus != null) startStatus.setText(message);
+        if (startButton != null) startButton.setEnabled(true);
         new AlertDialog.Builder(this).setTitle("Fahrt konnte nicht starten").setMessage(message)
                 .setPositiveButton("Verstanden", null).show();
     }
@@ -382,7 +434,7 @@ public final class MainActivity extends Activity {
         new AlertDialog.Builder(this).setTitle("Deine erste Fahrt")
                 .setMessage("1. Vor der Fahrt\nBefestige das Handy fest am Lenker, tippe auf „Fahrt starten“ und erlaube den genauen Standort. Halte es im Stand zwei Sekunden ruhig, bis „Kalibriert“ erscheint. Warte draußen, bis die App die Position gefunden hat.\n\n"
                         + "2. Unterwegs\nDie Karte zeigt deinen Standort und die Fahrtspur. Mit „Mein Standort“ folgt sie dir, mit „Karte vergrößern“ nutzt du den ganzen Bildschirm. Die App erfasst mögliche Unebenheiten automatisch. Du kannst das Display ausschalten. Für eine eigene Markierung erst sicher anhalten und „Stelle markieren“ wählen.\n\n"
-                        + "3. Nach der Fahrt\nBeende die Fahrt. Sieh dir die Fundstellen an, beschreibe sie und gib passende Einträge frei. Dann kannst du eine Datei speichern oder eine Meldung an die Verwaltung vorbereiten. Der Mailentwurf enthält Kalenderwochen und bleibt bearbeitbar. Erst in deinem Mailprogramm versendest du die Nachricht.")
+                        + "3. Nach der Fahrt\nBeende die Fahrt. Öffne unten „Fundstellen“, beschreibe sie und gib passende Einträge frei. Dann kannst du eine Datei speichern oder eine Meldung an die Verwaltung vorbereiten. Der Mailentwurf enthält Kalenderwochen und bleibt bearbeitbar. Erst in deinem Mailprogramm versendest du die Nachricht.")
                 .setPositiveButton("Los geht’s", null).show();
     }
 
@@ -429,7 +481,7 @@ public final class MainActivity extends Activity {
     private Button button(LinearLayout parent, String text, boolean primary, Runnable action) {
         Button button = new Button(this);
         button.setText(text); button.setAllCaps(false); button.setTextSize(16);
-        button.setMinHeight(dp(56));
+        button.setMinHeight(dp(48));
         button.setTextColor(primary ? Color.WHITE : GREEN);
         GradientDrawable background = new GradientDrawable();
         background.setColor(primary ? GREEN : Color.rgb(232, 242, 238));

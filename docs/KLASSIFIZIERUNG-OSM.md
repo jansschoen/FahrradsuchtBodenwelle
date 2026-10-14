@@ -50,7 +50,7 @@ Gefährdungsmerkmale sind unabhängige Kennzeichen: `poor_visibility`, `no_escap
 
 ## OSM-Daten und räumliche Zuordnung
 
-Die App fragt `https://overpass-api.de/api/interpreter` per HTTPS nach Wegen mit `highway` und ihrer Geometrie. Der Ausschnitt wird auf ein 0,002°-Raster gelegt und mit einem Rand von 0,003° erweitert. Die Abfrage umfasst in Berlin ungefähr einen Kilometer oder weniger pro Seitenlänge. Anfragen enthalten den Ausschnitt und die IP-Adresse, keine Notiz, Beschleunigungswerte oder Freigaben. Die Ergänzung ist auf der Startseite abschaltbar; Kartenkacheln sind eine separate Netzwerkfunktion.
+Die App fragt `https://overpass-api.de/api/interpreter` per HTTPS nach Wegen mit `highway` und ihrer Geometrie. Der Ausschnitt wird auf ein 0,002°-Raster gelegt und mit einem Rand von 0,003° erweitert. Die Abfrage umfasst in Berlin ungefähr einen Kilometer oder weniger pro Seitenlänge. Anfragen enthalten den Ausschnitt und die IP-Adresse, keine Notiz, Beschleunigungswerte oder Freigaben. Die Ergänzung ist unter **Mehr → Karte & Geodaten** abschaltbar; Kartenkacheln sind eine separate Netzwerkfunktion.
 
 Es gibt höchstens eine neue Abfrage pro Minute und Installation. Nach Fehlern gilt mindestens fünf Minuten Pause; ein längeres `Retry-After` des Servers wird berücksichtigt. Die App setzt einen identifizierenden User-Agent, 20 Sekunden Serverlaufzeit, 10 Sekunden Verbindungs- und 30 Sekunden Lesetimeout sowie maximal 4 MiB Antwortgröße. Unvollständige Antworten werden nicht gespeichert. Der lokale Cache hält höchstens 64 Ausschnitte für sieben Tage frisch. Offline können ältere Daten mit niedriger Sicherheit und ursprünglichem Abfragedatum weiterverwendet werden.
 
