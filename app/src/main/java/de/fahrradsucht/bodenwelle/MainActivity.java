@@ -37,12 +37,7 @@ public final class MainActivity extends Activity {
     private static final int PERMISSIONS = 10;
     private static final int EXPORT = 11;
     private static final int MAP_LOCATION = 12;
-    private static final int PHOTO_PICK = 13;
-    private static final int PHOTO_CAPTURE = 14;
-    private long pendingPhotoFinding;
-    private String pendingCapture = "";
-    private PhotoPanel activePhotoPanel;
-    private static final java.util.concurrent.ExecutorService PHOTOS = java.util.concurrent.Executors.newSingleThreadExecutor();
+    private FindingActions findingActions;
     private static final int GREEN = Color.rgb(8, 127, 115);
     private static final int INK = Color.rgb(27, 48, 46);
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy · HH:mm").withZone(ZoneId.of("Europe/Berlin"));
@@ -67,6 +62,8 @@ public final class MainActivity extends Activity {
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         store = new FindingStore(this);
+        findingActions = new FindingActions(this, store, this::render);
+        findingActions.restore(state);
         if (state != null) {
             pendingStart = state.getBoolean("pendingStart");
             openMapAfterStart = state.getBoolean("openMapAfterStart");
@@ -75,10 +72,6 @@ public final class MainActivity extends Activity {
         }
         if (Build.VERSION.SDK_INT >= 30) getWindow().setDecorFitsSystemWindows(false);
         render();
-        if (state != null) {
-            pendingPhotoFinding = state.getLong("photoFinding");
-            pendingCapture = state.getString("photoCapture", "");
-        }
         if (state == null) PhotoFiles.cleanup(this);
     }
 
@@ -87,8 +80,7 @@ public final class MainActivity extends Activity {
         state.putBoolean("openMapAfterStart", openMapAfterStart);
         state.putBoolean("startWhenResumed", startWhenResumed);
         state.putLong("serviceRequestedAt", serviceRequestedAt);
-        state.putLong("photoFinding", pendingPhotoFinding);
-        state.putString("photoCapture", pendingCapture);
+        findingActions.save(state);
         super.onSaveInstanceState(state);
     }
 
@@ -159,7 +151,7 @@ public final class MainActivity extends Activity {
         LinearLayout mapCard = card(content);
         addText(mapCard, "Deine Karte", 21, INK, true);
         mapPanel = new RideMapPanel(this, store, () -> requestPermissions(new String[]{
-                Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, MAP_LOCATION), this::review, false);
+                Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, MAP_LOCATION), findingActions::show, false);
         mapCard.addView(mapPanel);
         if (resumed) mapPanel.resume();
         button(mapCard, "Karte vergrößern", false, () -> startActivity(new Intent(this, MapActivity.class)));
@@ -174,7 +166,7 @@ public final class MainActivity extends Activity {
             button(ride, "Fahrt beenden", false, () -> startService(new Intent(this, RecordingService.class).setAction(RecordingService.STOP)));
             addText(ride, "Du kannst das Display ausschalten. Zum Markieren erst sicher anhalten.", 14, INK, false);
         } else {
-            addText(ride, "Handy fest am Lenker befestigen. GPS draußen abwarten. Die Automatik erkennt Erschütterungen ab etwa 5 km/h.", 14, INK, false);
+            addText(ride, "Handy fest am Lenker befestigen. Nach dem Start zwei Sekunden im Stand ruhig halten, bis „Kalibriert“ erscheint. Dann GPS draußen abwarten. Die Automatik erkennt vertikale Erschütterungen ab etwa 5 km/h.", 14, INK, false);
         }
         button(content, "So funktioniert’s", false, this::showHelp);
         if (!displayedRunning) renderFindings();
@@ -221,26 +213,45 @@ public final class MainActivity extends Activity {
         }
         if (findingCount > 1) button(content, "Mehrfachtreffer bündeln", false,
                 () -> startActivity(new Intent(this, BundleActivity.class))).setId(R.id.bundle_open);
+        List<List<FindingBundle>> suggestions = BundleSuggestions.suggest(bundles);
+        java.util.Set<Long> nearKeys = new java.util.HashSet<>();
+        for (List<FindingBundle> suggestion : suggestions) for (FindingBundle b : suggestion) nearKeys.add(b.key());
+        if (!suggestions.isEmpty()) {
+            LinearLayout nearby = card(content);
+            addText(nearby, "Zusammenfassbare Treffer", 20, INK, true);
+            int groupsShown = 0;
+            for (List<FindingBundle> group : suggestions) {
+                if (groupsShown++ >= 10) break;
+                addText(nearby, group.stream().mapToInt(b -> b.observations().size()).sum()
+                        + " Beobachtungen · unter 2 m Abstand laut GPS", 15, GREEN, true);
+            }
+            addText(nearby, "GPS kann um mehrere Meter abweichen. Bitte dieselbe Unebenheit vor dem Bündeln bestätigen; Freigaben bleiben einzeln.", 14, INK, false);
+            button(nearby, "Vorschläge prüfen", false, () -> startActivity(new Intent(this, BundleActivity.class)));
+        }
         int shown = 0;
         for (FindingBundle bundle : bundles) {
             Finding f = bundle.representative();
             if (shown++ >= 100) break;
             LinearLayout item = card(content);
             String category = bundle.title();
+            if (nearKeys.contains(bundle.key())) addText(item, "Zusammenfassbar · Treffer unter 2 m", 14, GREEN, true);
             addText(item, (bundle.reviewedCount()==bundle.observations().size() ? "✓ Geprüft · " : "Offen · ") + category, 18, INK, true);
             if(bundle.observations().size()>1) addText(item,bundle.observations().size()+" Beobachtungen · "+bundle.reviewedCount()+" freigegeben",15,GREEN,true);
             addText(item, DATE.format(Instant.ofEpochMilli(f.timeMillis())), 14, INK, false);
             addText(item, "manual".equals(f.source()) ? "Von dir markiert" : "Automatisch erfasst – bitte vor Ort zuordnen", 14, INK, false);
+            if (f.details().section() != null) addText(item, f.details().section().label(), 15, GREEN, true);
             Intensity intensity = bundle.intensity();
             TextView rating = addText(item, intensity.label()+(bundle.observations().size()>1?" · bisheriger Höchstwert":""), 15, intensity.level() <= 1 || intensity.level() == 5 ? Color.WHITE : INK, true);
             rating.setBackgroundColor(intensity.color()); rating.setPadding(dp(8), dp(6), dp(8), dp(6));
             addText(item, GeodataDescription.summary(f.details()), 14, INK, false);
-            if (f.position().projected()) addText(item, "Position auf den Zeitpunkt der Erschütterung geschätzt", 14, GREEN, false);
+            if (f.position().projected()) addText(item, f.details().section() == null
+                    ? "Position auf den Zeitpunkt der Erschütterung geschätzt"
+                    : "Abschnittsbeginn aus der GPS-Messung geschätzt", 14, GREEN, false);
             if (!f.note().isEmpty()) addText(item, f.note(), 15, INK, false);
             else addText(item, "Ergänze, was du an dieser Stelle gesehen hast.", 15, INK, false);
             button(item, "Auf der Karte ansehen", false, () -> openMap(f));
-            button(item, bundle.observations().size()>1?"Beobachtungen prüfen und Fotos ergänzen":"Stelle prüfen und Fotos ergänzen", true, () -> review(f));
-            Button delete = button(item, "Löschen", false, () -> deleteObservation(f));
+            button(item, bundle.observations().size()>1?"Beobachtungen prüfen und Fotos ergänzen":"Stelle prüfen und Fotos ergänzen", true, () -> findingActions.review(f));
+            Button delete = button(item, "Löschen", false, () -> findingActions.deleteObservation(f));
             delete.setId(R.id.finding_delete);
             delete.setTag(f.id());
             delete.setContentDescription(bundle.observations().size() > 1
@@ -355,66 +366,6 @@ public final class MainActivity extends Activity {
                 .setPositiveButton("Verstanden", null).show();
     }
 
-    private void review(Finding f) {
-        List<Finding> members = store.observations(f.bundleKey());
-        if (members.isEmpty()) { render(); return; }
-        if (members.size() == 1) { reviewObservation(members.get(0)); return; }
-        new AlertDialog.Builder(this).setTitle("Beobachtung auswählen")
-                .setItems(observationLabels(members), (d, index) -> reviewObservation(members.get(index)))
-                .setNegativeButton("Schließen", null)
-                .setNeutralButton("Bündelung auflösen", (d, w) -> { store.separateBundle(f.bundleKey()); render(); }).show();
-    }
-
-    private String[] observationLabels(List<Finding> members) {
-        return members.stream().map(f -> (f.reviewed() ? "✓ " : "Offen · ")
-                + DATE.format(Instant.ofEpochMilli(f.timeMillis())) + " · "
-                + Classification.label(Classification.BUMPS, f.category()) + " · Messung #" + f.id())
-                .toArray(String[]::new);
-    }
-
-    private void deleteObservation(Finding f) {
-        List<Finding> members = store.observations(f.bundleKey());
-        if (members.isEmpty()) { render(); return; }
-        if (members.size() == 1) { confirmDelete(members.get(0)); return; }
-        new AlertDialog.Builder(this).setTitle("Welche Messung löschen?")
-                .setItems(observationLabels(members), (d, index) -> confirmDelete(members.get(index)))
-                .setNegativeButton("Abbrechen", null).show();
-    }
-
-    private void confirmDelete(Finding f) {
-        String message = "Messung #" + f.id() + " vom " + DATE.format(Instant.ofEpochMilli(f.timeMillis()))
-                + "\n" + Classification.label(Classification.BUMPS, f.category())
-                + "\n\nDiese Messung und ihre Fotos werden aus der App gelöscht."
-                + (f.bundleId() > 0 ? " Weitere Messungen dieser Fundstelle bleiben erhalten." : "")
-                + " Bereits exportierte Kopien bleiben erhalten.";
-        new AlertDialog.Builder(this).setTitle("Messung löschen?").setMessage(message)
-                .setNegativeButton("Abbrechen", null)
-                .setPositiveButton("Löschen", (d, w) -> { store.delete(f.id()); render(); toast("Messung gelöscht."); }).show();
-    }
-
-    private void reviewObservation(Finding f) {
-        FindingReviewForm form = new FindingReviewForm(this, f);
-        activePhotoPanel = new PhotoPanel(this, store, f.id(), new PhotoPanel.Actions() {
-            @Override public void pick(long id) { pickPhoto(id); }
-            @Override public void capture(long id) { capturePhoto(id); }
-        });
-        PhotoPanel panel = activePhotoPanel;
-        form.photos.addView(panel.root);
-        ScrollView scroll = new ScrollView(this); scroll.addView(form.root);
-        AlertDialog dialog = new AlertDialog.Builder(this).setTitle("Fundstelle prüfen").setView(scroll)
-                .setNegativeButton("Abbrechen", null)
-                .setNeutralButton("Löschen", (d, w) -> confirmDelete(f))
-                .setPositiveButton("Speichern", null).create();
-        dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-            try {
-                store.review(f.id(), form.category(), form.note.getText().toString().trim(), form.release.isChecked(), form.details(f));
-                dialog.dismiss(); render();
-            } catch (IllegalArgumentException e) { form.height.setError(e.getMessage()); toast(e.getMessage()); }
-        }));
-        dialog.setOnDismissListener(d -> { if (activePhotoPanel == panel) activePhotoPanel = null; });
-        dialog.show();
-    }
-
     private void confirmExport() {
         long count = store.all().stream().filter(Finding::reviewed).count();
         if (count == 0) { toast("Bitte zuerst mindestens eine Fundstelle prüfen."); return; }
@@ -429,7 +380,7 @@ public final class MainActivity extends Activity {
 
     private void showHelp() {
         new AlertDialog.Builder(this).setTitle("Deine erste Fahrt")
-                .setMessage("1. Vor der Fahrt\nBefestige das Handy fest am Lenker, tippe auf „Fahrt starten“ und erlaube den genauen Standort. Warte draußen, bis die App die Position gefunden hat.\n\n"
+                .setMessage("1. Vor der Fahrt\nBefestige das Handy fest am Lenker, tippe auf „Fahrt starten“ und erlaube den genauen Standort. Halte es im Stand zwei Sekunden ruhig, bis „Kalibriert“ erscheint. Warte draußen, bis die App die Position gefunden hat.\n\n"
                         + "2. Unterwegs\nDie Karte zeigt deinen Standort und die Fahrtspur. Mit „Mein Standort“ folgt sie dir, mit „Karte vergrößern“ nutzt du den ganzen Bildschirm. Die App erfasst mögliche Unebenheiten automatisch. Du kannst das Display ausschalten. Für eine eigene Markierung erst sicher anhalten und „Stelle markieren“ wählen.\n\n"
                         + "3. Nach der Fahrt\nBeende die Fahrt. Sieh dir die Fundstellen an, beschreibe sie und gib passende Einträge frei. Dann kannst du eine Datei speichern oder eine Meldung an die Verwaltung vorbereiten. Der Mailentwurf enthält Kalenderwochen und bleibt bearbeitbar. Erst in deinem Mailprogramm versendest du die Nachricht.")
                 .setPositiveButton("Los geht’s", null).show();
@@ -439,34 +390,9 @@ public final class MainActivity extends Activity {
         startActivity(new Intent(this, MapActivity.class).putExtra("latitude", f.latitude()).putExtra("longitude", f.longitude()));
     }
 
-    private void pickPhoto(long id) {
-        pendingPhotoFinding=id;pendingCapture="";
-        Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("image/*").putExtra(Intent.EXTRA_ALLOW_MULTIPLE,true);
-        try { startActivityForResult(pick,PHOTO_PICK); } catch(android.content.ActivityNotFoundException e){pendingPhotoFinding=0;toast("Keine Bildauswahl gefunden.");}
-    }
-    private void capturePhoto(long id) {
-        pendingPhotoFinding=id;pendingCapture=java.util.UUID.randomUUID().toString();Uri uri=PhotoFiles.captureUri(this,pendingCapture);
-        Intent capture=new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE).putExtra(android.provider.MediaStore.EXTRA_OUTPUT,uri);
-        capture.setClipData(android.content.ClipData.newRawUri("Kamerafoto",uri));capture.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION|Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        try { startActivityForResult(capture,PHOTO_CAPTURE); } catch(android.content.ActivityNotFoundException e){PhotoFiles.captureFile(this,pendingCapture).delete();pendingCapture="";pendingPhotoFinding=0;toast("Keine Kamera-App gefunden. Du kannst ein vorhandenes Foto auswählen.");}
-    }
-
     @Override public void onActivityResult(int request, int result, Intent data) {
         super.onActivityResult(request, result, data);
-        if(request==PHOTO_PICK || request==PHOTO_CAPTURE){
-            long findingId=pendingPhotoFinding;String capture=pendingCapture;pendingPhotoFinding=0;pendingCapture="";
-            if(!capture.isEmpty())revokeUriPermission(PhotoFiles.captureUri(this,capture),Intent.FLAG_GRANT_WRITE_URI_PERMISSION|Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            if(result!=RESULT_OK){if(!capture.isEmpty())PhotoFiles.captureFile(this,capture).delete();return;}
-            java.util.List<Uri> uris=new java.util.ArrayList<>();
-            if(request==PHOTO_PICK && data!=null){if(data.getClipData()!=null)for(int i=0;i<data.getClipData().getItemCount();i++)uris.add(data.getClipData().getItemAt(i).getUri());else if(data.getData()!=null)uris.add(data.getData());}
-            if(request==PHOTO_PICK && uris.size()>PhotoFiles.MAX_PER_OBSERVATION-store.photos(findingId).size()){toast("Bitte höchstens fünf Fotos pro Beobachtung auswählen. Es wurde noch kein Foto übernommen.");return;}
-            android.content.Context app=getApplicationContext();toast("Foto wird lokal vorbereitet …");
-            PHOTOS.execute(()->{int count=0;try{
-                if(request==PHOTO_CAPTURE){PhotoFiles.importCapture(app,capture,findingId);count++;}
-                else for(Uri uri:uris){PhotoFiles.importPhoto(app,uri,findingId);count++;}
-                int imported=count;handler.post(()->{if(!isDestroyed()){toast(imported+" Foto(s) hinzugefügt.");if(activePhotoPanel!=null)activePhotoPanel.refresh();}});
-            }catch(Exception e){int imported=count;handler.post(()->{if(!isDestroyed()){toast(imported+" Foto(s) hinzugefügt. Ein Foto konnte nicht übernommen werden: "+e.getMessage());if(activePhotoPanel!=null)activePhotoPanel.refresh();}});}});return;
-        }
+        if (findingActions.onActivityResult(request, result, data)) return;
         if (request != EXPORT || result != RESULT_OK || data == null || data.getData() == null) return;
         try (OutputStream stream = getContentResolver().openOutputStream(data.getData(), "wt")) {
             if (stream == null) throw new java.io.IOException("No output stream");

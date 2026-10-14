@@ -5,7 +5,8 @@ public final class Classification {
     private Classification() {}
     public record Choice(String id, String label) { @Override public String toString() { return label; } }
     public static final Choice[] BUMPS = choices("root_heave|Wurzelaufbruch", "pothole|Schlagloch", "transverse_groove|Querrille",
-            "longitudinal_groove|Längsrille", "paving_displacement|Pflasterversatz", "long_wave|Langgezogene Bodenwelle", "other|Sonstige Unebenheit");
+            "longitudinal_groove|Längsrille", "paving_displacement|Pflasterversatz", "long_wave|Langgezogene Bodenwelle",
+            "rough_road|Unebener Straßenabschnitt", "other|Sonstige Unebenheit");
     public static final Choice[] ROADS = choices("mandatory_cycleway|Benutzungspflichtiger Radweg", "cycleway|Sonstiger Radweg",
             "shared_path|Gemeinsamer Geh- und Radweg", "bicycle_road|Fahrradstraße", "carriageway|Reguläre Fahrbahn",
             "other|Sonstige Verkehrsfläche", "unknown|Unbekannt");

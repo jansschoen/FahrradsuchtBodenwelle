@@ -45,9 +45,12 @@ public final class RideMapPanel extends LinearLayout {
     private final Runnable requestLocation;
     private final Consumer<Finding> review;
     private final SensitivityControl sensitivity;
+    private final TextView calibration;
+    private final Button recalibrate;
     private long shownRevision = -1;
     private final List<Polyline> lines = new ArrayList<>();
     private final List<Marker> markers = new ArrayList<>();
+    private final List<Polyline> sectionLines = new ArrayList<>();
     private List<RoutePoint> points = new ArrayList<>();
     private int shownRouteCount = -1;
     private int shownFindingCount = -1;
@@ -64,7 +67,7 @@ public final class RideMapPanel extends LinearLayout {
         IConfigurationProvider config = Configuration.getInstance();
         config.setOsmdroidBasePath(base);
         config.setOsmdroidTileCache(cache);
-        config.setUserAgentValue("Bodenwelle/0.5.0 (de.fahrradsucht.bodenwelle; https://github.com/jansschoen/FahrradsuchtBodenwelle)");
+        config.setUserAgentValue("Bodenwelle/" + BuildConfig.VERSION_NAME + " (de.fahrradsucht.bodenwelle; https://github.com/jansschoen/FahrradsuchtBodenwelle)");
         config.setTileDownloadThreads((short) 2);
         config.setTileFileSystemCacheMaxBytes(60 * 1024 * 1024L);
         config.setTileFileSystemCacheTrimBytes(48 * 1024 * 1024L);
@@ -104,6 +107,12 @@ public final class RideMapPanel extends LinearLayout {
         addView(controls);
         sensitivity = new SensitivityControl(activity);
         addView(sensitivity);
+        calibration = text(RecordingService.calibrationStatus, 14);
+        calibration.setId(R.id.calibration_status);
+        recalibrate = control(R.string.recalibrate, () -> activity.startService(
+                new Intent(activity, RecordingService.class).setAction(RecordingService.CALIBRATE)));
+        recalibrate.setId(R.id.recalibrate);
+        addView(recalibrate);
         text(activity.getString(R.string.map_legend), 12);
         TextView attribution = text(activity.getString(R.string.osm_attribution), 12);
         attribution.setMinHeight(dp(40));
@@ -145,6 +154,8 @@ public final class RideMapPanel extends LinearLayout {
 
     public void refresh() {
         sensitivity.refresh();
+        if (calibration != null) calibration.setText(RecordingService.calibrationStatus);
+        if (recalibrate != null) recalibrate.setVisibility(RecordingService.running ? View.VISIBLE : View.GONE);
         int count = store.routeCount();
         if (shownRouteCount != count) {
             shownRouteCount = count;
@@ -171,6 +182,7 @@ public final class RideMapPanel extends LinearLayout {
             shownFindingCount = findings;
             for (Marker marker : markers) { marker.closeInfoWindow(); marker.onDetach(map); }
             map.getOverlays().removeAll(markers); markers.clear();
+            map.getOverlays().removeAll(sectionLines); sectionLines.clear();
             int shown = 0;
             for (FindingBundle bundle : store.bundles()) {
                 Finding finding=bundle.representative();
@@ -187,10 +199,20 @@ public final class RideMapPanel extends LinearLayout {
                 marker.setTitle((bundle.reviewedCount()==bundle.observations().size()?"Geprüfte Fundstelle":"Fundstelle mit offenen Beobachtungen")+" · "+bundle.observations().size()+" Beobachtung(en)");
                 marker.setSnippet(bundle.title() + " · " + bundle.intensity().label()+(bundle.observations().size()>1?" · bisheriger Höchstwert":"") + (finding.note().isEmpty() ? "" : " · " + finding.note()));
                 marker.setOnMarkerClickListener((m, view) -> {
-                    if (review != null && !RecordingService.running) review.accept(finding);
+                    if (review != null) review.accept(finding);
                     else m.showInfoWindow();
                     return true;
                 });
+                RoughSection section = finding.details().section();
+                if (section != null) {
+                    Polyline line = new Polyline(map);
+                    line.setPoints(java.util.Arrays.asList(new GeoPoint(finding.latitude(), finding.longitude()),
+                            new GeoPoint(section.endLatitude(), section.endLongitude())));
+                    line.getOutlinePaint().setColor(Color.rgb(207, 109, 17));
+                    line.getOutlinePaint().setStrokeWidth(dp(7));
+                    line.setOnClickListener((l, view, point) -> { if (review != null) review.accept(finding); return true; });
+                    sectionLines.add(line); map.getOverlays().add(line);
+                }
                 markers.add(marker); map.getOverlays().add(marker);
             }
         }

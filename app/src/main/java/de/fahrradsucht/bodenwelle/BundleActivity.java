@@ -28,7 +28,8 @@ public final class BundleActivity extends Activity {
         text("Bestätige nur Beobachtungen derselben tatsächlichen Unebenheit. Einzelne Messungen, Freigaben und Fotos bleiben erhalten. Du kannst eine Bündelung wieder auflösen.",16);
         List<FindingBundle> all=store.bundles();
         List<List<FindingBundle>> suggestions=BundleSuggestions.suggest(all);
-        if(!suggestions.isEmpty())text("Nahe Treffer gleicher Art – bitte vor Ort zuordnen",18);
+        if(!suggestions.isEmpty())text("Zusammenfassbar · unter 2 m Abstand laut GPS",18);
+        text("Die GPS-Ungenauigkeit kann größer als zwei Meter sein. Auch ungeprüfte Treffer werden vorgeschlagen; Freigaben bleiben einzeln. Unterschiedlich bekannte Schadensarten und Straßenabschnitte werden nicht automatisch vorgeschlagen.",14);
         for(List<FindingBundle> suggestion:suggestions) {
             text(suggestion.get(0).title()+" · "+suggestion.stream().mapToInt(b->b.observations().size()).sum()+" Beobachtungen",16);
             for(FindingBundle b:suggestion)text(describe(b),14);

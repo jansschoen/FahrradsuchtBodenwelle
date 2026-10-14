@@ -106,9 +106,9 @@ public class DetectionTest {
     }
     @Test public void invalidProjectionSampleDoesNotPoisonLaterValues() {
         AccelerationProjector p = new AccelerationProjector();
-        p.accept(1_000_000_000L, 0, 0, 9.81);
-        assertEquals(0, p.accept(1_010_000_000L, Double.NaN, 0, 9.81), 0);
-        assertTrue(p.accept(1_020_000_000L, 0, 0, 17.81) > 7);
+        for (long t = 1_000_000_000L; t < 4_000_000_000L; t += 10_000_000L) p.accept(t, 0, 0, 9.81);
+        assertTrue(Double.isNaN(p.accept(4_000_000_000L, Double.NaN, 0, 9.81)));
+        assertEquals(8, p.accept(4_010_000_000L, 0, 0, 17.81), 1e-6);
     }
     @Test public void oldInaccurateOrMissingFixPreventsDetection() {
         assertFalse(RideEligibility.locationUsable(5001, true, 5));

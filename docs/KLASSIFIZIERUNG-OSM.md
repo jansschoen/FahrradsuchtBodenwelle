@@ -83,3 +83,7 @@ Die Live-Abfrage und der Abruf der aktuellen Overpass-Dokumentation wurden am 13
 Automatisierte Tests prüfen Höhen- und Sensorgrenzen, fehlende und widersprüchliche Tags, Oberflächen, parallele und kreuzende Wege, Cache, Offline-Ergänzung, Fehlerpausen, manuelle Korrekturen und deren Nebenläufigkeit, Datenmigration sowie aktualisierte Kartenfarben. Native Android-Frameworktests laufen auf simuliertem Android 9 und 15. Der tatsächliche Abruf auf dem Fairphone und die Zuordnungsqualität im Fahrtest bleiben zu prüfen; die App trifft keine verbindliche Aussage über Zulässigkeit oder Beseitigungspflichten.
 
 Ab Version 0.4.0 steigen die Zahlenwerte des Sensitivitätsreglers nach rechts; eine direkte Zahleneingabe ist zusätzlich vorhanden. Mailentwürfe und Kalenderwochen sind in [MAIL-MELDUNGEN.md](MAIL-MELDUNGEN.md) dokumentiert.
+
+## Straßenabschnitte
+
+Seit 0.7.0 ergänzt `rough_road` die Kategorie **Unebener Straßenabschnitt**. Die optionale Abschnittsgeometrie bleibt beim Prüfen und bei OSM-Ergänzungen erhalten. Anfang und Ende sind GPS-Schätzungen, die Länge stammt aus Geschwindigkeit und Zeit. Quelle, Unsicherheit und einzelne Freigaben bleiben nachvollziehbar. Die neue letzte CSV-Spalte `rough_section` enthält die optionalen Abschnittsmetadaten als JSON; die bisherigen Spalten bleiben in derselben Reihenfolge. [Erkennungslogik und Bedienung](KALIBRIERUNG-ABSCHNITTE.md).

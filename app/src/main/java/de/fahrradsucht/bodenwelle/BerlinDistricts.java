@@ -43,7 +43,14 @@ public final class BerlinDistricts {
     }
     public Assignment assign(Finding f, String manualId) {
         if (manualId != null && !manualId.isEmpty()) return new Assignment(manualId, "manual");
-        return locate(f.latitude(), f.longitude(), f.accuracy(), f.position().distanceMeters());
+        Assignment start = locate(f.latitude(), f.longitude(), f.accuracy(), f.position().distanceMeters());
+        RoughSection section = f.details().section();
+        if (section != null) {
+            Assignment end = locate(section.endLatitude(), section.endLongitude(), section.endAccuracy(), section.endPositionDistance());
+            if (start.districtId().isEmpty() || !start.districtId().equals(end.districtId()))
+                return new Assignment("", "section_jurisdiction_uncertain");
+        }
+        return start;
     }
     public Assignment locate(double lat, double lon, float accuracy, double projectionDistance) {
         if (!Double.isFinite(lat) || !Double.isFinite(lon) || !Double.isFinite(projectionDistance) || !Float.isFinite(accuracy) || accuracy < 0)

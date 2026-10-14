@@ -20,9 +20,12 @@ public final class MapActivity extends Activity {
     private RideMapPanel panel;
     private TextView status;
     private LinearLayout rideControls;
+    private FindingActions findingActions;
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         store = new FindingStore(this);
+        findingActions = new FindingActions(this, store, () -> panel.refresh());
+        findingActions.restore(state);
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         if (Build.VERSION.SDK_INT >= 30) {
@@ -43,7 +46,7 @@ public final class MapActivity extends Activity {
         status.setPadding(padding, padding, padding, padding);
         root.addView(status);
         panel = new RideMapPanel(this, store, () -> requestPermissions(new String[]{
-                Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 1), null, true);
+                Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 1), findingActions::show, true);
         root.addView(panel, new LinearLayout.LayoutParams(-1, 0, 1));
         rideControls = new LinearLayout(this);
         rideControls.setOrientation(LinearLayout.HORIZONTAL);
@@ -72,6 +75,11 @@ public final class MapActivity extends Activity {
     @Override public void onResume() { super.onResume(); panel.resume(); handler.post(tick); }
     @Override public void onPause() { handler.removeCallbacks(tick); panel.pause(); super.onPause(); }
     @Override public void onDestroy() { panel.destroy(); store.close(); super.onDestroy(); }
+    @Override public void onSaveInstanceState(Bundle state) { findingActions.save(state); super.onSaveInstanceState(state); }
+    @Override public void onActivityResult(int request, int result, Intent data) {
+        super.onActivityResult(request, result, data);
+        findingActions.onActivityResult(request, result, data);
+    }
     @Override public void onRequestPermissionsResult(int code, String[] permissions, int[] result) {
         super.onRequestPermissionsResult(code, permissions, result); panel.resume();
     }

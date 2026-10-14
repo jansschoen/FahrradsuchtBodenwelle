@@ -67,6 +67,12 @@ public class RecordingWorkflowTest {
     private RecordingService start() {
         service = Robolectric.buildService(RecordingService.class).create();
         service.get().onStartCommand(new Intent(app, RecordingService.class), 0, 1);
+        for (int i = 0; i < 220; i++) {
+            ShadowSystemClock.advanceBy(Duration.ofMillis(10));
+            SensorEvent event = ShadowSensorManager.createSensorEvent(3, Sensor.TYPE_ACCELEROMETER);
+            event.timestamp = SystemClock.elapsedRealtimeNanos(); event.values[2] = 9.81f;
+            Shadows.shadowOf(sensors).sendSensorEventToListeners(event, sensor);
+        }
         return service.get();
     }
     private Location fix(String provider, float accuracy) {
@@ -76,6 +82,49 @@ public class RecordingWorkflowTest {
         location.setTime(System.currentTimeMillis());
         location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
         return location;
+    }
+    private void sample(float x, float y, float z) {
+        ShadowSystemClock.advanceBy(Duration.ofMillis(10));
+        SensorEvent event = ShadowSensorManager.createSensorEvent(3, Sensor.TYPE_ACCELEROMETER);
+        event.timestamp = SystemClock.elapsedRealtimeNanos();
+        event.values[0] = x; event.values[1] = y; event.values[2] = z;
+        Shadows.shadowOf(sensors).sendSensorEventToListeners(event, sensor);
+    }
+    @Test public void movingStartWaitsForStandstillAndHorizontalAccelerationDoesNotCreateFindings() {
+        service = Robolectric.buildService(RecordingService.class).create();
+        service.get().onStartCommand(new Intent(app, RecordingService.class), 0, 1);
+        service.get().onLocationChanged(fix(LocationManager.GPS_PROVIDER, 5));
+        for (int i = 0; i < 220; i++) sample(0, 0, 9.81f);
+        assertTrue(RecordingService.calibrationStatus.startsWith("Kalibrierung"));
+        Location stopped = fix(LocationManager.GPS_PROVIDER, 5); stopped.setSpeed(0);
+        service.get().onLocationChanged(stopped);
+        for (int i = 0; i < 220; i++) sample(0, 0, 9.81f);
+        assertTrue(RecordingService.calibrationStatus.startsWith("Kalibriert"));
+        service.get().onLocationChanged(fix(LocationManager.GPS_PROVIDER, 5));
+        for (int i = 0; i < 200; i++) sample(60, 0, 9.81f);
+        try (FindingStore store = new FindingStore(app)) { assertEquals(0, store.count()); }
+        sample(60, 0, 69.81f);
+        for (int i = 0; i < 30; i++) sample(60, 0, 9.81f);
+        try (FindingStore store = new FindingStore(app)) { assertEquals(1, store.count()); }
+    }
+    @Test public void continuousRoughnessIsOneUnreviewedSectionAndRideStopSavesIt() {
+        RecordingService recording = start();
+        for (int i = 0; i < 550; i++) {
+            if (i % 100 == 0) {
+                Location location = fix(LocationManager.GPS_PROVIDER, 5);
+                location.setLatitude(52.5 + (i / 100) * .00005); location.setBearing(0);
+                recording.onLocationChanged(location);
+            }
+            sample(0, 0, i % 2 == 0 ? 69.81f : -50.19f);
+        }
+        recording.onStartCommand(new Intent(app, RecordingService.class).setAction(RecordingService.STOP), 0, 2);
+        try (FindingStore store = new FindingStore(app)) {
+            assertEquals(1, store.count()); Finding finding = store.all().get(0);
+            assertEquals("rough_road", finding.category()); assertFalse(finding.reviewed());
+            assertNotNull(finding.details().section()); assertTrue(finding.details().section().lengthMeters() >= 25);
+            assertTrue(finding.details().section().endLatitude() > finding.latitude());
+            assertEquals(1, FindingCsv.exportReviewed(store.all()).lines().count());
+        }
     }
     @Test public void foregroundServiceActuallyRecordsGpsRouteAndManualFinding() {
         RecordingService recording = start();

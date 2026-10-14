@@ -54,7 +54,7 @@ public class FindingPositionTest {
             String csv = FindingCsv.exportReviewed(store.all());
             assertTrue(csv.contains("gps_latitude,gps_longitude,bearing_deg,position_distance_m,position_method"));
             assertTrue(csv.contains("52.5,13.4,0.0,18.0,\"course_speed_time\""));
-            assertTrue(csv.contains("\"experimental-2\""));
+            assertTrue(csv.contains("\"" + BumpDetector.VERSION + "\""));
         }
     }
     @Test public void newerGpsFixIsBackProjectedToEarlierPeak() {

@@ -26,7 +26,7 @@ public final class OverpassClient {
         HttpURLConnection connection = (HttpURLConnection) new URL(ENDPOINT).openConnection();
         connection.setConnectTimeout(10_000); connection.setReadTimeout(30_000);
         connection.setRequestMethod("POST"); connection.setDoOutput(true); connection.setInstanceFollowRedirects(false);
-        connection.setRequestProperty("User-Agent", "Bodenwelle/0.5.0 (https://github.com/jansschoen/FahrradsuchtBodenwelle)");
+        connection.setRequestProperty("User-Agent", "Bodenwelle/" + BuildConfig.VERSION_NAME + " (https://github.com/jansschoen/FahrradsuchtBodenwelle)");
         connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
         byte[] request = ("data=" + URLEncoder.encode(query, StandardCharsets.UTF_8.name())).getBytes(StandardCharsets.UTF_8);
         try {

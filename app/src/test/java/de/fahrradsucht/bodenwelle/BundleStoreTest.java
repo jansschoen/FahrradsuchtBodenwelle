@@ -31,7 +31,7 @@ public class BundleStoreTest {
     }
     @Test public void csvKeepsOneRowPerReleasedObservationWithBundleReference() {
         try(FindingStore s=new FindingStore(app)){long a=insert(s,52.5),b=insert(s,52.50005);long key=s.mergeBundles(List.of(-a,-b));String csv=FindingCsv.exportReviewed(s.all());
-            assertEquals(3,csv.lines().count());assertTrue(csv.lines().findFirst().orElseThrow().endsWith("bundle_id"));assertTrue(csv.contains(","+key+"\r\n"));
+            assertEquals(3,csv.lines().count());assertTrue(csv.lines().findFirst().orElseThrow().endsWith("bundle_id,rough_section"));assertTrue(csv.contains(","+key+",\"\"\r\n"));
             s.review(a,"root_heave","",false);assertEquals(2,FindingCsv.exportReviewed(s.all()).lines().count());
         }
     }

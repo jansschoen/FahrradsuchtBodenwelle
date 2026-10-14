@@ -39,6 +39,6 @@ public class IntensityTest {
         FindingDetails reviewed = original.reviewed(null, 45.0, 31, "carriageway", true, "asphalt", true);
         assertEquals(original.intensity(), reviewed.intensity());
         assertEquals(5, Classification.hazards(31).split(";").length);
-        assertEquals(7, Classification.BUMPS.length);
+        assertEquals(8, Classification.BUMPS.length);
     }
 }

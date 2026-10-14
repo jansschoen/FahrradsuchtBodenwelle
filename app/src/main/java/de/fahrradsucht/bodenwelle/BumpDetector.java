@@ -2,7 +2,7 @@ package de.fahrradsucht.bodenwelle;
 
 /** Experimental event detector. Thresholds require validation on real rides. */
 public final class BumpDetector {
-    public static final String VERSION = "experimental-2";
+    public static final String VERSION = "experimental-3-calibrated-vertical";
     public static final double DEFAULT_THRESHOLD = 40.0;
     private static final long WARMUP_MS = 2_000;
     private static final long WINDOW_MS = 250;
@@ -17,6 +17,7 @@ public final class BumpDetector {
     private double threshold = DEFAULT_THRESHOLD;
 
     public record Detection(long elapsedMillis, double peak, double threshold) {}
+    public void cancelPending() { candidateMillis = -1; }
 
     public void setThreshold(double threshold) {
         if (!Double.isFinite(threshold) || threshold < 5 || threshold > 100)

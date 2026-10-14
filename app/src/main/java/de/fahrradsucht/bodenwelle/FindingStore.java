@@ -147,6 +147,27 @@ public final class FindingStore extends SQLiteOpenHelper {
         return result;
     }
 
+    public long insertSection(Location start, Location end, SurfaceDetector.Section section) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.beginTransaction();
+        try {
+            long id = insert(start, new BumpDetector.Detection(section.startMillis(), section.peak(), section.threshold()));
+            long offset = section.endMillis() - end.getElapsedRealtimeNanos() / 1_000_000L;
+            PositionEstimate estimate = PositionEstimator.estimate(end.getLatitude(), end.getLongitude(), offset,
+                    end.hasSpeed() ? end.getSpeed() : null, end.hasBearing() ? end.getBearing() : null,
+                    end.hasBearingAccuracy() ? end.getBearingAccuracyDegrees() : null);
+            RoughSection geometry = new RoughSection(estimate.latitude(), estimate.longitude(), end.getAccuracy(),
+                    section.endMillis() - section.startMillis(), section.lengthMeters(), end.getLatitude(), end.getLongitude(),
+                    estimate.distanceMeters(), estimate.method());
+            ContentValues values = new ContentValues();
+            values.put("category", "rough_road");
+            values.put("details", FindingDetails.initial("rough_road", section.peak()).withSection(geometry).json());
+            db.update("findings", values, "id = ?", new String[]{Long.toString(id)});
+            db.setTransactionSuccessful();
+            return id;
+        } finally { db.endTransaction(); }
+    }
+
     /** Read only the original observations belonging to one displayed place. */
     public List<Finding> observations(long bundleKey) {
         List<Finding> result = new ArrayList<>();

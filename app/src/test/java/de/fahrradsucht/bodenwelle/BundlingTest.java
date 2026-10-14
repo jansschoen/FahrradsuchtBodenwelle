@@ -11,17 +11,17 @@ public class BundlingTest {
         return new Finding(f.id(),f.timeMillis(),f.latitude(),f.longitude(),f.accuracy(),f.speed(),f.peak(),f.threshold(),f.source(),f.category(),f.note(),f.reviewed(),f.locationAgeMillis(),f.position(),f.detectorVersion(),f.details(),bundle);
     }
     private FindingBundle singleton(Finding f){return new FindingBundle(f.bundleKey(),List.of(f));}
-    @Test public void suggestionsRequireKnownSameTypeGoodGpsAndNearbyReviewedObservations() {
-        Finding a=finding(1,52.5,"root_heave",5,true,0),b=finding(2,52.50005,"root_heave",5,true,0);
+    @Test public void suggestionsUseStrictTwoMeterDistanceAndRejectConflictingKnownTypes() {
+        Finding a=finding(1,52.5,"root_heave",5,true,0),b=finding(2,52.50001,"root_heave",5,true,0);
         assertTrue(BundleSuggestions.compatible(singleton(a),singleton(b)));
-        assertFalse(BundleSuggestions.compatible(singleton(a),singleton(finding(3,52.50005,"pothole",5,true,0))));
-        assertFalse(BundleSuggestions.compatible(singleton(a),singleton(finding(3,52.50005,"root_heave",20,true,0))));
-        assertFalse(BundleSuggestions.compatible(singleton(a),singleton(finding(3,52.50005,"root_heave",5,false,0))));
-        assertFalse(BundleSuggestions.compatible(singleton(a),singleton(finding(3,52.5005,"root_heave",5,true,0))));
-        assertFalse(BundleSuggestions.compatible(singleton(a),singleton(finding(3,52.50005,"root_heave",Float.NaN,true,0))));
+        assertFalse(BundleSuggestions.compatible(singleton(a),singleton(finding(3,52.50001,"pothole",5,true,0))));
+        assertFalse(BundleSuggestions.compatible(singleton(a),singleton(finding(3,52.50001,"root_heave",26,true,0))));
+        assertTrue(BundleSuggestions.compatible(singleton(a),singleton(finding(3,52.50001,"other",5,false,0))));
+        assertFalse(BundleSuggestions.compatible(singleton(a),singleton(finding(3,52.50002,"root_heave",5,true,0))));
+        assertFalse(BundleSuggestions.compatible(singleton(a),singleton(finding(3,52.50001,"root_heave",Float.NaN,true,0))));
     }
     @Test public void suggestionsCannotChainTogetherDistantEndpoints() {
-        List<List<FindingBundle>> proposals=BundleSuggestions.suggest(List.of(singleton(finding(1,52.5,"root_heave",5,true,0)),singleton(finding(2,52.50009,"root_heave",5,true,0)),singleton(finding(3,52.50018,"root_heave",5,true,0))));
+        List<List<FindingBundle>> proposals=BundleSuggestions.suggest(List.of(singleton(finding(1,52.5,"other",5,false,0)),singleton(finding(2,52.500012,"other",5,false,0)),singleton(finding(3,52.500024,"other",5,false,0))));
         assertEquals(1,proposals.size());assertEquals(2,proposals.get(0).size());
     }
     @Test public void confirmedRepeatIsOneMailPlaceWithCountsWeeksAndMeasurementRange() {

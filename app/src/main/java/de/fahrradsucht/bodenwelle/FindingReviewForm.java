@@ -23,6 +23,10 @@ public final class FindingReviewForm {
     public FindingReviewForm(Context c, Finding f) {
         context = c; root = column(); root.setPadding(dp(20), dp(12), dp(20), 0);
         text(root, "Was hast du dort gesehen?");
+        if (f.details().section() != null) {
+            text(root, f.details().section().label());
+            text(root, "Automatisch vorgeschlagener Abschnitt; Ausdehnung und Zustand bitte vor Ort prüfen. Anfang und Ende sind GPS-Schätzungen, die Länge stammt aus Geschwindigkeit und Dauer.");
+        }
         bump = spinner(root, Classification.BUMPS, Classification.bumpId(f.category()));
         if (!f.details().legacyCategory().isEmpty()) text(root, "Frühere Angabe: " + f.details().legacyCategory());
         text(root, f.details().intensity().label());

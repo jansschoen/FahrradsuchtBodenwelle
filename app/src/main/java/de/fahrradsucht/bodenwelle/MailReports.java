@@ -17,7 +17,13 @@ public final class MailReports {
     public record Point(List<Item> observations) {
         public Point { observations=java.util.Collections.unmodifiableList(new ArrayList<>(observations)); }
         public Finding representative() { return observations.stream().map(Item::finding).min(java.util.Comparator.comparingDouble((Finding f)->f.accuracy()).thenComparingLong(f->-f.id())).orElseThrow(); }
-        public String weeks() { return observations.stream().map(i->calendarWeek(i.finding().timeMillis())).distinct().sorted().collect(java.util.stream.Collectors.joining(", ")); }
+        public String weeks() {
+            return observations.stream().flatMap(i -> i.finding().details().section() == null
+                    ? java.util.stream.Stream.of(calendarWeek(i.finding().timeMillis()))
+                    : java.util.stream.Stream.of(calendarWeek(i.finding().timeMillis()),
+                        calendarWeek(i.finding().timeMillis() + i.finding().details().section().durationMillis())))
+                    .distinct().sorted().collect(java.util.stream.Collectors.joining(", "));
+        }
         public String title() { return observations.stream().map(i->Classification.label(Classification.BUMPS,Classification.bumpId(i.finding().category()))).distinct().collect(java.util.stream.Collectors.joining(" / ")); }
     }
     public static List<Point> points(List<Item> items) {
@@ -85,6 +91,14 @@ public final class MailReports {
             for(Item observation:point.observations()) {
                 Finding x=observation.finding();if(x.details().heightMm()!=null)heights.add(x.details().heightMm());if(x.peak()!=null)peaks.add(x.peak());
                 flags|=x.details().hazards();if(includeNotes&&!x.note().isEmpty())notes.add(x.note());hasOsm|=x.details().osm().assigned();
+                RoughSection section = x.details().section();
+                if (section != null) {
+                    body.append(String.format(Locale.GERMANY, "Unebener Abschnitt: etwa %.0f m (aus Fahrgeschwindigkeit und Dauer geschätzt).\n", section.lengthMeters()));
+                    body.append(String.format(Locale.ROOT, "Anfang: %.6f, %.6f · Ende: %.6f, %.6f\n", x.latitude(), x.longitude(), section.endLatitude(), section.endLongitude()));
+                    body.append("Endpunktkarte: https://www.openstreetmap.org/?mlat=").append(String.format(Locale.ROOT, "%.6f", section.endLatitude()))
+                            .append("&mlon=").append(String.format(Locale.ROOT, "%.6f", section.endLongitude())).append('\n');
+                    body.append("Die Abschnittserkennung ist ein vorläufiger Hinweis; Ausdehnung und Zustand bitte vor Ort prüfen.\n");
+                }
             }
             if(!heights.isEmpty()) { hasHeight=true;body.append("Vor Ort gemessener Höhenunterschied: ").append(range(heights,2)).append(" mm (").append(heights.size()).append(" Messung(en))\n"); }
             if(!peaks.isEmpty()) { hasSensor=true;body.append("Smartphone-Sensorreaktion: ").append(range(peaks,1)).append(" m/s² (").append(peaks.size()).append(" Beobachtung(en))\n"); }

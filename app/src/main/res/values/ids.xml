@@ -1,4 +1,6 @@
 <resources>
+    <item name="calibration_status" type="id" />
+    <item name="recalibrate" type="id" />
     <item name="finding_delete" type="id" />
     <item name="photo_pick" type="id" />
     <item name="photo_capture" type="id" />

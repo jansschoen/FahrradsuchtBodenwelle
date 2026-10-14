@@ -51,7 +51,7 @@ Die Fahrtspur bleibt nach Fahrtende erhalten. Eine neue bestätigte Fahrt ersetz
 
 ## Neue Klassifizierung und OSM prüfen
 
-Unter **Stelle prüfen** wählst du eine der sieben Unebenheitsarten. Zusätzliche Gefährdungsmerkmale lassen sich einzeln im aufklappbaren Bereich markieren. Eine tatsächlich vor Ort gemessene Höhe kannst du separat in Millimetern ergänzen und ausdrücklich bestätigen. Ohne diese Bestätigung bewertet die App ausschließlich die Sensorreaktion, vorläufig und ohne Höhenumrechnung.
+Unter **Stelle prüfen** wählst du eine der acht Unebenheitsarten. Zusätzliche Gefährdungsmerkmale lassen sich einzeln im aufklappbaren Bereich markieren. Eine tatsächlich vor Ort gemessene Höhe kannst du separat in Millimetern ergänzen und ausdrücklich bestätigen. Ohne diese Bestätigung bewertet die App ausschließlich die Sensorreaktion, vorläufig und ohne Höhenumrechnung.
 
 Verkehrsfläche und Oberfläche erscheinen als **OSM-Vorschlag** mit Zuordnungssicherheit. Prüfe gerade bei parallelen Wegen, ob die Fläche plausibel ist. Unter **Verkehrsfläche und Oberfläche prüfen** kannst du beide Angaben unabhängig manuell festlegen. Solche Änderungen bleiben bei späteren OSM-Antworten erhalten. Angaben zur Benutzungspflicht sind Vorschläge aus Kartentags; entscheidend ist die Beschilderung vor Ort, nicht allein OSM.
 
@@ -88,3 +88,13 @@ Erzeuge eine Mail mit den gewünschten freigegebenen Beobachtungen. Wiederholung
 1. Nach Fahrtende an einer Fundstelle direkt **Löschen** antippen. Zuerst **Abbrechen** wählen: Messung und Fotos müssen erhalten bleiben.
 2. Erneut **Löschen** wählen und bestätigen: Diese Messung und ihre lokalen Fotos verschwinden aus Liste, Karte und künftigen Exporten. Die Fahrtspur bleibt erhalten.
 3. Bei einer gebündelten Fundstelle eine einzelne Messung auswählen und löschen. Die übrigen Beobachtungen samt Fotos und Freigaben müssen erhalten bleiben. Beim letzten Treffer verschwindet die Fundstelle vollständig. Bereits exportierte Dateien oder übergebene Mailanhänge bleiben eigenständige Kopien.
+
+### Vertikale Erkennung und Abschnitte (0.7.0)
+
+1. Handy befestigen, Fahrt starten, im Stand zwei Sekunden bis **Kalibriert** warten. Die Fortschrittsanzeige prüfen. Nach einer Halterungsänderung im Stand erneut kalibrieren.
+2. Auf einer bekannten glatten Strecke vorsichtig beschleunigen und bremsen; horizontale Bewegung sollte keine zusätzlichen Treffer erzeugen. Mit mehreren sicheren Wiederholungsfahrten prüfen, ob bekannte Unebenheiten weiterhin erfasst werden.
+3. Auf einer bekannten längeren unebenen Strecke prüfen, ob ein **Unebener Straßenabschnitt** mit plausiblen Endpunkten statt vieler Einzelpunkte entsteht. Ende der Störung und Fahrtende sollen den Abschnitt abschließen. Die Heuristik muss im Fahrtest abgestimmt werden.
+4. Nach Fahrtende Vorschläge unter zwei Metern prüfen. Vor Bestätigung müssen Originale und individuelle Freigaben erhalten bleiben.
+5. Auf beiden Karten einen Punkt antippen, Fotos/Bearbeitung öffnen und das Löschen zuerst abbrechen, anschließend an einem Testeintrag bestätigen. Abschnittslinien ebenfalls antippen.
+
+[Details und Testparameter](KALIBRIERUNG-ABSCHNITTE.md).

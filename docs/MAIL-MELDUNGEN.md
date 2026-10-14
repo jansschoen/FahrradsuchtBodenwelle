@@ -60,3 +60,7 @@ Sinnvolle nächste Schritte: wiederholte Treffer einer tatsächlich gleichen Ste
 ## Erweiterung in 0.5.0
 
 Bestätigte Bündelungen, lokale Fotos, Fotoauswahl und deren Übergabe sind in [BUENDELUNG-FOTOS.md](BUENDELUNG-FOTOS.md) dokumentiert. Der Mailtext nennt nur ausgewählte freigegebene Beobachtungen; exakte Messzeiten bleiben lokal.
+
+## Unebene Straßenabschnitte
+
+Abschnitte werden als ein persönlich freizugebender Eintrag mit Anfang, Ende und geschätzter Länge gemeldet. Bei einem Wochenwechsel erscheinen beide Kalenderwochen. Genaue Zeitpunkte und die Fahrtspur werden weiterhin nicht übernommen. Unterschiedliche Bezirksvorschläge für Anfang und Ende lassen die Zuständigkeit offen; ein Bezirk kann nach Prüfung manuell gesetzt werden. Die Abschnittserkennung und ihre Ausdehnung sind ausdrücklich vorläufig.

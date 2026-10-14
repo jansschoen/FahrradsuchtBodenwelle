@@ -32,7 +32,7 @@ public class PhotoWorkflowTest {
     private void photo(FindingStore s,long id)throws Exception {String name=java.util.UUID.randomUUID()+".jpg";Files.write(PhotoFiles.localFile(app,name).toPath(),new byte[]{1,2,3});s.addPhoto(id,name,1,1,3);}
     private void prepare(MailReportActivity a){a.findViewById(R.id.mail_prepare).performClick();Shadows.shadowOf(Looper.getMainLooper()).idle();}
     @Test public void mergedPlaceIsOneMailEntryAndBothPhotosReachTheMailChooser()throws Exception {
-        try(FindingStore s=new FindingStore(app)){long a=finding(s,52.52),b=finding(s,52.52004);photo(s,a);photo(s,b);s.mergeBundles(List.of(-a,-b));}
+        try(FindingStore s=new FindingStore(app)){long a=finding(s,52.52),b=finding(s,52.52001);photo(s,a);photo(s,b);s.mergeBundles(List.of(-a,-b));}
         try(ActivityController<MailReportActivity> c=Robolectric.buildActivity(MailReportActivity.class).setup()){
             prepare(c.get());String body=((android.widget.EditText)c.get().findViewById(R.id.mail_body)).getText().toString();assertTrue(body.contains("2 ausgewählte Beobachtungen"));
             c.get().findViewById(R.id.mail_open).performClick();Intent chooser=Shadows.shadowOf(c.get()).getNextStartedActivity();assertEquals(Intent.ACTION_CHOOSER,chooser.getAction());
@@ -66,7 +66,7 @@ public class PhotoWorkflowTest {
         }
     }
     @Test public void bundlingUiRequiresHumanConfirmationBeforeChangingStoredPlaces() {
-        try(FindingStore s=new FindingStore(app)){finding(s,52.52);finding(s,52.52004);}
+        try(FindingStore s=new FindingStore(app)){finding(s,52.52);finding(s,52.52001);}
         try(ActivityController<BundleActivity> c=Robolectric.buildActivity(BundleActivity.class).setup();FindingStore s=new FindingStore(app)){
             confirmButton(c.get().findViewById(android.R.id.content)).performClick();assertEquals(2,s.bundles().size());AlertDialog d=ShadowAlertDialog.getLatestAlertDialog();d.getButton(AlertDialog.BUTTON_POSITIVE).performClick();Shadows.shadowOf(Looper.getMainLooper()).idle();assertEquals(1,s.bundles().size());assertEquals(2,s.count());
         }

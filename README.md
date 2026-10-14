@@ -16,15 +16,15 @@ Für eine spätere breite öffentliche Veröffentlichung ist die aktuelle [OSM-K
 
 ## Auf dem Fairphone ausprobieren
 
-**[Android-Testversion 0.6.0 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.6.0.apk)**
+**[Android-Testversion 0.7.0 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.7.0.apk)**
 
-Öffne die heruntergeladene APK auf deinem Android-Handy. Falls Android danach fragt, erlaube die Installation aus dieser Quelle. Die [kurze Installationsanleitung](downloads/INSTALLATION.md) und die [SHA-256-Prüfsummen](downloads/SHA256SUMS) liegen neben der APK. Version 0.6.0 verwendet dieselbe App-ID und Signatur wie die vorherigen Testversionen und ist als Update über die vorhandene Installation vorgesehen. Eine Deinstallation würde die lokalen Daten löschen. Dies ist eine Debug-Testversion; die Korrekturen müssen auf dem Fairphone noch praktisch überprüft werden.
+Öffne die heruntergeladene APK auf deinem Android-Handy. Falls Android danach fragt, erlaube die Installation aus dieser Quelle. Die [kurze Installationsanleitung](downloads/INSTALLATION.md) und die [SHA-256-Prüfsummen](downloads/SHA256SUMS) liegen neben der APK. Version 0.7.0 verwendet dieselbe App-ID und Signatur wie die vorherigen Testversionen und ist als Update über die vorhandene Installation vorgesehen. Eine Deinstallation würde die lokalen Daten löschen. Dies ist eine Debug-Testversion; die Korrekturen müssen auf dem Fairphone noch praktisch überprüft werden.
 
 ### Messungen prüfen, löschen und bündeln
 
 **Löschen** steht direkt an jeder Fundstelle in der Liste. Nach einer kurzen Bestätigung wird die einzelne Messung mit ihren lokalen Fotos entfernt. Bei gebündelten Treffern wählst du zuerst die betroffene Messung; andere Beobachtungen und die Fahrtspur bleiben erhalten. Bereits exportierte Kopien werden nicht zurückgezogen.
 
-**Mehrfachtreffer bündeln** schlägt nahe, freigegebene Beobachtungen gleicher Art vor. Nach deiner Bestätigung erscheinen sie als gemeinsame Fundstelle in Liste und Karte. Alle Originalmessungen und Freigaben bleiben erhalten; die Bündelung lässt sich auflösen. Du kannst bei ungenauem GPS auch selbst auswählen.
+**Zusammenfassbar** gruppiert Vorschläge unter zwei Metern, auch vor der Freigabe. **Mehrfachtreffer bündeln** öffnet die Prüfung; GPS-Ungenauigkeit kann größer als der Abstand sein. Nach deiner Bestätigung erscheinen sie als gemeinsame Fundstelle in Liste und Karte. Alle Originalmessungen und Freigaben bleiben erhalten; die Bündelung lässt sich auflösen. Du kannst bei ungenauem GPS auch selbst auswählen.
 
 Unter **Stelle prüfen und Fotos ergänzen** lassen sich Bilder auswählen oder über die Kamera aufnehmen. Bis zu fünf lokale Fotokopien je Beobachtung werden verkleinert und ohne ursprüngliche EXIF-Orts-/Zeitangaben gespeichert. Originale im Album bleiben erhalten. Prüfe Bildinhalte selbst vor dem Weitergeben.
 
@@ -40,7 +40,7 @@ Die Mail ist persönlich formuliert, wahlweise mit kurzem Hinweis auf Bodenwelle
 
 ### Klassifizierung und OSM-Ergänzung
 
-- Sieben Unebenheitsarten: Wurzelaufbruch, Schlagloch, Querrille, Längsrille, Pflasterversatz, langgezogene Bodenwelle und sonstige Unebenheit. Alte allgemeine Angaben bleiben nachvollziehbar erhalten.
+- Acht Unebenheitsarten: Wurzelaufbruch, Schlagloch, Querrille, Längsrille, Pflasterversatz, langgezogene Bodenwelle, unebener Straßenabschnitt und sonstige Unebenheit. Alte allgemeine Angaben bleiben nachvollziehbar erhalten.
 - Fünf farbige Intensitätsklassen mit getrennten Grundlagen: selbst vor Ort gemessene und bestätigte Millimeterwerte verwenden die projektinternen Höhenklassen; Sensorwerte erhalten ausschließlich eine als vorläufig gekennzeichnete Beschleunigungsskala. Es gibt keine automatische Millimeterumrechnung und keine gesetzlichen Grenzwerte.
 - Fünf unabhängige Gefährdungsmerkmale, optionale gemessene Höhe und manuelle Verkehrsflächen-/Oberflächenkorrekturen liegen in aufklappbaren Bereichen der Bearbeitung. Gefährdungsmerkmale verändern keine Messwerte.
 - Verkehrsfläche und Oberfläche werden nach Möglichkeit aus OSM-Weggeometrien und Tags ergänzt. Mehrdeutige parallele Wege bleiben unbekannt; eine Benutzungspflicht wird nicht aus einem bloßen Radweg-Tag abgeleitet. OSM-Vorschläge enthalten Quelle, Originaltags, Zeitpunkt und Sicherheit; manuelle Korrekturen bleiben geschützt.
@@ -49,6 +49,12 @@ Die Mail ist persönlich formuliert, wahlweise mit kurzem Hinweis auf Bodenwelle
 Die [Dokumentation zu Klassifizierung und OSM](docs/KLASSIFIZIERUNG-OSM.md) beschreibt Kategorien, Testgrenzen, räumliche Zuordnung, Export und verbleibende Einschränkungen. **Der Live-Overpass-Abruf ist aus dieser Cloud durch den Proxy blockiert und muss auf dem Fairphone geprüft werden.** Die Logik ist mit kontrollierten OSM-Antworten getestet. Die Klassifizierungs- und OSM-Logik ist automatisiert geprüft; die jeweils aktuelle Gesamtprüfung steht in der [Installationsanleitung](downloads/INSTALLATION.md).
 
 ### Erkennung und Positionskorrektur
+
+Nach Fahrtbeginn zwei Sekunden im Stand ruhig halten, bis **Kalibriert** erscheint. Die Erkennung verwendet ausschließlich die auf die kalibrierte Vertikale projizierte Beschleunigung nach Abzug der Ruheschwerkraft. Androids Lagesensor führt, sofern verfügbar, die Orientierung mit; die Beschleunigung beim Fahren passt die Achse nicht mehr laufend an. **Im Stand neu kalibrieren** steht während der Fahrt an der Karte zur Verfügung.
+
+Anhaltende Schwingungen werden nach mindestens drei Sekunden und zehn geschätzten Metern als **Unebener Straßenabschnitt** erfasst, mit Anfang, Ende und geschätzter Länge. Kandidaten innerhalb desselben Abschnitts erscheinen nicht zusätzlich als Einzelpunkte. Eine orange Verbindung markiert die ungefähren Endpunkte. [Algorithmus, Bedienung und Grenzen](docs/KALIBRIERUNG-ABSCHNITTE.md).
+
+Auf beiden Karten öffnen Punkte und Abschnittslinien ein Menü zum Prüfen, Ergänzen von Fotos und Löschen.
 
 - Die feste Auslöseschwelle startet bei **40 m/s²**. Gemeint ist der Betrag der gefilterten vertikalen Sensorreaktion nach Abzug der geschätzten Schwerkraft, nicht die Höhe einer Bodenwelle.
 - **Empfindlichkeit einstellen** an der Karte öffnet einen Schieberegler von 5 bis 100 m/s²: links mehr Treffer, rechts weniger Treffer. Die Einstellung wird gespeichert und gilt auch während einer laufenden Fahrt sofort für neue Messungen. Jede Fundstelle speichert ihre damalige Schwelle. Bediene das Telefon nur im sicheren Stand.

@@ -28,13 +28,17 @@ import java.util.Locale;
 public final class RecordingService extends Service implements SensorEventListener, LocationListener {
     public static final String STOP = "de.fahrradsucht.bodenwelle.STOP";
     public static final String MARK = "de.fahrradsucht.bodenwelle.MARK";
+    public static final String CALIBRATE = "de.fahrradsucht.bodenwelle.CALIBRATE";
     public static volatile boolean running;
     public static volatile String status = "Noch keine Fahrt gestartet.";
     public static volatile String lastAction = "";
     public static volatile String startFailure = "";
+    public static volatile String calibrationStatus = "Vor der Fahrt das Handy fest befestigen und zwei Sekunden ruhig halten.";
     private static final String CHANNEL = "ride";
     private final AccelerationProjector projector = new AccelerationProjector();
-    private final BumpDetector detector = new BumpDetector();
+    private final SurfaceDetector detector = new SurfaceDetector();
+    private final java.util.TreeMap<Long, Location> locationHistory = new java.util.TreeMap<>();
+    private long lastLocationSnapshot = -1;
     private final RouteTracker routeTracker = new RouteTracker();
     private final Handler handler = new Handler(Looper.getMainLooper());
     private SensorManager sensors;
@@ -61,9 +65,19 @@ public final class RecordingService extends Service implements SensorEventListen
 
     @Override public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && STOP.equals(intent.getAction())) {
+            boolean saved = saveUpdate(detector.finish());
             running = false;
-            status = "Fahrt beendet. Fundstellen bleiben auf diesem Handy.";
+            if (saved) status = "Fahrt beendet. Fundstellen bleiben auf diesem Handy.";
             stopSelf();
+            return START_NOT_STICKY;
+        }
+        if (intent != null && CALIBRATE.equals(intent.getAction())) {
+            if (running) {
+                saveUpdate(detector.finish());
+                projector.reset();
+                calibrationStatus = "Kalibrierung · bitte anhalten und das montierte Handy zwei Sekunden ruhig halten.";
+                refreshStatus();
+            } else stopSelf();
             return START_NOT_STICKY;
         }
         if (intent != null && MARK.equals(intent.getAction())) {
@@ -99,6 +113,9 @@ public final class RecordingService extends Service implements SensorEventListen
             failStart("Kein nutzbarer Beschleunigungssensor gefunden.");
             return START_NOT_STICKY;
         }
+        Sensor rotation = sensors.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
+        if (rotation == null) rotation = sensors.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        if (rotation != null) sensors.registerListener(this, rotation, 10_000);
         try {
             if (DeviceLocationSource.enabledProviders(locations).isEmpty()) {
                 failStart("Der Standort ist am Handy ausgeschaltet. Bitte einschalten und erneut starten.");
@@ -114,6 +131,8 @@ public final class RecordingService extends Service implements SensorEventListen
             return START_NOT_STICKY;
         }
         running = true;
+        projector.reset();
+        calibrationStatus = "Kalibrierung · bitte im Stand das montierte Handy zwei Sekunden ruhig halten.";
         startedAt = SystemClock.elapsedRealtime();
         status = "Fahrt läuft · Standort wird gesucht …";
         lastAction = "";
@@ -156,7 +175,8 @@ public final class RecordingService extends Service implements SensorEventListen
     }
 
     private void refreshStatus() {
-        if (latest == null) status = "Fahrt läuft · Standort wird gesucht. Draußen kurz warten.";
+        if (!projector.calibrated()) status = calibrationStatus;
+        else if (latest == null) status = "Fahrt läuft · Standort wird gesucht. Draußen kurz warten.";
         else if (!usableLocation()) status = "Fahrt läuft · Automatik wartet auf einen aktuellen, genaueren Standort.";
         else if (SystemClock.elapsedRealtime() - startedAt > 3_000 && SystemClock.elapsedRealtime() - lastSensorAt > 3_000)
             status = "Fahrt läuft · Automatik wartet auf Sensordaten.";
@@ -166,19 +186,62 @@ public final class RecordingService extends Service implements SensorEventListen
 
     @Override public void onSensorChanged(SensorEvent event) {
         if (!running) return;
+        if (event.sensor != null && (event.sensor.getType() == Sensor.TYPE_GAME_ROTATION_VECTOR
+                || event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR)) {
+            float[] matrix = new float[9];
+            SensorManager.getRotationMatrixFromVector(matrix, event.values);
+            projector.orientation(event.timestamp, matrix[6], matrix[7], matrix[8]);
+            return;
+        }
+        if (event.sensor != null && event.sensor.getType() != Sensor.TYPE_ACCELEROMETER) return;
         lastSensorAt = SystemClock.elapsedRealtime();
-        double vertical = projector.accept(event.timestamp, event.values[0], event.values[1], event.values[2]);
-        detector.setThreshold(preferences.threshold());
-        BumpDetector.Detection detection = detector.accept(event.timestamp / 1_000_000L, vertical, eligible());
-        if (detection != null && latest != null) {
-            try {
-                long id = store.insert(latest, detection);
+        boolean stationary = latest == null || !usableLocation() || !latest.hasSpeed() || latest.getSpeed() < .8;
+        double vertical = projector.accept(event.timestamp, event.values[0], event.values[1], event.values[2], stationary);
+        calibrationStatus = projector.calibrated()
+                ? !Double.isFinite(vertical) ? "Kalibriert · Automatik wartet auf aktuelle Lagedaten."
+                    : projector.orientationAvailable() ? "Kalibriert · vertikale Beschleunigung · Lage wird mitgeführt."
+                    : "Kalibriert · vertikale Beschleunigung · feste Lage; bei Halterungsänderung neu kalibrieren."
+                : "Kalibrierung · " + projector.progress() + " % · bitte anhalten und das montierte Handy ruhig halten.";
+        long millis = event.timestamp / 1_000_000L;
+        boolean allowed = projector.calibrated() && Double.isFinite(vertical) && eligible();
+        if (allowed && (lastLocationSnapshot < 0 || millis - lastLocationSnapshot >= 100)) {
+            locationHistory.put(millis, new Location(latest));
+            lastLocationSnapshot = millis;
+        }
+        saveUpdate(detector.accept(millis, vertical, preferences.threshold(), allowed,
+                latest != null && latest.hasSpeed() ? latest.getSpeed() : 0));
+        locationHistory.headMap(millis - 130_000).clear();
+        if (detector.sectionActive()) lastAction = "Unebener Straßenabschnitt erkannt · wird bis zum Ende der Störung aufgezeichnet.";
+    }
+
+    private Location locationAt(long millis) {
+        java.util.Map.Entry<Long, Location> entry = locationHistory.floorEntry(millis);
+        if (entry == null) entry = locationHistory.ceilingEntry(millis);
+        return entry != null && Math.abs(entry.getKey() - millis) <= 500 ? entry.getValue() : null;
+    }
+
+    private boolean saveUpdate(SurfaceDetector.Update update) {
+        try {
+            for (BumpDetector.Detection detection : update.singles()) {
+                Location location = locationAt(detection.elapsedMillis());
+                if (location == null) { lastAction = "Messung verworfen: passende Position fehlt."; continue; }
+                long id = store.insert(location, detection);
                 OsmEnricher.enqueue(this, id);
                 lastAction = "Verdachtsstelle erfasst – noch ungeprüft.";
-            } catch (RuntimeException e) {
-                status = "Speichern fehlgeschlagen. Aufzeichnung beendet; Speicher prüfen.";
-                stopSelf();
             }
+            if (update.section() != null) {
+                SurfaceDetector.Section section = update.section();
+                Location start = locationAt(section.startMillis()), end = locationAt(section.endMillis());
+                if (start == null || end == null) { lastAction = "Abschnitt verworfen: passende Position fehlt."; return true; }
+                long id = store.insertSection(start, end, section);
+                OsmEnricher.enqueue(this, id);
+                lastAction = "Unebener Straßenabschnitt gespeichert – bitte nach der Fahrt prüfen.";
+            }
+            return true;
+        } catch (RuntimeException e) {
+            status = "Speichern fehlgeschlagen. Aufzeichnung beendet; Speicher prüfen.";
+            stopSelf();
+            return false;
         }
     }
 
@@ -224,6 +287,7 @@ public final class RecordingService extends Service implements SensorEventListen
 
     @Override public void onDestroy() {
         running = false;
+        if (store != null) saveUpdate(detector.finish());
         handler.removeCallbacksAndMessages(null);
         if (sensors != null) sensors.unregisterListener(this);
         if (locationSource != null) locationSource.stop();
