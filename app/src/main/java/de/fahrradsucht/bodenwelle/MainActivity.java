@@ -52,9 +52,11 @@ public final class MainActivity extends Activity {
     private TextView lastAction;
     private boolean displayedRunning;
     private int displayedCount = -1;
+    private int findingLimit = 100;
     private long displayedRevision = -1;
     private boolean pendingStart;
     private RideMapPanel mapPanel;
+    private Bundle mapSelection = new Bundle();
     private boolean openMapAfterStart;
     private boolean resumed;
     private boolean startWhenResumed;
@@ -67,10 +69,12 @@ public final class MainActivity extends Activity {
         store = new FindingStore(this);
         findingActions = new FindingActions(this, store, this::refreshCurrentPage);
         findingActions.restore(state);
+        if (state != null && state.getBundle("mapSelection") != null) mapSelection = state.getBundle("mapSelection");
         menus = new AppMenus(this, store, this::refreshCurrentPage);
         if (state != null) {
             selectedTab = Math.max(0, Math.min(2, state.getInt("tab")));
             findingFilter = Math.max(0, Math.min(2, state.getInt("findingFilter")));
+            findingLimit = Math.max(100, state.getInt("findingLimit", 100));
             int[] saved = state.getIntArray("scrollPositions");
             if (saved != null && saved.length == 3) System.arraycopy(saved, 0, scrollPositions, 0, 3);
         }
@@ -91,6 +95,9 @@ public final class MainActivity extends Activity {
         state.putBoolean("startWhenResumed", startWhenResumed);
         state.putLong("serviceRequestedAt", serviceRequestedAt);
         findingActions.save(state);
+        if (mapPanel != null) mapPanel.saveSelection(mapSelection);
+        state.putBundle("mapSelection", mapSelection);
+        state.putInt("findingLimit", findingLimit);
         state.putInt("tab", selectedTab); state.putInt("findingFilter", findingFilter);
         if (contentScroll != null) scrollPositions[selectedTab] = contentScroll.getScrollY();
         state.putIntArray("scrollPositions", scrollPositions);
@@ -101,10 +108,11 @@ public final class MainActivity extends Activity {
         super.onResume(); resumed = true;
         if (mapPanel != null) mapPanel.resume();
         handler.post(tick); handler.post(this::startIfResumed);
-        OsmEnricher.pending(this);
+        OsmEnricher.visible(this, true);
     }
     @Override public void onPause() {
         resumed = false; handler.removeCallbacks(tick);
+        OsmEnricher.visible(this, false);
         if (mapPanel != null) mapPanel.pause(); super.onPause();
     }
     @Override public void onDestroy() { if (mapPanel != null) mapPanel.destroy(); menus.close(); store.close(); super.onDestroy(); }
@@ -135,7 +143,7 @@ public final class MainActivity extends Activity {
 
     private void render() {
         if (contentScroll != null) scrollPositions[renderedTab] = contentScroll.getScrollY();
-        if (mapPanel != null) { mapPanel.destroy(); mapPanel = null; }
+        if (mapPanel != null) { mapPanel.saveSelection(mapSelection); mapPanel.destroy(); mapPanel = null; }
         startButton = null; startStatus = null; rideCount = null; lastAction = null;
         displayedRunning = RecordingService.running;
         displayedCount = store.count(); displayedRevision = store.revision();
@@ -214,6 +222,8 @@ public final class MainActivity extends Activity {
         addText(mapCard, "Deine Karte", 20, INK, true);
         mapPanel = new RideMapPanel(this, store, () -> requestPermissions(new String[]{
                 Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, MAP_LOCATION), findingActions::show, false);
+        findingActions.setMapBundler(mapPanel::startBundling);
+        mapPanel.restoreSelection(mapSelection);
         mapCard.addView(mapPanel); if (resumed) mapPanel.resume();
         button(mapCard, "Karte vergrößern", false, () -> startActivity(new Intent(this, MapActivity.class)));
     }
@@ -249,7 +259,7 @@ public final class MainActivity extends Activity {
         for (int i = 0; i < labels.length; i++) {
             final int filter = i;
             Button choice = button(filters, labels[i], findingFilter == i, () -> {
-                findingFilter = filter; contentScroll.scrollTo(0, 0); render();
+                findingFilter = filter; findingLimit = 100; contentScroll.scrollTo(0, 0); render();
             }); choice.setId(ids[i]); choice.setSelected(findingFilter == i); equalWidth(choice); choice.setTextSize(14);
         }
         int shown = 0, matches = 0;
@@ -257,13 +267,14 @@ public final class MainActivity extends Activity {
             if (findingFilter == 1 && bundle.reviewedCount() == bundle.observations().size()) continue;
             if (findingFilter == 2 && bundle.reviewedCount() == 0) continue;
             matches++;
-            if (shown++ >= 100) continue;
+            if (shown++ >= findingLimit) continue;
             Finding f = bundle.representative();
             LinearLayout item = card(content);
             String state = bundle.reviewedCount() == bundle.observations().size() ? "Freigegeben"
                     : bundle.reviewedCount() == 0 ? "Offen" : "Teilweise freigegeben";
             addText(item, state + (nearKeys.contains(bundle.key()) ? " · zusammenfassbar" : ""), 13, GREEN, true);
             addText(item, bundle.title(), 20, INK, true);
+            addText(item, bundle.referenceLabel(), 14, GREEN, true);
             addText(item, DATE.format(Instant.ofEpochMilli(f.timeMillis()))
                     + (bundle.observations().size() > 1 ? " · " + bundle.observations().size() + " Beobachtungen" : ""), 14, INK, false);
             Intensity intensity = bundle.intensity();
@@ -287,13 +298,17 @@ public final class MainActivity extends Activity {
             details.setBackgroundColor(Color.TRANSPARENT);
         }
         if (matches == 0) addText(content, "Keine Fundstellen in diesem Filter.", 16, INK, false);
-        if (matches > 100) addText(content, "Die Liste zeigt die neuesten 100 passenden Fundstellen. Der Export enthält alle freigegebenen Beobachtungen.", 14, INK, false);
+        if (matches > findingLimit) {
+            addText(content, findingLimit + " von " + matches + " passenden Fundstellen angezeigt. Alle Messungen bleiben gespeichert und auf der Karte erreichbar.", 14, INK, false);
+            button(content, "Weitere Fundstellen anzeigen", false, () -> { findingLimit += 100; render(); }).setId(R.id.findings_more);
+        }
     }
 
     private void showFindingDetails(FindingBundle bundle) {
         Finding f = bundle.representative();
         LinearLayout details = column(); details.setPadding(dp(20), dp(8), dp(20), dp(12));
         addText(details, bundle.title(), 20, INK, true);
+        addText(details, bundle.referenceLabel() + "\nMessdetails: #" + f.id(), 14, GREEN, true);
         if (!f.note().isEmpty()) addText(details, f.note(), 16, INK, false);
         if (bundle.observations().size() > 1) addText(details, bundle.observations().size() + " Beobachtungen · "
                 + bundle.reviewedCount() + " freigegeben. Messdetails beziehen sich auf die repräsentative Beobachtung.", 14, INK, false);

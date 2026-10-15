@@ -9,6 +9,7 @@
     <item name="finding_review" type="id" />
     <item name="finding_details" type="id" />
     <item name="findings_mail" type="id" />
+    <item name="findings_more" type="id" />
     <item name="findings_actions" type="id" />
     <item name="menu_measurement" type="id" />
     <item name="menu_geodata" type="id" />
@@ -18,6 +19,9 @@
     <item name="delete_route" type="id" />
     <item name="delete_all" type="id" />
     <item name="map_options" type="id" />
+    <item name="map_bundle_start" type="id" />
+    <item name="map_bundle_confirm" type="id" />
+    <item name="map_bundle_cancel" type="id" />
     <item name="calibration_status" type="id" />
     <item name="recalibrate" type="id" />
     <item name="finding_delete" type="id" />

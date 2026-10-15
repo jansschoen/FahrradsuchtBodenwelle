@@ -6,10 +6,17 @@ import java.util.List;
 
 /** Conservative local association, not navigation map matching or a legal survey. */
 public final class OsmMatcher {
+    public static final String VERSION = "2";
     private OsmMatcher() {}
     private record Candidate(OsmWay way, double distance, double angle, double score) {}
     public static OsmMatch match(double lat, double lon, float accuracy, Float bearing, List<OsmWay> ways, long time, String source) {
-        if (!Float.isFinite(accuracy) || accuracy < 0 || accuracy > 25) return empty("no_match", time, source);
+        return match(lat, lon, accuracy, 0, bearing, ways, time, source);
+    }
+    public static OsmMatch match(double lat, double lon, float accuracy, float projectionMargin, Float bearing,
+                                 List<OsmWay> ways, long time, String source) {
+        if (!Double.isFinite(lat) || !Double.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180
+                || !Float.isFinite(accuracy) || accuracy < 0 || accuracy > 50) return empty("no_match", time, source);
+        float uncertainty = accuracy + Math.max(0, Math.min(10, projectionMargin));
         List<Candidate> candidates = new ArrayList<>();
         for (OsmWay way : ways) {
             if (!way.tags().containsKey("highway") || way.geometry().size() < 2) continue;
@@ -31,17 +38,33 @@ public final class OsmMatcher {
                     angle = Math.min(difference, 180 - difference);
                 }
             }
-            if (nearest <= Math.max(12, accuracy + 5) && angle <= 60)
+            if (nearest <= 50 && angle <= 60)
                 candidates.add(new Candidate(way, nearest, angle, nearest + angle / 3));
         }
         candidates.sort(Comparator.comparingDouble(Candidate::score));
         if (candidates.isEmpty()) return empty("no_match", time, source);
         Candidate best = candidates.get(0);
-        if (candidates.size() > 1 && candidates.get(1).score - best.score <= Math.max(8, accuracy))
-            return empty("ambiguous", time, source);
+        List<Candidate> plausible = new ArrayList<>();
+        for (Candidate candidate : candidates) if (candidate.score - best.score <= Math.max(8, uncertainty)) plausible.add(candidate);
+        if (plausible.size() > 1) return consensus(plausible, time, source);
         OsmTags.Result tags = OsmTags.classify(best.way.tags());
-        String confidence = accuracy <= 8 && best.distance <= 8 && !tags.uncertain() ? "medium" : "low";
+        String confidence = accuracy <= 8 && projectionMargin <= 2 && best.distance <= 8 && !tags.uncertain() ? "medium" : "low";
         return new OsmMatch("matched", best.way.id(), best.way.tags(), time, confidence, best.distance, source, tags.traffic(), tags.surface());
+    }
+    private static OsmMatch consensus(List<Candidate> candidates, long time, String source) {
+        OsmTags.Result first = OsmTags.classify(candidates.get(0).way.tags());
+        String traffic = first.traffic(), surface = first.surface();
+        java.util.Map<String, String> sharedTags = new java.util.HashMap<>(candidates.get(0).way.tags());
+        for (Candidate candidate : candidates) {
+            OsmTags.Result tags = OsmTags.classify(candidate.way.tags());
+            if (!traffic.equals(tags.traffic())) traffic = "unknown";
+            if (!surface.equals(tags.surface())) surface = "unknown";
+            sharedTags.entrySet().removeIf(e -> !e.getValue().equals(candidate.way.tags().get(e.getKey())));
+        }
+        if ("unknown".equals(traffic) && "unknown".equals(surface)) return empty("ambiguous", time, source);
+        sharedTags.put("bodenwelle:candidate_way_ids", candidates.stream().map(c -> Long.toString(c.way.id()))
+                .collect(java.util.stream.Collectors.joining(";")));
+        return new OsmMatch("area_suggestion", null, sharedTags, time, "low", null, source, traffic, surface);
     }
     private static OsmMatch empty(String status, long time, String source) {
         return new OsmMatch(status, null, java.util.Collections.emptyMap(), time, "unknown", null, source, "unknown", "unknown");

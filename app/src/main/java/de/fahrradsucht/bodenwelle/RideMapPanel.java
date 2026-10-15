@@ -7,6 +7,9 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.os.Bundle;
 import android.graphics.drawable.GradientDrawable;
 import android.location.Location;
 import android.location.LocationManager;
@@ -58,6 +61,15 @@ public final class RideMapPanel extends LinearLayout {
     private int shownRouteCount = -1;
     private int shownFindingCount = -1;
     private boolean initializedCenter;
+    private List<FindingBundle> savedBundles = new ArrayList<>();
+    private List<MapClusters.Cluster> clusters = new ArrayList<>();
+    private double shownZoom = -1;
+    private final java.util.LinkedHashSet<Long> selected = new java.util.LinkedHashSet<>();
+    private boolean selecting;
+    private final LinearLayout selectionControls;
+    private final TextView selectionStatus;
+    private final Button mergeSelection;
+    private final Runnable zoomRefresh = this::refresh;
 
     public RideMapPanel(Activity activity, FindingStore store, Runnable requestLocation, Consumer<Finding> review,
                         boolean fullScreen) {
@@ -110,6 +122,22 @@ public final class RideMapPanel extends LinearLayout {
         optionButton.setId(R.id.map_options);
         controls.addView(optionButton, new LayoutParams(0, -2, 1));
         addView(controls);
+        selectionControls = new LinearLayout(activity); selectionControls.setOrientation(VERTICAL);
+        selectionStatus = new TextView(activity); selectionStatus.setTextSize(14); selectionControls.addView(selectionStatus);
+        LinearLayout selectionButtons = new LinearLayout(activity); selectionControls.addView(selectionButtons);
+        mergeSelection = control("Auswahl bündeln", () -> BundleConfirmation.show(activity, store,
+                new ArrayList<>(selected), () -> { selecting = false; selected.clear(); shownZoom = -1; refresh(); }));
+        mergeSelection.setId(R.id.map_bundle_confirm);
+        selectionButtons.addView(mergeSelection, new LayoutParams(0, -2, 1));
+        Button cancelSelection = control("Abbrechen", () -> { selecting = false; selected.clear(); shownZoom = -1; refresh(); });
+        cancelSelection.setId(R.id.map_bundle_cancel); selectionButtons.addView(cancelSelection, new LayoutParams(0, -2, 1));
+        addView(selectionControls); updateSelectionControls();
+        map.addMapListener(new org.osmdroid.events.MapListener() {
+            @Override public boolean onScroll(org.osmdroid.events.ScrollEvent event) { return false; }
+            @Override public boolean onZoom(org.osmdroid.events.ZoomEvent event) {
+                removeCallbacks(zoomRefresh); postDelayed(zoomRefresh, 120); return false;
+            }
+        });
         calibration = text(RecordingService.calibrationStatus, 14);
         calibration.setId(R.id.calibration_status);
         TextView attribution = text(activity.getString(R.string.osm_attribution), 12);
@@ -126,7 +154,7 @@ public final class RideMapPanel extends LinearLayout {
         refresh();
     }
     public void pause() { position.disableMyLocation(); map.onPause(); }
-    public void destroy() { if (options != null) options.dismiss(); pause(); map.onDetach(); }
+    public void destroy() { removeCallbacks(zoomRefresh); if (options != null) options.dismiss(); pause(); map.onDetach(); }
 
     private void showOptions() {
         if (options != null && options.isShowing()) return;
@@ -134,6 +162,9 @@ public final class RideMapPanel extends LinearLayout {
         content.setPadding(dp(16), dp(8), dp(16), dp(12));
         Button route = control(R.string.show_route, () -> { showRoute(); if (options != null) options.dismiss(); });
         content.addView(route);
+        Button bundle = control("Punkte auf der Karte bündeln", () -> {
+            if (options != null) options.dismiss(); startBundling(null);
+        }); bundle.setId(R.id.map_bundle_start); content.addView(bundle);
         sensitivity = new SensitivityControl(activity); sensitivity.expand(); content.addView(sensitivity);
         TextView sectionHint = new TextView(activity);
         sectionHint.setText(R.string.section_sensitivity_hint);
@@ -204,50 +235,123 @@ public final class RideMapPanel extends LinearLayout {
             }
         }
         int findings = store.count();
-        if (shownFindingCount != findings || shownRevision != store.revision()) {
-            shownRevision = store.revision();
-            shownFindingCount = findings;
-            for (Marker marker : markers) { marker.closeInfoWindow(); marker.onDetach(map); }
-            map.getOverlays().removeAll(markers); markers.clear();
-            map.getOverlays().removeAll(sectionLines); sectionLines.clear();
-            int shown = 0;
-            for (FindingBundle bundle : store.bundles()) {
-                Finding finding=bundle.representative();
-                if (shown++ >= 500) break;
-                Marker marker = new Marker(map);
-                marker.setPosition(new GeoPoint(finding.latitude(), finding.longitude()));
-                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
-                GradientDrawable icon = new GradientDrawable();
-                icon.setShape(GradientDrawable.OVAL);
-                icon.setSize(dp(20), dp(20));
-                icon.setColor(bundle.intensity().color());
-                icon.setStroke(dp(2), Color.WHITE);
-                marker.setIcon(icon);
-                marker.setTitle((bundle.reviewedCount()==bundle.observations().size()?"Geprüfte Fundstelle":"Fundstelle mit offenen Beobachtungen")+" · "+bundle.observations().size()+" Beobachtung(en)");
-                marker.setSnippet(bundle.title() + " · " + bundle.intensity().label()+(bundle.observations().size()>1?" · bisheriger Höchstwert":"") + (finding.note().isEmpty() ? "" : " · " + finding.note()));
-                marker.setOnMarkerClickListener((m, view) -> {
-                    if (review != null) review.accept(finding);
-                    else m.showInfoWindow();
-                    return true;
-                });
-                RoughSection section = finding.details().section();
-                if (section != null) {
-                    Polyline line = new Polyline(map);
-                    line.setPoints(java.util.Arrays.asList(new GeoPoint(finding.latitude(), finding.longitude()),
-                            new GeoPoint(section.endLatitude(), section.endLongitude())));
-                    line.getOutlinePaint().setColor(Color.rgb(207, 109, 17));
-                    line.getOutlinePaint().setStrokeWidth(dp(7));
-                    line.setOnClickListener((l, view, point) -> { if (review != null) review.accept(finding); return true; });
-                    sectionLines.add(line); map.getOverlays().add(line);
-                }
-                markers.add(marker); map.getOverlays().add(marker);
-            }
+        boolean changed = shownFindingCount != findings || shownRevision != store.revision();
+        if (changed) {
+            shownRevision = store.revision(); shownFindingCount = findings;
+            savedBundles = store.bundles();
+            selected.retainAll(savedBundles.stream().map(FindingBundle::key).collect(java.util.stream.Collectors.toSet()));
         }
+        double zoom = map.getZoomLevelDouble();
+        if (changed || Math.abs(zoom - shownZoom) > .01) {
+            shownZoom = zoom; rebuildMarkers();
+        }
+        updateSelectionControls();
         refreshPositionStatus();
         routeStatus.setText(points.isEmpty() ? R.string.route_summary_empty : RecordingService.running ? R.string.route_running : R.string.route_saved);
-        // Draw the position over the route and finding markers.
-        map.getOverlays().remove(position); map.getOverlays().add(position);
+        // Keep findings tappable even while standing directly on a hotspot.
+        map.getOverlays().remove(position); map.getOverlays().add(0, position);
         map.invalidate();
+    }
+
+    private void rebuildMarkers() {
+        for (Marker marker : markers) { marker.closeInfoWindow(); marker.onDetach(map); }
+        map.getOverlays().removeAll(markers); markers.clear();
+        map.getOverlays().removeAll(sectionLines); sectionLines.clear();
+        clusters = MapClusters.group(savedBundles, shownZoom, org.osmdroid.util.TileSystem.getTileSize(), dp(44));
+        // Show every saved section, including originals inside confirmed bundles.
+        for (FindingBundle bundle : savedBundles) for (Finding finding : bundle.observations()) {
+            RoughSection section = finding.details().section();
+            if (section == null) continue;
+            Polyline line = new Polyline(map);
+            line.setPoints(java.util.Arrays.asList(new GeoPoint(finding.latitude(), finding.longitude()),
+                    new GeoPoint(section.endLatitude(), section.endLongitude())));
+            line.getOutlinePaint().setColor(Color.rgb(207, 109, 17)); line.getOutlinePaint().setStrokeWidth(dp(7));
+            line.setOnClickListener((l, view, point) -> {
+                if (selecting) toggle(bundle.key()); else if (review != null) review.accept(finding); return true;
+            });
+            sectionLines.add(line); map.getOverlays().add(line);
+        }
+        for (MapClusters.Cluster cluster : clusters) {
+            Finding finding = cluster.representative(); Marker marker = new Marker(map);
+            marker.setPosition(new GeoPoint(finding.latitude(), finding.longitude()));
+            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
+            String label = cluster.count() == 1 ? "#" + finding.id() : "×" + cluster.count();
+            boolean marked = cluster.bundles().stream().anyMatch(b -> selected.contains(b.key()));
+            marker.setIcon(new MarkerBadge(label, cluster.intensity(), marked));
+            marker.setRelatedObject(cluster);
+            boolean released = cluster.bundles().stream().allMatch(b -> b.reviewedCount() == b.observations().size());
+            marker.setTitle((released ? "Geprüfte Fundstelle" : "Fundstelle mit offenen Beobachtungen")
+                    + " · " + cluster.count() + " Messung(en)" + (marked ? " · ausgewählt" : ""));
+            marker.setSnippet(cluster.bundles().stream().map(FindingBundle::references).collect(java.util.stream.Collectors.joining(", ")));
+            marker.setOnMarkerClickListener((m, view) -> {
+                choose(MapClusters.atMarker(cluster, clusters, shownZoom, org.osmdroid.util.TileSystem.getTileSize(), dp(50)));
+                return true;
+            });
+            markers.add(marker); map.getOverlays().add(marker);
+        }
+    }
+
+    private void choose(List<FindingBundle> bundles) {
+        if (bundles.size() == 1) {
+            if (selecting) toggle(bundles.get(0).key());
+            else if (review != null) review.accept(bundles.get(0).representative());
+            return;
+        }
+        String[] labels = bundles.stream().map(b -> b.references() + " · " + b.title()
+                + " · " + b.observations().size() + " Messung(en)").toArray(String[]::new);
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity).setTitle(selecting ? "Fundstellen auswählen" : "Nahe Fundstellen")
+                .setNegativeButton("Schließen", null);
+        if (selecting) {
+            boolean[] checked = new boolean[bundles.size()];
+            for (int i = 0; i < checked.length; i++) checked[i] = selected.contains(bundles.get(i).key());
+            builder.setMultiChoiceItems(labels, checked, (d, index, value) -> checked[index] = value)
+                    .setPositiveButton("Auswahl übernehmen", (d, w) -> {
+                        for (int i = 0; i < checked.length; i++) {
+                            if (checked[i]) selected.add(bundles.get(i).key()); else selected.remove(bundles.get(i).key());
+                        }
+                        shownZoom = -1; refresh();
+                    });
+        } else builder.setItems(labels, (d, index) -> { if (review != null) review.accept(bundles.get(index).representative()); });
+        builder.show();
+    }
+    private void toggle(long key) {
+        if (!selected.remove(key)) selected.add(key);
+        shownZoom = -1; refresh();
+    }
+    public void startBundling(Finding finding) {
+        selecting = true; selected.clear(); if (finding != null) selected.add(finding.bundleKey());
+        shownZoom = -1; refresh();
+    }
+    private void updateSelectionControls() {
+        if (selectionControls == null) return;
+        selectionControls.setVisibility(selecting ? View.VISIBLE : View.GONE);
+        selectionStatus.setText(activity.getResources().getQuantityString(R.plurals.map_bundle_selection, selected.size(), selected.size()));
+        mergeSelection.setEnabled(selected.size() >= 2);
+    }
+    public void saveSelection(Bundle state) {
+        state.putBoolean("mapSelecting", selecting);
+        state.putLongArray("mapSelected", selected.stream().mapToLong(Long::longValue).toArray());
+    }
+    public void restoreSelection(Bundle state) {
+        if (state == null) return; selecting = state.getBoolean("mapSelecting"); selected.clear();
+        long[] keys = state.getLongArray("mapSelected"); if (keys != null) for (long key : keys) selected.add(key);
+        shownZoom = -1; refresh();
+    }
+    private final class MarkerBadge extends GradientDrawable {
+        private final String label;
+        private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        MarkerBadge(String label, Intensity intensity, boolean selected) {
+            this.label = label; paint.setTextSize(dp(13)); paint.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+            paint.setTextAlign(Paint.Align.CENTER);
+            paint.setColor(intensity.level() <= 1 || intensity.level() == 5 ? Color.WHITE : Color.rgb(27, 48, 46));
+            setColor(intensity.color()); setCornerRadius(dp(18));
+            setSize(Math.max(dp(36), (int) paint.measureText(label) + dp(18)), dp(36));
+            setStroke(dp(selected ? 4 : 2), selected ? TEAL : Color.WHITE);
+        }
+        @Override public void draw(Canvas canvas) {
+            super.draw(canvas); android.graphics.Rect bounds = getBounds();
+            canvas.drawText(label, bounds.exactCenterX(), bounds.exactCenterY() - (paint.ascent() + paint.descent()) / 2, paint);
+        }
     }
 
     private void refreshPositionStatus() {
@@ -304,7 +408,8 @@ public final class RideMapPanel extends LinearLayout {
         text.setPadding(dp(4), dp(4), dp(4), dp(4)); addView(text);
         return text;
     }
-    private Button control(int label, Runnable action) {
+    private Button control(int label, Runnable action) { return control(activity.getString(label), action); }
+    private Button control(String label, Runnable action) {
         Button button = new Button(activity);
         button.setText(label); button.setTextSize(14); button.setAllCaps(false); button.setMinHeight(dp(48));
         button.setTextColor(TEAL);

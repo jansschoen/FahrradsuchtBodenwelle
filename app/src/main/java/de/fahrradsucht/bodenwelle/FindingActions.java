@@ -26,10 +26,12 @@ public final class FindingActions {
     private long pendingPhotoFinding;
     private String pendingCapture = "";
     private PhotoPanel activePhotoPanel;
+    private java.util.function.Consumer<Finding> mapBundler;
 
     public FindingActions(Activity activity, FindingStore store, Runnable changed) {
         this.activity = activity; this.store = store; this.changed = changed;
     }
+    public void setMapBundler(java.util.function.Consumer<Finding> action) { mapBundler = action; }
     public void restore(Bundle state) {
         if (state == null) return;
         pendingPhotoFinding = state.getLong("photoFinding");
@@ -42,11 +44,21 @@ public final class FindingActions {
     public void show(Finding finding) {
         Finding current = store.get(finding.id());
         if (current == null) { changed.run(); return; }
-        String message = Classification.label(Classification.BUMPS, current.category())
+        String message = "Messungen " + FindingBundle.references(store.observations(current.bundleKey())) + "\n"
+                + Classification.label(Classification.BUMPS, current.category())
                 + "\n" + DATE.format(Instant.ofEpochMilli(current.timeMillis()))
                 + (current.details().section() == null ? "" : "\n" + current.details().section().label())
                 + "\n\nBitte nur im sicheren Stand bearbeiten.";
-        new AlertDialog.Builder(activity).setTitle("Fundstelle auf der Karte").setMessage(message)
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity).setTitle("Fundstelle auf der Karte").setMessage(message);
+        if (mapBundler != null) {
+            android.widget.Button bundle = new android.widget.Button(activity);
+            bundle.setText(R.string.map_bundle_other); bundle.setAllCaps(false); bundle.setId(R.id.map_bundle_start);
+            builder.setView(bundle);
+            AlertDialog dialog = builder.setPositiveButton("Prüfen & Fotos", (d, w) -> review(current))
+                    .setNeutralButton("Löschen", (d, w) -> deleteObservation(current)).setNegativeButton("Schließen", null).create();
+            bundle.setOnClickListener(v -> { dialog.dismiss(); mapBundler.accept(current); }); dialog.show(); return;
+        }
+        builder
                 .setPositiveButton("Prüfen & Fotos", (d, w) -> review(current))
                 .setNeutralButton("Löschen", (d, w) -> deleteObservation(current))
                 .setNegativeButton("Schließen", null).show();
@@ -97,7 +109,7 @@ public final class FindingActions {
         PhotoPanel panel = activePhotoPanel;
         form.photos.addView(panel.root);
         ScrollView scroll = new ScrollView(activity); scroll.addView(form.root);
-        AlertDialog dialog = new AlertDialog.Builder(activity).setTitle("Fundstelle prüfen").setView(scroll)
+        AlertDialog dialog = new AlertDialog.Builder(activity).setTitle("Messung #" + f.id() + " prüfen").setView(scroll)
                 .setNegativeButton("Abbrechen", null)
                 .setNeutralButton("Löschen", (d, w) -> confirmDelete(f))
                 .setPositiveButton("Speichern", null).create();

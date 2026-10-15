@@ -29,7 +29,7 @@
     <string name="map_permission">Tippe auf „Mein Standort“, um den genauen Standort zu erlauben.</string>
     <string name="my_location">Mein Standort</string>
     <string name="show_route">Fahrtspur ansehen</string>
-    <string name="map_legend">Türkis: Fahrtspur · Orange: geschätzte Verbindung zwischen Anfang und Ende eines unebenen Abschnitts · Punkte: Intensität von Grün bis Rot, Grau ohne Messung. Sensorbewertung vorläufig; keine Höhenmessung.</string>
+    <string name="map_legend">Türkis: Fahrtspur · Orange: geschätzte Verbindung zwischen Anfang und Ende eines unebenen Abschnitts · Markierungen: # = Messungsnummer, × = Anzahl aller Messungen an dieser Stelle. Antippen öffnet auch überlappende Fundstellen. Anzeigegruppen ändern keine gespeicherten Bündelungen. Farben: Intensität von Grün bis Rot, Grau ohne Messung. Sensorbewertung vorläufig; keine Höhenmessung.</string>
     <string name="osm_attribution">© OpenStreetMap contributors · Lizenz ansehen</string>
     <string name="route_empty">Die Fahrtspur beginnt, sobald du eine Fahrt startest und GPS verfügbar ist.</string>
     <string name="route_running">Aktuelle Fahrtspur</string>
@@ -42,5 +42,11 @@
     <plurals name="finding_count">
         <item quantity="one">%d Fundstelle auf diesem Handy</item>
         <item quantity="other">%d Fundstellen auf diesem Handy</item>
+    </plurals>
+    <string name="bundle_choice">%1$s\n%2$s</string>
+    <string name="map_bundle_other">Mit anderem Punkt bündeln</string>
+    <plurals name="map_bundle_selection">
+        <item quantity="one">Im sicheren Stand: Punkte antippen · %1$d Fundstelle ausgewählt</item>
+        <item quantity="other">Im sicheren Stand: Punkte antippen · %1$d Fundstellen ausgewählt</item>
     </plurals>
 </resources>

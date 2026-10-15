@@ -74,6 +74,8 @@ public final class MailReports {
         for (Point point : group.points()) {
             Finding f=point.representative(); FindingDetails d=f.details();
             body.append(++index).append(". ").append(point.title()).append(" · ").append(point.weeks()).append('\n');
+            body.append("Messungsnummern: ").append(FindingBundle.references(point.observations().stream()
+                    .map(Item::finding).collect(java.util.stream.Collectors.toList()))).append('\n');
             if(point.observations().size()>1)body.append("Wiederholt beobachtet: ").append(point.observations().size()).append(" ausgewählte Beobachtungen derselben bestätigten Fundstelle\n");
             String roadName = d.osm().assigned() ? d.osm().tags().getOrDefault("name", "") : "";
             if (!roadName.isEmpty()) body.append("Straße/Weg laut OSM: ").append(oneLine(roadName)).append('\n');
@@ -90,7 +92,7 @@ public final class MailReports {
             List<Double> heights=new ArrayList<>(),peaks=new ArrayList<>();java.util.Set<String> notes=new java.util.LinkedHashSet<>();int flags=0;
             for(Item observation:point.observations()) {
                 Finding x=observation.finding();if(x.details().heightMm()!=null)heights.add(x.details().heightMm());if(x.peak()!=null)peaks.add(x.peak());
-                flags|=x.details().hazards();if(includeNotes&&!x.note().isEmpty())notes.add(x.note());hasOsm|=x.details().osm().assigned();
+                flags|=x.details().hazards();if(includeNotes&&!x.note().isEmpty())notes.add(x.note());hasOsm|=x.details().osm().hasSuggestions();
                 RoughSection section = x.details().section();
                 if (section != null) {
                     body.append(String.format(Locale.GERMANY, "Unebener Abschnitt: etwa %.0f m (aus Fahrgeschwindigkeit und Dauer geschätzt).\n", section.lengthMeters()));

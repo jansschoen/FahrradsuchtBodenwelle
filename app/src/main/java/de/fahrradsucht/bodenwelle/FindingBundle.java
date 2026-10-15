@@ -20,6 +20,13 @@ public record FindingBundle(long key, List<Finding> observations) {
         return observations.stream().map(f->Classification.label(Classification.BUMPS,f.category())).distinct().collect(java.util.stream.Collectors.joining(" / "));
     }
     public boolean confirmed() { return key > 0; }
+    /** Stable local IDs survive editing, bundling, splitting and subsequent rides. */
+    public String references() { return references(observations); }
+    public String referenceLabel() { return (observations.size() == 1 ? "Messung " : "Messungen ") + references(); }
+    public static String references(List<Finding> findings) {
+        return findings.stream().map(Finding::id).sorted().map(id -> "#" + id)
+                .collect(java.util.stream.Collectors.joining(", "));
+    }
     public Intensity intensity() {
         // A real height stays separate from acceleration; do not compare their numeric classes.
         return observations.stream().map(f->f.details().intensity()).max(Comparator.comparingInt((Intensity i)->i.heightBased()?1:0)

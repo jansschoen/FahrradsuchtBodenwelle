@@ -53,10 +53,19 @@ public class OsmRepositoryTest {
             repository.enrich(b, false); assertEquals(1, calls.get()); assertTrue(store.get(b).details().osm().assigned());
         }
     }
+    @Test public void adjacentGridCellsReuseTheirOverlappingQueryArea() {
+        long a = finding(13.39999), b = finding(13.40001);
+        assertNotEquals(OsmRepository.cell(52.5, 13.39999), OsmRepository.cell(52.5, 13.40001));
+        try (OsmRepository repository = new OsmRepository(context, success(), time::get); FindingStore store = new FindingStore(context)) {
+            repository.enrich(a, true); repository.enrich(b, true);
+            assertEquals(1, calls.get()); assertTrue(store.get(b).details().osm().assigned());
+            assertEquals(OsmMatcher.VERSION, store.get(b).details().osm().tags().get("bodenwelle:matcher_version"));
+        }
+    }
     @Test public void globalRequestBudgetPreventsRequestsForEveryFinding() {
         long a = finding(13.4), b = finding(13.42);
         try (OsmRepository repository = new OsmRepository(context, success(), time::get); FindingStore store = new FindingStore(context)) {
-            repository.enrich(a, true); repository.enrich(b, true); assertEquals(1, calls.get());
+            assertEquals(0, repository.enrich(a, true)); assertEquals(time.get() + 60_000, repository.enrich(b, true)); assertEquals(1, calls.get());
             assertEquals("rate_limited", store.get(b).details().osm().status());
             time.addAndGet(60_000); repository.enrich(b, true); assertEquals(2, calls.get());
         }

@@ -9,5 +9,6 @@ public record OsmMatch(String status, Long wayId, Map<String, String> tags, long
     public static OsmMatch empty(String status) {
         return new OsmMatch(status, null, java.util.Collections.emptyMap(), 0, "unknown", null, "", "unknown", "unknown");
     }
+    public boolean hasSuggestions() { return assigned() || "area_suggestion".equals(status); }
     public boolean assigned() { return "matched".equals(status); }
 }

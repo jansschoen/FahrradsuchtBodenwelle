@@ -3,50 +3,54 @@ package de.fahrradsucht.bodenwelle;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
-import java.util.LinkedHashSet;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
-/** Optional geodata work runs separately from the recording and UI threads. */
+/** Optional serial geodata work, retried while an app screen or a recording is active. */
 public final class OsmEnricher {
-    private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor(r -> { Thread t = new Thread(r, "Bodenwelle-OSM"); t.setDaemon(true); return t; });
-    private static final LinkedHashSet<Long> QUEUED = new LinkedHashSet<>();
-    private static boolean draining;
+    private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "Bodenwelle-OSM"); t.setDaemon(true); return t;
+    });
+    private static OsmWorkQueue queue;
+    private static android.app.Application owner;
+    private static volatile int visibleScreens;
     private OsmEnricher() {}
     public static boolean enabled(Context c) { return c.getSharedPreferences("geodata", Context.MODE_PRIVATE).getBoolean("enabled", true); }
-    public static void enabled(Context c, boolean enabled) { c.getSharedPreferences("geodata", Context.MODE_PRIVATE).edit().putBoolean("enabled", enabled).apply(); }
-    public static void enqueue(Context context, long id) {
+    public static synchronized void enabled(Context c, boolean enabled) {
+        c.getSharedPreferences("geodata", Context.MODE_PRIVATE).edit().putBoolean("enabled", enabled).apply();
+        if (!enabled && queue != null) queue.clear();
+    }
+    public static synchronized void visible(Context c, boolean visible) {
+        visibleScreens = Math.max(0, visibleScreens + (visible ? 1 : -1));
+        if (!visible && visibleScreens == 0 && !RecordingService.running && queue != null) queue.clear();
+        if (visible) pending(c);
+    }
+    public static synchronized void enqueue(Context context, long id) {
         if (!enabled(context)) return;
         Context app = context.getApplicationContext();
-        synchronized (QUEUED) {
-            if (QUEUED.size() < 200) QUEUED.add(id);
-            if (draining) return; draining = true;
-        }
-        EXECUTOR.execute(() -> {
-            try (OsmRepository repository = new OsmRepository(app, OverpassClient::fetch, System::currentTimeMillis)) {
-                while (true) {
-                    Long next;
-                    synchronized (QUEUED) {
-                        if (QUEUED.isEmpty()) { draining = false; return; }
-                        next = QUEUED.iterator().next(); QUEUED.remove(next);
-                    }
-                    if (enabled(app)) repository.enrich(next, online(app));
+        if (queue == null || owner != app) {
+            if (queue != null) queue.clear(); owner = (android.app.Application) app;
+            queue = new OsmWorkQueue((action, delay) -> {
+                java.util.concurrent.ScheduledFuture<?> scheduled = EXECUTOR.schedule(action, delay, TimeUnit.MILLISECONDS);
+                return () -> scheduled.cancel(false);
+            }, next -> {
+                try (OsmRepository repository = new OsmRepository(app, OverpassClient::fetch, System::currentTimeMillis)) {
+                    return repository.enrich(next, online(app));
                 }
-            } catch (RuntimeException ignored) {
-                // A cache/database issue must never stop the sensor recorder. Entries stay locally available.
-                synchronized (QUEUED) { draining = false; QUEUED.clear(); }
-            }
-        });
+            }, System::currentTimeMillis, () -> enabled(app) && (visibleScreens > 0 || RecordingService.running));
+        }
+        queue.add(id);
     }
     public static void pending(Context c) {
         if (!enabled(c)) return;
         try (FindingStore store = new FindingStore(c)) {
-            int count = 0;
             for (Finding f : store.all()) {
                 OsmMatch m = f.details().osm();
-                boolean finished = m.assigned() || "ambiguous".equals(m.status()) || "no_match".equals(m.status());
+                boolean finished = m.hasSuggestions() || "ambiguous".equals(m.status()) || "no_match".equals(m.status());
                 boolean stale = System.currentTimeMillis() - m.queriedAt() > 7L * 24 * 60 * 60 * 1000;
-                if ((!finished || stale) && count++ < 200) enqueue(c, f.id());
+                boolean oldMatcher = !OsmMatcher.VERSION.equals(m.tags().get("bodenwelle:matcher_version"));
+                if (!finished || stale || oldMatcher) enqueue(c, f.id());
             }
         }
     }
