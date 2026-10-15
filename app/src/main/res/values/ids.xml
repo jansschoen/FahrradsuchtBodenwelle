@@ -43,4 +43,6 @@
     <item name="mail_subject" type="id" />
     <item name="mail_body" type="id" />
     <item name="mail_open" type="id" />
+    <item name="bundle_traffic_choice" type="id" />
+    <item name="bundle_surface_choice" type="id" />
 </resources>

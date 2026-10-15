@@ -92,7 +92,8 @@ public final class MailReports {
             List<Double> heights=new ArrayList<>(),peaks=new ArrayList<>();java.util.Set<String> notes=new java.util.LinkedHashSet<>();int flags=0;
             for(Item observation:point.observations()) {
                 Finding x=observation.finding();if(x.details().heightMm()!=null)heights.add(x.details().heightMm());if(x.peak()!=null)peaks.add(x.peak());
-                flags|=x.details().hazards();if(includeNotes&&!x.note().isEmpty())notes.add(x.note());hasOsm|=x.details().osm().hasSuggestions();
+                flags|=x.details().hazards();if(includeNotes&&!x.note().isEmpty())notes.add(x.note());hasOsm|=x.details().osm().hasSuggestions()
+                        || x.details().hasAutomaticDescription();
                 RoughSection section = x.details().section();
                 if (section != null) {
                     body.append(String.format(Locale.GERMANY, "Unebener Abschnitt: etwa %.0f m (aus Fahrgeschwindigkeit und Dauer geschätzt).\n", section.lengthMeters()));

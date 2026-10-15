@@ -9,7 +9,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-/** Photos belong to the original observation, so unbundling preserves their ownership. */
+/** A shared place gallery; a single file can remain linked to several measurements after unbundling. */
 public final class PhotoPanel {
     public interface Actions { void pick(long findingId); void capture(long findingId); }
     public final LinearLayout root;
@@ -23,7 +23,8 @@ public final class PhotoPanel {
     }
     public void refresh() {
         root.removeAllViews();
-        TextView hint=new TextView(activity);hint.setText(R.string.photos_hint);root.addView(hint);
+        TextView hint=new TextView(activity);hint.setText(activity.getString(R.string.photos_hint));root.addView(hint);
+        TextView capacity = new TextView(activity); capacity.setText(activity.getResources().getQuantityString(R.plurals.photo_capacity, store.photoLimit(findingId), store.photoLimit(findingId))); root.addView(capacity);
         java.util.List<FindingPhoto> photos=store.photos(findingId);
         for (FindingPhoto photo:photos) {
             LinearLayout row=new LinearLayout(activity);root.addView(row);
@@ -33,12 +34,12 @@ public final class PhotoPanel {
             int size=Math.round(100*activity.getResources().getDisplayMetrics().density);
             row.addView(image,new LinearLayout.LayoutParams(size,size)); image.setOnClickListener(v -> show(activity,photo));
             Button remove=new Button(activity);remove.setText(R.string.photo_remove);remove.setAllCaps(false);row.addView(remove);
-            remove.setOnClickListener(v -> new AlertDialog.Builder(activity).setTitle("Foto löschen?").setMessage("Das Foto wird aus der App entfernt. Bereits weitergegebene Kopien bleiben bestehen.")
-                    .setNegativeButton("Abbrechen",null).setPositiveButton("Löschen",(d,w)->{store.deletePhoto(photo.id());refresh();}).show());
+            remove.setOnClickListener(v -> new AlertDialog.Builder(activity).setTitle("Foto löschen?").setMessage("Das Foto wird für diese Fundstelle und alle darin gebündelten Messungen entfernt. Bei bereits getrennten Fundstellen bleibt deren Foto erhalten. Bereits weitergegebene Kopien bleiben bestehen.")
+                    .setNegativeButton("Abbrechen",null).setPositiveButton("Löschen",(d,w)->{store.deletePhoto(findingId,photo.id());refresh();}).show());
         }
         Button pick=new Button(activity);pick.setText(R.string.photo_pick);pick.setAllCaps(false);pick.setId(R.id.photo_pick);root.addView(pick);
         Button capture=new Button(activity);capture.setText(R.string.photo_capture);capture.setAllCaps(false);capture.setId(R.id.photo_capture);root.addView(capture);
-        pick.setEnabled(photos.size()<PhotoFiles.MAX_PER_OBSERVATION);capture.setEnabled(pick.isEnabled());
+        pick.setEnabled(photos.size()<store.photoLimit(findingId));capture.setEnabled(pick.isEnabled());
         pick.setOnClickListener(v->actions.pick(findingId));capture.setOnClickListener(v->actions.capture(findingId));
     }
     public static void show(Activity activity,FindingPhoto photo) {

@@ -55,7 +55,7 @@ Schema 5 fügt nur die optionale manuelle Bezirkszuordnung hinzu; Fundstellen, S
 
 Tests prüfen Reglerumkehr, Zahleneingabe, ungültige Eingaben, ISO-Wochenjahr und Berliner Zeitzone, fehlende genaue Messzeiten, Ausschluss nicht freigegebener Stellen, Bezirksaufteilung und vollständige Teilmails, repräsentative Punkte aller zwölf Bezirke, Grenzfälle, Migration, Mail-Intent, manuelle Empfänger, Widerruf der Freigabe und erhaltene Bearbeitungen beim Drehen des Geräts. Frameworktests laufen auf simuliertem Android 9 und 15. Das konkrete Mailprogramm auf dem Fairphone muss noch praktisch geprüft werden; einige Programme können vorbefüllte Angaben unterschiedlich übernehmen.
 
-Sinnvolle nächste Schritte: wiederholte Treffer einer tatsächlich gleichen Stelle nach Prüfung bündeln, Fotoanhänge mit entfernbaren Metadaten ergänzen sowie Aktenzeichen und Bearbeitungsstand lokal verwalten. Aktuelle amtliche Grenzgeometrien und gegebenenfalls ein Straßenbaulastverzeichnis würden die Empfängervorschläge weiter verbessern.
+Bündelung und bereinigte Fotoanhänge sind umgesetzt. Ein möglicher nächster Schritt ist die lokale Verwaltung von Aktenzeichen und Bearbeitungsständen. Aktuelle amtliche Grenzgeometrien und gegebenenfalls ein Straßenbaulastverzeichnis würden die Empfängervorschläge weiter verbessern.
 
 ## Erweiterung in 0.5.0
 
@@ -64,3 +64,5 @@ Bestätigte Bündelungen, lokale Fotos, Fotoauswahl und deren Übergabe sind in 
 ## Unebene Straßenabschnitte
 
 Abschnitte werden als ein persönlich freizugebender Eintrag mit Anfang, Ende und geschätzter Länge gemeldet. Bei einem Wochenwechsel erscheinen beide Kalenderwochen. Genaue Zeitpunkte und die Fahrtspur werden weiterhin nicht übernommen. Unterschiedliche Bezirksvorschläge für Anfang und Ende lassen die Zuständigkeit offen; ein Bezirk kann nach Prüfung manuell gesetzt werden. Die Abschnittserkennung und ihre Ausdehnung sind ausdrücklich vorläufig.
+
+Seit **0.10.0** stehen Fotos, Verkehrsfläche, Oberfläche und Gefährdungsmerkmale gemeinsam für alle Messungen eines Bündels zur Verfügung. Gemeinsame Fotos erscheinen je gemeldeter Fundstelle einmal; ihre ursprüngliche Importmessung muss dafür nicht zusätzlich freigegeben werden. Die tatsächlich gemeldeten Messwerte, Notizen, Nummern und Kalenderwochen stammen weiterhin ausschließlich aus ausgewählten freigegebenen Einzelmessungen. Bei getrennten Fundstellen kann dasselbe gemeinsame Foto für jede Stelle unabhängig gewählt werden; diese Auswahl bleibt beim Drehen erhalten.

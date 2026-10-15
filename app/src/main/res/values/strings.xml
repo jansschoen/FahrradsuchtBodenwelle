@@ -4,7 +4,7 @@
     <string name="calibration_start_hint">Nach dem Fahrtstart zwei Sekunden im Stand kalibrieren.</string>
     <string name="route_summary_empty">Noch keine Fahrtspur</string>
     <string name="recalibrate">Im Stand neu kalibrieren</string>
-    <string name="photos_hint">Bis zu fünf Fotos pro Beobachtung. Kopien werden verkleinert; EXIF-Orts- und Zeitangaben werden entfernt. Bitte Bildinhalte wie Gesichter und Kennzeichen vor dem Weitergeben prüfen. Nur im sicheren Stand fotografieren.</string>
+    <string name="photos_hint">Fotos werden sofort gespeichert und stehen allen Messungen der gebündelten Fundstelle zur Verfügung. Kopien werden verkleinert; EXIF-Orts- und Zeitangaben werden entfernt. Bitte Bildinhalte wie Gesichter und Kennzeichen vor dem Weitergeben prüfen. Nur im sicheren Stand fotografieren.</string>
     <string name="photos_section">Fotos ansehen und ergänzen</string>
     <string name="photo_preview">Foto der Unebenheit – zum Vergrößern antippen</string>
     <string name="photo_remove">Foto löschen</string>
@@ -48,5 +48,10 @@
     <plurals name="map_bundle_selection">
         <item quantity="one">Im sicheren Stand: Punkte antippen · %1$d Fundstelle ausgewählt</item>
         <item quantity="other">Im sicheren Stand: Punkte antippen · %1$d Fundstellen ausgewählt</item>
+    </plurals>
+    <string name="bundle_shared_hint">Fotos, Verkehrsfläche, Oberfläche und Gefährdungsmerkmale gelten gemeinsam für alle Messungen dieses Bündels. Beschreibung, Schadensart, Höhenmessung und Freigabe bleiben einzeln.</string>
+    <plurals name="photo_capacity">
+        <item quantity="one">Speicher für %1$d Foto. Bereits übernommene Fotos bleiben auch oberhalb dieser Grenze erhalten.</item>
+        <item quantity="other">Speicher für %1$d Fotos. Bereits übernommene Fotos bleiben auch oberhalb dieser Grenze erhalten.</item>
     </plurals>
 </resources>

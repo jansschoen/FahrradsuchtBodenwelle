@@ -131,7 +131,8 @@ public class DeletionWorkflowTest {
                 assertEquals(bundle, store.get(kept).bundleId());
                 assertEquals(List.of(kept), store.observations(bundle).stream().map(Finding::id).toList());
                 assertTrue(keptPhoto.exists());
-                assertFalse(removedPhoto.exists());
+                assertTrue(removedPhoto.exists());
+                assertEquals(2, store.photos(kept).size());
                 assertNotNull(deleteButton(controller.get().findViewById(android.R.id.content), kept));
             }
         }

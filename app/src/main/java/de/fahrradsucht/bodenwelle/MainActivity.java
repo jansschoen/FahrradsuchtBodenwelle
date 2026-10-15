@@ -273,6 +273,7 @@ public final class MainActivity extends Activity {
             String state = bundle.reviewedCount() == bundle.observations().size() ? "Freigegeben"
                     : bundle.reviewedCount() == 0 ? "Offen" : "Teilweise freigegeben";
             addText(item, state + (nearKeys.contains(bundle.key()) ? " · zusammenfassbar" : ""), 13, GREEN, true);
+            if (SharedFindingDetails.from(bundle.observations()).conflicting()) addText(item, "Gemeinsame Angaben prüfen", 14, GREEN, true);
             addText(item, bundle.title(), 20, INK, true);
             addText(item, bundle.referenceLabel(), 14, GREEN, true);
             addText(item, DATE.format(Instant.ofEpochMilli(f.timeMillis()))
@@ -327,6 +328,7 @@ public final class MainActivity extends Activity {
         addText(details, "Bewertungsgrundlage: " + (score.value() == null ? "keine Messung" : score.value() + " " + score.unit()) + " · " + score.method(), 14, INK, false);
         for (int i = 0; i < Classification.HAZARDS.length; i++) if ((f.details().hazards() & (1 << i)) != 0)
             addText(details, "Zusatzmerkmal: " + Classification.HAZARDS[i].label(), 14, INK, false);
+        if (bundle.observations().size() > 1) addText(details, "Verkehrsfläche, Oberfläche und Gefährdungsmerkmale gelten gemeinsam für das Bündel. OSM-Abfragedetails gehören zur angezeigten Einzelmessung #" + f.id() + ".", 14, INK, false);
         addText(details, GeodataDescription.details(f.details()), 14, INK, false);
         if (f.details().osm().queriedAt() > 0 && System.currentTimeMillis() - f.details().osm().queriedAt() > 7L * 24 * 60 * 60 * 1000)
             addText(details, "OSM-Cache älter als sieben Tage; Angaben können veraltet sein.", 14, INK, false);

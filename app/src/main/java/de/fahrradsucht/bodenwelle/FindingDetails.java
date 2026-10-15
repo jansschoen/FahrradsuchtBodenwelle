@@ -11,6 +11,12 @@ public record FindingDetails(String legacyCategory, Double heightMm, Intensity i
                           String traffic, boolean trafficManual, String surface, boolean surfaceManual, OsmMatch osm) {
         this(legacyCategory, heightMm, intensity, hazards, traffic, trafficManual, surface, surfaceManual, osm, null);
     }
+    public FindingDetails withShared(int flags, String road, boolean roadManual, String ground, boolean groundManual) {
+        return new FindingDetails(legacyCategory, heightMm, intensity, flags, road, roadManual, ground, groundManual, osm, section);
+    }
+    public boolean hasAutomaticDescription() {
+        return !trafficManual && !"unknown".equals(traffic) || !surfaceManual && !"unknown".equals(surface);
+    }
     public FindingDetails withSection(RoughSection section) {
         return new FindingDetails(legacyCategory, heightMm, intensity, hazards, traffic, trafficManual,
                 surface, surfaceManual, osm, section);

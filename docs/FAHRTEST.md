@@ -86,7 +86,7 @@ Erzeuge eine Mail mit den gewünschten freigegebenen Beobachtungen. Wiederholung
 ### Einzelne Messung löschen (0.6.0)
 
 1. Nach Fahrtende an einer Fundstelle direkt **Löschen** antippen. Zuerst **Abbrechen** wählen: Messung und Fotos müssen erhalten bleiben.
-2. Erneut **Löschen** wählen und bestätigen: Diese Messung und ihre lokalen Fotos verschwinden aus Liste, Karte und künftigen Exporten. Die Fahrtspur bleibt erhalten.
+2. Erneut **Löschen** wählen und bestätigen: Diese Messung verschwindet aus Liste, Karte und künftigen Exporten. Fotos bleiben erhalten, sofern sie noch anderen Messungen zugeordnet sind. Die Fahrtspur bleibt erhalten.
 3. Bei einer gebündelten Fundstelle eine einzelne Messung auswählen und löschen. Die übrigen Beobachtungen samt Fotos und Freigaben müssen erhalten bleiben. Beim letzten Treffer verschwindet die Fundstelle vollständig. Bereits exportierte Dateien oder übergebene Mailanhänge bleiben eigenständige Kopien.
 
 ### Vertikale Erkennung und Abschnitte (0.7.0)
@@ -107,3 +107,11 @@ Erzeuge eine Mail mit den gewünschten freigegebenen Beobachtungen. Wiederholung
 4. **Weitere Aktionen** für CSV und manuelles Bündeln öffnen. Die Vorschläge gelten jetzt für jedes Messpunktpaar mit Abstand streng unter vier Metern.
 5. **Kartenoptionen** für Schieberegler, Neukalibrierung, Fahrtspuransicht und Legende öffnen. Standortgenauigkeit bleibt auf der Karte sichtbar.
 6. Unter **Mehr → Daten verwalten** das Löschen erst abbrechen. Gesamtlöschung und Fahrtspurlöschung sind während einer laufenden Fahrt deaktiviert.
+
+## Gemeinsame Angaben und Fotos ab 0.10.0
+
+1. Zwei Messungen derselben Stelle unterschiedlich ergänzen: ein Foto und Asphalt bei der einen, ein weiteres Foto und zusätzliche Gefährdungsmerkmale bei der anderen. Bündeln und prüfen, dass beide Messungen dieselbe Galerie, Verkehrsfläche/Oberfläche und vereinigte Gefährdungsmerkmale zeigen.
+2. Bei zwei widersprüchlichen manuellen Oberflächen muss die Bestätigung eine Auswahl verlangen. Zuerst abbrechen: Beide ursprünglichen Angaben bleiben erhalten. Dann einen gemeinsamen Wert wählen und bestätigen.
+3. In einer Messung die gemeinsame Oberfläche ändern und ein Gefährdungsmerkmal abwählen: Die Änderung muss bei allen Bündelmitgliedern erscheinen. Messwerte, Höhen, Notizen und individuelle Freigaben bleiben einzeln.
+4. Ein Foto ergänzen, die ursprüngliche Importmessung löschen und prüfen, dass das Foto bei den übrigen Messungen erhalten bleibt. Eine Mail soll es je Fundstelle nur einmal anbieten.
+5. Bündel auflösen: Gemeinsame Angaben und Fotos bleiben bei allen Einzelmessungen erhalten. Ein Foto bei einer getrennten Stelle entfernen; bei der anderen muss es weiterhin sichtbar sein. In der Mail können die Fotos beider Stellen unabhängig gewählt werden, auch nach dem Drehen des Handys.

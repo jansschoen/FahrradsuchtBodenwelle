@@ -23,15 +23,22 @@ public final class BundleConfirmation {
         }
         double span = 0;
         for (Finding a : members) for (Finding b : members) span = Math.max(span, BundleSuggestions.distance(a, b));
-        new AlertDialog.Builder(activity).setTitle("Dieselbe Unebenheit?")
+        SharedFindingDetails shared = SharedFindingDetails.from(members);
+        SharedFieldsForm form = new SharedFieldsForm(activity, shared);
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity).setTitle("Dieselbe Unebenheit?")
                 .setMessage("Messungen " + FindingBundle.references(members) + "\n\n" + members.size()
                         + " Beobachtungen zusammenfassen? Größter Abstand der Messpunkte: " + Math.round(span)
                         + " m. Prüfe Straßenseite und benachbarte Schäden. GPS kann ungenau sein."
-                        + "\n\nOriginalmessungen, einzelne Freigaben und Fotos bleiben erhalten. Die Bündelung lässt sich auflösen.")
-                .setNegativeButton("Abbrechen", null).setPositiveButton("Zusammenfassen", (d, w) -> {
-                    try { store.mergeBundles(keys); }
-                    catch (IllegalArgumentException e) { Toast.makeText(activity, e.getMessage(), Toast.LENGTH_LONG).show(); }
-                    changed.run();
-                }).show();
+                        + "\n\nFotos, Verkehrsfläche, Oberfläche und Gefährdungsmerkmale werden für alle Messungen übernommen. Manuelle Angaben haben Vorrang; Gefährdungsmerkmale werden vereinigt."
+                        + (shared.conflicting() ? " Abweichende manuelle Angaben bitte unten auswählen." : "")
+                        + " Messwerte und einzelne Freigaben bleiben erhalten. Die Bündelung lässt sich auflösen.")
+                .setNegativeButton("Abbrechen", null).setPositiveButton("Zusammenfassen", null);
+        if (shared.conflicting()) builder.setView(form.root);
+        AlertDialog dialog = builder.create();
+        dialog.show();
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            try { store.mergeBundles(keys, form.traffic(), form.surface()); dialog.dismiss(); changed.run(); }
+            catch (IllegalArgumentException e) { Toast.makeText(activity, e.getMessage(), Toast.LENGTH_LONG).show(); }
+        });
     }
 }

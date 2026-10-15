@@ -25,10 +25,10 @@ public class PhotoAttachmentTest {
     private long observation(FindingStore s,boolean released){Location l=new Location("gps");l.setLatitude(52.5);l.setLongitude(13.4);l.setAccuracy(5);long id=s.insert(l,null);s.review(id,"root_heave","",released);return id;}
     private long photo(FindingStore s,long id)throws Exception {String filename=java.util.UUID.randomUUID()+".jpg";Files.write(PhotoFiles.localFile(app,filename).toPath(),new byte[]{1,2,3});return s.addPhoto(id,filename,1,1,3);}
     private MailReports.Group group(FindingStore s,long...ids){List<MailReports.Item> items=new ArrayList<>();for(long id:ids)items.add(new MailReports.Item(s.get(id),"01","manual"));return MailReports.groups(items,true).get(0);}
-    @Test public void onlyPhotosOfSelectedReleasedObservationsAreIncludedEvenWithinOneBundle()throws Exception {
+    @Test public void sharedPhotosAreAvailableToEachReleasedBundleMemberAndRemainAfterSplitting()throws Exception {
         try(FindingStore s=new FindingStore(app)){long a=observation(s,true),b=observation(s,false);photo(s,a);photo(s,b);long key=s.mergeBundles(List.of(-a,-b));
-            MailReports.Group g=group(s,a,b);List<MailAttachments.Choice> choices=MailAttachments.choices(g,s);assertEquals(1,choices.size());assertEquals(a,choices.get(0).photo().findingId());
-            s.separateBundle(key);assertEquals(1,s.photos(a).size());assertEquals(1,s.photos(b).size());
+            MailReports.Group g=group(s,a,b);List<MailAttachments.Choice> choices=MailAttachments.choices(g,s);assertEquals(2,choices.size());assertTrue(choices.stream().anyMatch(choice->choice.photo().findingId()==a));
+            s.separateBundle(key);assertEquals(2,s.photos(a).size());assertEquals(2,s.photos(b).size());
         }
     }
     @Test public void snapshotsAreReadOnlyTimestampFreeAndRemainReadableAfterLocalPhotoDeletion()throws Exception {

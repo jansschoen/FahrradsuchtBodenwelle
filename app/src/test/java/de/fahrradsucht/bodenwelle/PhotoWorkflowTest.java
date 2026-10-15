@@ -48,6 +48,16 @@ public class PhotoWorkflowTest {
             assertEquals(Intent.ACTION_SEND,mail.getAction());assertEquals(1,mail.getClipData().getItemCount());assertEquals("Stelle-01-Foto-02.jpg",mail.getClipData().getItemAt(0).getUri().getLastPathSegment());
         }
     }
+    @Test public void theSameSharedImageCanBeSelectedIndependentlyForTwoSeparatedPlacesAfterRotation()throws Exception {
+        try(FindingStore s=new FindingStore(app)){long a=finding(s,52.52),b=finding(s,52.52001);photo(s,a);long key=s.mergeBundles(List.of(-a,-b));s.separateBundle(key);}
+        try(ActivityController<MailReportActivity> c=Robolectric.buildActivity(MailReportActivity.class).setup()){
+            prepare(c.get());CheckBox first=photoCheckbox(c.get().findViewById(android.R.id.content));assertNotNull(first);first.setChecked(false);
+            c.recreate();Shadows.shadowOf(Looper.getMainLooper()).idle();assertFalse(photoCheckbox(c.get().findViewById(android.R.id.content)).isChecked());
+            c.get().findViewById(R.id.mail_open).performClick();Intent chooser=Shadows.shadowOf(c.get()).getNextStartedActivity();assertNotNull(chooser);
+            Intent mail=chooser.getParcelableExtra(Intent.EXTRA_INTENT);assertEquals(Intent.ACTION_SEND,mail.getAction());assertEquals(1,mail.getClipData().getItemCount());
+            assertEquals("Stelle-02-Foto-01.jpg",mail.getClipData().getItemAt(0).getUri().getLastPathSegment());
+        }
+    }
     @Test public void cameraRequestUsesScopedOutputAndCancellationRemovesRawCapture()throws Exception {
         try(FindingStore s=new FindingStore(app)){finding(s,52.52);}
         try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){

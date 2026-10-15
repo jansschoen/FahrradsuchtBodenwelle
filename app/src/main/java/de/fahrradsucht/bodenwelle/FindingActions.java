@@ -66,11 +66,27 @@ public final class FindingActions {
     public void review(Finding f) {
         List<Finding> members = store.observations(f.bundleKey());
         if (members.isEmpty()) { changed.run(); return; }
+        SharedFindingDetails shared = SharedFindingDetails.from(members);
+        if (shared.conflicting()) { resolveShared(f, shared); return; }
         if (members.size() == 1) { reviewObservation(members.get(0)); return; }
         new AlertDialog.Builder(activity).setTitle("Beobachtung auswählen")
                 .setItems(observationLabels(members), (d, index) -> reviewObservation(members.get(index)))
                 .setNegativeButton("Schließen", null)
                 .setNeutralButton("Bündelung auflösen", (d, w) -> { store.separateBundle(f.bundleKey()); changed.run(); }).show();
+    }
+
+    private void resolveShared(Finding finding, SharedFindingDetails shared) {
+        SharedFieldsForm form = new SharedFieldsForm(activity, shared);
+        AlertDialog dialog = new AlertDialog.Builder(activity).setTitle("Gemeinsame Angaben abgleichen")
+                .setMessage("In diesem älteren Bündel gibt es unterschiedliche manuelle Angaben. Welche sollen für alle Messungen gelten? Fotos und Gefährdungsmerkmale sind bereits gemeinsam verfügbar.")
+                .setView(form.root).setNegativeButton("Abbrechen", null).setPositiveButton("Für alle übernehmen", null).create();
+        dialog.show();
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            try {
+                store.resolveShared(finding.bundleKey(), form.traffic(), form.surface()); dialog.dismiss(); changed.run();
+                Finding current = store.get(finding.id()); if (current != null) review(current);
+            } catch (IllegalArgumentException e) { toast(e.getMessage()); }
+        });
     }
 
     private String[] observationLabels(List<Finding> members) {
@@ -92,7 +108,7 @@ public final class FindingActions {
     private void confirmDelete(Finding f) {
         String message = "Messung #" + f.id() + " vom " + DATE.format(Instant.ofEpochMilli(f.timeMillis()))
                 + "\n" + Classification.label(Classification.BUMPS, f.category())
-                + "\n\nDiese Messung und ihre Fotos werden aus der App gelöscht."
+                + "\n\nDiese Messung wird aus der App gelöscht. Fotos bleiben erhalten, solange sie noch zu einer anderen Messung gehören."
                 + (f.bundleId() > 0 ? " Weitere Messungen dieser Fundstelle bleiben erhalten." : "")
                 + " Bereits exportierte Kopien bleiben erhalten.";
         new AlertDialog.Builder(activity).setTitle("Messung löschen?").setMessage(message)
@@ -101,7 +117,14 @@ public final class FindingActions {
     }
 
     private void reviewObservation(Finding f) {
+        Finding current = store.get(f.id()); if (current == null) { changed.run(); return; }
+        f = current;
         FindingReviewForm form = new FindingReviewForm(activity, f);
+        if (store.observations(f.bundleKey()).size() > 1) {
+            android.widget.TextView hint = new android.widget.TextView(activity); hint.setText(R.string.bundle_shared_hint);
+            hint.setTextSize(15); form.root.addView(hint, 0);
+        }
+        final Finding edited = f;
         activePhotoPanel = new PhotoPanel(activity, store, f.id(), new PhotoPanel.Actions() {
             @Override public void pick(long id) { pickPhoto(id); }
             @Override public void capture(long id) { capturePhoto(id); }
@@ -111,11 +134,11 @@ public final class FindingActions {
         ScrollView scroll = new ScrollView(activity); scroll.addView(form.root);
         AlertDialog dialog = new AlertDialog.Builder(activity).setTitle("Messung #" + f.id() + " prüfen").setView(scroll)
                 .setNegativeButton("Abbrechen", null)
-                .setNeutralButton("Löschen", (d, w) -> confirmDelete(f))
+                .setNeutralButton("Löschen", (d, w) -> confirmDelete(edited))
                 .setPositiveButton("Speichern", null).create();
         dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             try {
-                store.review(f.id(), form.category(), form.note.getText().toString().trim(), form.release.isChecked(), form.details(f));
+                store.review(edited.id(), form.category(), form.note.getText().toString().trim(), form.release.isChecked(), form.details(edited));
                 dialog.dismiss(); changed.run();
             } catch (IllegalArgumentException e) { form.height.setError(e.getMessage()); toast(e.getMessage()); }
         }));
@@ -142,7 +165,7 @@ public final class FindingActions {
             if(result!=Activity.RESULT_OK){if(!capture.isEmpty())PhotoFiles.captureFile(activity,capture).delete();return true;}
             java.util.List<Uri> uris=new java.util.ArrayList<>();
             if(request==PHOTO_PICK && data!=null){if(data.getClipData()!=null)for(int i=0;i<data.getClipData().getItemCount();i++)uris.add(data.getClipData().getItemAt(i).getUri());else if(data.getData()!=null)uris.add(data.getData());}
-            if(request==PHOTO_PICK && uris.size()>PhotoFiles.MAX_PER_OBSERVATION-store.photos(findingId).size()){toast("Bitte höchstens fünf Fotos pro Beobachtung auswählen. Es wurde noch kein Foto übernommen.");return true;}
+            if(request==PHOTO_PICK && uris.size()>store.photoLimit(findingId)-store.photos(findingId).size()){toast("Bitte weniger Fotos auswählen; der gemeinsame Fotospeicher reicht dafür nicht aus. Es wurde noch kein Foto übernommen.");return true;}
             android.content.Context app=activity.getApplicationContext();toast("Foto wird lokal vorbereitet …");
             PHOTOS.execute(()->{int count=0;try{
                 if(request==PHOTO_CAPTURE){PhotoFiles.importCapture(app,capture,findingId);count++;}

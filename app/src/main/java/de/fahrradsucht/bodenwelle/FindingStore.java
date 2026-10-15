@@ -12,7 +12,7 @@ import java.util.List;
 public final class FindingStore extends SQLiteOpenHelper {
     private static final java.util.concurrent.atomic.AtomicLong CHANGES = new java.util.concurrent.atomic.AtomicLong();
     private final Context context;
-    public FindingStore(Context context) { super(context, "findings.db", null, 6); this.context = context.getApplicationContext(); }
+    public FindingStore(Context context) { super(context, "findings.db", null, 7); this.context = context.getApplicationContext(); }
     @Override public void onConfigure(SQLiteDatabase db) { db.setForeignKeyConstraintsEnabled(true); }
 
     @Override public void onCreate(SQLiteDatabase db) {
@@ -22,6 +22,7 @@ public final class FindingStore extends SQLiteOpenHelper {
         addClassification(db);
         addMailColumn(db);
         addBundlesAndPhotos(db);
+        addSharedPhotos(db);
     }
 
     @Override public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -30,12 +31,35 @@ public final class FindingStore extends SQLiteOpenHelper {
         if (oldVersion < 4) addClassification(db);
         if (oldVersion < 5) addMailColumn(db);
         if (oldVersion < 6) addBundlesAndPhotos(db);
+        if (oldVersion < 7) addSharedPhotos(db);
     }
     private static void addBundlesAndPhotos(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE finding_bundles (id INTEGER PRIMARY KEY AUTOINCREMENT)");
         db.execSQL("ALTER TABLE findings ADD COLUMN bundle_id INTEGER REFERENCES finding_bundles(id)");
         db.execSQL("CREATE INDEX findings_bundle ON findings(bundle_id)");
         db.execSQL("CREATE TABLE finding_photos(id INTEGER PRIMARY KEY AUTOINCREMENT,finding_id INTEGER NOT NULL REFERENCES findings(id) ON DELETE CASCADE,filename TEXT NOT NULL UNIQUE,width INTEGER NOT NULL,height INTEGER NOT NULL,bytes INTEGER NOT NULL)");
+    }
+    private static void addSharedPhotos(SQLiteDatabase db) {
+        db.execSQL("CREATE TABLE photo_links(photo_id INTEGER NOT NULL REFERENCES finding_photos(id) ON DELETE CASCADE,finding_id INTEGER NOT NULL REFERENCES findings(id) ON DELETE CASCADE,PRIMARY KEY(photo_id,finding_id))");
+        db.execSQL("CREATE INDEX photo_links_finding ON photo_links(finding_id)");
+        db.execSQL("INSERT INTO photo_links SELECT id,finding_id FROM finding_photos");
+        java.util.Map<Long,List<Finding>> bundles = new java.util.LinkedHashMap<>();
+        try (Cursor c = db.rawQuery("SELECT * FROM findings WHERE bundle_id IS NOT NULL ORDER BY id DESC", null)) {
+            while (c.moveToNext()) { Finding f = readFinding(c); bundles.computeIfAbsent(f.bundleId(), unused -> new ArrayList<>()).add(f); }
+        }
+        for (java.util.Map.Entry<Long,List<Finding>> bundle : bundles.entrySet()) {
+            shareBundlePhotos(db, bundle.getKey());
+            applyShared(db, bundle.getValue(), SharedFindingDetails.from(bundle.getValue()));
+        }
+    }
+    private static void shareBundlePhotos(SQLiteDatabase db, long bundleId) {
+        db.execSQL("INSERT OR IGNORE INTO photo_links(photo_id,finding_id) SELECT links.photo_id,member.id FROM photo_links links JOIN findings origin ON origin.id=links.finding_id JOIN findings member ON member.bundle_id=origin.bundle_id WHERE origin.bundle_id=?", new Object[]{bundleId});
+    }
+    private static void applyShared(SQLiteDatabase db, List<Finding> members, SharedFindingDetails shared) {
+        for (Finding f : members) {
+            ContentValues values = new ContentValues(); values.put("details", shared.apply(f.details()).json());
+            db.update("findings", values, "id = ?", new String[]{Long.toString(f.id())});
+        }
     }
     private static void addMailColumn(SQLiteDatabase db) {
         db.execSQL("ALTER TABLE findings ADD COLUMN report_district TEXT NOT NULL DEFAULT ''");
@@ -217,6 +241,10 @@ public final class FindingStore extends SQLiteOpenHelper {
             Finding current = get(id);
             if (current != null) v.put("details", details.withOsm(current.details().osm()).json());
             db.update("findings", v, "id = ?", new String[]{Long.toString(id)});
+            if (current != null && current.bundleId() > 0) {
+                List<Finding> members = observations(current.bundleKey());
+                applyShared(db, members, SharedFindingDetails.edited(members, details));
+            }
             db.setTransactionSuccessful(); CHANGES.incrementAndGet();
         } finally { db.endTransaction(); }
     }
@@ -227,6 +255,10 @@ public final class FindingStore extends SQLiteOpenHelper {
             if (current != null) {
                 ContentValues v = new ContentValues(); v.put("details", current.details().withOsm(match).json());
                 db.update("findings", v, "id = ?", new String[]{Long.toString(id)});
+                if (current.bundleId() > 0) {
+                    List<Finding> members = observations(current.bundleKey());
+                    applyShared(db, members, SharedFindingDetails.from(members));
+                }
             }
             db.setTransactionSuccessful(); CHANGES.incrementAndGet();
         } finally { db.endTransaction(); }
@@ -252,7 +284,8 @@ public final class FindingStore extends SQLiteOpenHelper {
         for (java.util.Map.Entry<Long,List<Finding>> e : groups.entrySet()) result.add(new FindingBundle(e.getKey(), e.getValue()));
         return result;
     }
-    public long mergeBundles(List<Long> keys) {
+    public long mergeBundles(List<Long> keys) { return mergeBundles(keys, null, null); }
+    public long mergeBundles(List<Long> keys, String traffic, String surface) {
         java.util.Set<Long> chosen = new java.util.HashSet<>(keys);
         SQLiteDatabase db = getWritableDatabase(); db.beginTransaction();
         try {
@@ -260,10 +293,21 @@ public final class FindingStore extends SQLiteOpenHelper {
             java.util.Set<Long> present = new java.util.HashSet<>();
             for (Finding f : all()) if (chosen.contains(f.bundleKey())) { members.add(f); present.add(f.bundleKey()); }
             if (present.size() < 2 || !present.equals(chosen)) throw new IllegalArgumentException("Bitte mindestens zwei vorhandene Fundstellen auswählen.");
+            SharedFindingDetails shared = SharedFindingDetails.from(members).choose(traffic, surface);
             long id = db.insertOrThrow("finding_bundles", "id", new ContentValues());
             ContentValues v = new ContentValues(); v.put("bundle_id", id);
             for (Finding f : members) db.update("findings", v, "id = ?", new String[]{Long.toString(f.id())});
+            applyShared(db, members, shared); shareBundlePhotos(db, id);
             removeEmptyBundles(db); db.setTransactionSuccessful(); CHANGES.incrementAndGet(); return id;
+        } finally { db.endTransaction(); }
+    }
+    public void resolveShared(long bundleKey, String traffic, String surface) {
+        SQLiteDatabase db = getWritableDatabase(); db.beginTransaction();
+        try {
+            List<Finding> members = observations(bundleKey);
+            if (members.isEmpty()) throw new IllegalArgumentException("Diese Fundstelle ist nicht mehr vorhanden.");
+            applyShared(db, members, SharedFindingDetails.from(members).choose(traffic, surface));
+            db.setTransactionSuccessful(); CHANGES.incrementAndGet();
         } finally { db.endTransaction(); }
     }
     public void separateBundle(long key) {
@@ -277,57 +321,89 @@ public final class FindingStore extends SQLiteOpenHelper {
     }
     public List<FindingPhoto> photos(long findingId) {
         List<FindingPhoto> result = new ArrayList<>();
-        try (Cursor c = getReadableDatabase().rawQuery("SELECT id,finding_id,filename,width,height,bytes FROM finding_photos WHERE finding_id = ? ORDER BY id", new String[]{Long.toString(findingId)})) {
-            while (c.moveToNext()) result.add(new FindingPhoto(c.getLong(0),c.getLong(1),c.getString(2),c.getInt(3),c.getInt(4),c.getLong(5)));
+        try (Cursor c = getReadableDatabase().rawQuery("SELECT p.id,p.finding_id,p.filename,p.width,p.height,p.bytes FROM finding_photos p JOIN photo_links links ON links.photo_id=p.id WHERE links.finding_id=? ORDER BY p.id", new String[]{Long.toString(findingId)})) {
+            while (c.moveToNext()) result.add(readPhoto(c));
         }
         return result;
     }
+    private static FindingPhoto readPhoto(Cursor c) {
+        return new FindingPhoto(c.getLong(0), c.getLong(1), c.getString(2), c.getInt(3), c.getInt(4), c.getLong(5));
+    }
     public FindingPhoto photo(long id) {
         try (Cursor c = getReadableDatabase().rawQuery("SELECT id,finding_id,filename,width,height,bytes FROM finding_photos WHERE id = ?", new String[]{Long.toString(id)})) {
-            return c.moveToFirst() ? new FindingPhoto(c.getLong(0),c.getLong(1),c.getString(2),c.getInt(3),c.getInt(4),c.getLong(5)) : null;
+            return c.moveToFirst() ? readPhoto(c) : null;
         }
+    }
+    public boolean hasPhoto(long findingId, long photoId) {
+        try (Cursor c = getReadableDatabase().rawQuery("SELECT 1 FROM photo_links WHERE finding_id=? AND photo_id=?", new String[]{Long.toString(findingId), Long.toString(photoId)})) { return c.moveToFirst(); }
+    }
+    public int photoLimit(long findingId) {
+        Finding finding = get(findingId);
+        return PhotoFiles.MAX_PER_OBSERVATION * (finding == null ? 1 : Math.max(1, observations(finding.bundleKey()).size()));
     }
     public synchronized long addPhoto(long findingId, String filename, int width, int height, long bytes) {
         if (!filename.matches("[a-f0-9-]{36}\\.jpg")) throw new IllegalArgumentException("Invalid photo filename");
         SQLiteDatabase db = getWritableDatabase(); db.beginTransaction();
         try {
-            if (photos(findingId).size() >= PhotoFiles.MAX_PER_OBSERVATION) throw new IllegalArgumentException("Pro Beobachtung sind höchstens fünf Fotos möglich.");
+            Finding finding = get(findingId);
+            if (finding == null) throw new IllegalArgumentException("Diese Messung wurde inzwischen gelöscht.");
+            if (photos(findingId).size() >= photoLimit(findingId)) throw new IllegalArgumentException("Der Fotospeicher dieser Fundstelle ist voll. Vorhandene Fotos bleiben erhalten.");
             ContentValues v = new ContentValues(); v.put("finding_id",findingId); v.put("filename",filename); v.put("width",width); v.put("height",height); v.put("bytes",bytes);
-            long id = db.insertOrThrow("finding_photos",null,v); db.setTransactionSuccessful(); CHANGES.incrementAndGet(); return id;
+            long id = db.insertOrThrow("finding_photos",null,v);
+            for (Finding member : observations(finding.bundleKey())) {
+                db.execSQL("INSERT INTO photo_links(photo_id,finding_id) VALUES(?,?)", new Object[]{id, member.id()});
+            }
+            db.setTransactionSuccessful(); CHANGES.incrementAndGet(); return id;
         } finally { db.endTransaction(); }
     }
     public void deletePhoto(long id) {
-        FindingPhoto photo = photo(id); getWritableDatabase().delete("finding_photos","id = ?",new String[]{Long.toString(id)});
-        if (photo != null) PhotoFiles.localFile(context,photo.filename()).delete(); CHANGES.incrementAndGet();
+        FindingPhoto photo = photo(id); if (photo != null) deletePhoto(photo.findingId(), id);
     }
-
-    public void delete(long id) {
-        SQLiteDatabase db = getWritableDatabase();
-        db.beginTransaction();
-        List<FindingPhoto> files;
+    /** Remove the photo from this place, retaining links and the file for other, separated places. */
+    public void deletePhoto(long findingId, long photoId) {
+        SQLiteDatabase db = getWritableDatabase(); db.beginTransaction(); List<FindingPhoto> removed = new ArrayList<>();
         try {
-            files = photos(id);
-            db.delete("findings", "id = ?", new String[]{Long.toString(id)});
-            removeEmptyBundles(db);
-            db.setTransactionSuccessful();
+            Finding finding = get(findingId); FindingPhoto photo = photo(photoId);
+            if (finding != null && photo != null && hasPhoto(findingId, photoId)) {
+                for (Finding member : observations(finding.bundleKey()))
+                    db.delete("photo_links", "finding_id=? AND photo_id=?", new String[]{Long.toString(member.id()), Long.toString(photoId)});
+                keepOrRemovePhoto(db, photo, removed);
+            }
+            db.setTransactionSuccessful(); CHANGES.incrementAndGet();
         } finally { db.endTransaction(); }
-        removeLocalPhotos(files);
-        CHANGES.incrementAndGet();
+        removeLocalPhotos(removed);
+    }
+    private static void keepOrRemovePhoto(SQLiteDatabase db, FindingPhoto photo, List<FindingPhoto> removed) {
+        try (Cursor c = db.rawQuery("SELECT finding_id FROM photo_links WHERE photo_id=? ORDER BY finding_id LIMIT 1", new String[]{Long.toString(photo.id())})) {
+            if (c.moveToFirst()) {
+                ContentValues owner = new ContentValues(); owner.put("finding_id", c.getLong(0));
+                db.update("finding_photos", owner, "id=?", new String[]{Long.toString(photo.id())});
+            } else {
+                db.delete("finding_photos", "id=?", new String[]{Long.toString(photo.id())}); removed.add(photo);
+            }
+        }
+    }
+    public void delete(long id) {
+        SQLiteDatabase db = getWritableDatabase(); db.beginTransaction(); List<FindingPhoto> removed = new ArrayList<>();
+        try {
+            List<FindingPhoto> photos = photos(id);
+            // Transfer the technical file owner before its foreign-key cascade; other links survive.
+            db.delete("photo_links", "finding_id=?", new String[]{Long.toString(id)});
+            for (FindingPhoto photo : photos) keepOrRemovePhoto(db, photo, removed);
+            db.delete("findings", "id = ?", new String[]{Long.toString(id)});
+            removeEmptyBundles(db); db.setTransactionSuccessful();
+        } finally { db.endTransaction(); }
+        removeLocalPhotos(removed); CHANGES.incrementAndGet();
     }
     public void deleteAll() {
-        SQLiteDatabase db = getWritableDatabase();
-        db.beginTransaction();
-        List<FindingPhoto> files = new ArrayList<>();
+        SQLiteDatabase db = getWritableDatabase(); db.beginTransaction(); List<FindingPhoto> files = new ArrayList<>();
         try {
-            for (Finding f : all()) files.addAll(photos(f.id()));
-            db.delete("findings", null, null);
-            db.delete("finding_bundles", null, null);
+            try (Cursor c = db.rawQuery("SELECT id,finding_id,filename,width,height,bytes FROM finding_photos", null)) { while (c.moveToNext()) files.add(readPhoto(c)); }
+            db.delete("findings", null, null); db.delete("finding_bundles", null, null);
             db.setTransactionSuccessful();
         } finally { db.endTransaction(); }
-        removeLocalPhotos(files);
-        CHANGES.incrementAndGet();
+        removeLocalPhotos(files); CHANGES.incrementAndGet();
     }
-
     private void removeLocalPhotos(List<FindingPhoto> photos) {
         for (FindingPhoto photo : photos) PhotoFiles.localFile(context, photo.filename()).delete();
     }

@@ -82,7 +82,7 @@ public final class OsmRepository implements AutoCloseable {
     private void mark(long id, String status) {
         // Network failures do not destroy a prior usable assignment or manual overrides.
         Finding current = store.get(id);
-        if (current != null && !current.details().osm().hasSuggestions())
+        if (current != null && !current.details().osm().hasSuggestions() && !current.details().hasAutomaticDescription())
             store.setOsm(id, new OsmMatch(status, null, java.util.Collections.emptyMap(), 0, "unknown", null, OverpassClient.ENDPOINT, "unknown", "unknown"));
     }
     @Override public void close() { store.close(); }
