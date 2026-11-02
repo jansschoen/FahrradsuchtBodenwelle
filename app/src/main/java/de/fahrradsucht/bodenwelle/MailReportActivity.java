@@ -44,6 +44,13 @@ public final class MailReportActivity extends Activity {
     private final Map<String, DraftState> saved = new HashMap<>();
     private MailReports.Group current;
     private boolean building;
+    private final android.os.Handler reportHandler=new android.os.Handler(android.os.Looper.getMainLooper());
+    private final java.util.concurrent.ExecutorService reportExecutor=java.util.concurrent.Executors.newSingleThreadExecutor(r->{Thread t=new Thread(r,"Bodenwelle-PDF");t.setDaemon(true);return t;});
+    private java.util.concurrent.Future<?> reportTask;
+    private Button reportPreviewButton,reportMailButton,reportRefreshButton;
+    private TextView reportStatus;
+    private CheckBox separatePhotos;
+    private boolean exporting;
     private final Map<String,CheckBox> photoChecks=new java.util.LinkedHashMap<>();
     private List<MailAttachments.Choice> attachmentChoices=new ArrayList<>();
     private record Row(long id, CheckBox selected, Spinner district, BerlinDistricts.Assignment automatic) {}
@@ -52,6 +59,8 @@ public final class MailReportActivity extends Activity {
         String address = "", authority = "", subject = "", body = "";
         boolean handedOff;
         java.util.Set<String> selectedPhotos;
+        ReportExport.Request request;ReportExport.Result report;
+        boolean separatePhotos;
     }
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -117,6 +126,7 @@ public final class MailReportActivity extends Activity {
         return boundaries.assign(f, "");
     }
     private void prepare() {
+        if(exporting)return;
         saveCurrent(); saved.clear(); current = null;
         settings.edit().putBoolean("split", split.isChecked()).putBoolean("notice", appNotice.isChecked()).putString("name", name.getText().toString().trim()).apply();
         List<MailReports.Item> items = new ArrayList<>();
@@ -163,7 +173,7 @@ public final class MailReportActivity extends Activity {
                     && group.items().stream().allMatch(i -> i.districtId().equals(group.items().get(0).districtId()))) office = group.items().get(0).districtId();
             DistrictCatalog.Authority a = catalog.get(office);
             if (a != null) { state.authority = a.id(); state.address = settings.getString("address_" + a.id(), a.email()); }
-            MailReports.Draft template = MailReports.draft(group, group.districtId().isEmpty() ? "" : catalog.name(group.districtId()), appNotice.isChecked(), notes.isChecked(), name.getText().toString());
+            MailReports.Draft template = MailReports.coverLetter(group, group.districtId().isEmpty() ? "" : catalog.name(group.districtId()), appNotice.isChecked(), name.getText().toString());
             state.subject = template.subject(); state.body = template.body(); saved.put(group.key(), state);
         }
         List<DistrictOption> offices = new ArrayList<>(); offices.add(new DistrictOption("", "Andere Anlaufstelle / eigene E-Mail"));
@@ -180,17 +190,25 @@ public final class MailReportActivity extends Activity {
         });
         text(preview, "Empfänger", 15); recipient = edit(preview, state.address, false); recipient.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS); recipient.setId(R.id.mail_recipient);
         text(preview, "Betreff", 15); subject = edit(preview, state.subject, false); subject.setId(R.id.mail_subject);
-        text(preview, "Mailtext – vor der Übergabe prüfen", 18); body = edit(preview, state.body, true); body.setId(R.id.mail_body);
+        text(preview, "Kurzes Anschreiben", 18); body = edit(preview, state.body, true); body.setId(R.id.mail_body);
+        separatePhotos=null;
         photoChecks.clear();attachmentChoices=MailAttachments.choices(group,store);
         if(!attachmentChoices.isEmpty()) {
-            text(preview,"Fotos auswählen (höchstens 10 Fotos / 10 MB)",18);
-            text(preview,"Gemeinsame Fotos eines Bündels erscheinen je Fundstelle einmal. Die Nummer im Dateinamen gehört zur Fundstelle im Text. Prüfe Bildinhalte vor der Übergabe. Metadaten wurden beim Import entfernt. Änderungen der Nummerierung im Mailtext erfordern passende Fotozuordnung.",14);
+            text(preview,"Fotos für den PDF-Bericht (höchstens 10 / 10 MB)",18);
+            text(preview,"Gewählte Fotos stehen direkt im PDF bei der passenden Fundstelle. Gemeinsame Fotos erscheinen je Fundstelle einmal. Die Nummer gehört zur Fundstelle in Karte und Tabelle. Prüfe Bildinhalte vor der Übergabe. Metadaten wurden beim Import entfernt. Änderungen der Nummerierung im Mailtext erfordern passende Fotozuordnung.",14);
             for(MailAttachments.Choice choice:attachmentChoices) {
                 CheckBox checked=check(preview,choice.displayName()+" · "+Math.max(1,choice.photo().bytes()/1024)+" KB",state.selectedPhotos==null||state.selectedPhotos.contains(choice.key()));
                 photoChecks.put(choice.key(),checked);
                 button(preview,"Foto zu Stelle "+choice.place()+" ansehen",()->PhotoPanel.show(this,choice.photo()));
             }
         }
+        if(!attachmentChoices.isEmpty()){separatePhotos=check(preview,"Fotos zusätzlich einzeln anhängen",state.separatePhotos);separatePhotos.setId(R.id.report_separate_photos);}
+        LinearLayout reportCard=column();reportCard.setPadding(dp(16),dp(14),dp(16),dp(14));
+        android.graphics.drawable.GradientDrawable reportBackground=new android.graphics.drawable.GradientDrawable();reportBackground.setColor(0xffedf5f1);reportBackground.setCornerRadius(dp(16));reportCard.setBackground(reportBackground);preview.addView(reportCard);
+        text(reportCard,"Dein PDF-Bericht",21);text(reportCard,"Nummerierte Karte · Fundstellentabelle · ausgewählte Fotos. Nur freigegebene Messungen; Zeitangaben als Kalenderwochen.",15);
+        reportStatus=text(reportCard,"Vor dem Versenden ansehen und prüfen. Bei fehlenden Kartenteilen wird der Bericht deutlich gekennzeichnet.",14);reportStatus.setId(R.id.report_status);
+        reportPreviewButton=button(reportCard,"PDF ansehen",()->export(false));reportPreviewButton.setId(R.id.report_preview);
+        reportRefreshButton=button(reportCard,"PDF neu erstellen",()->{DraftState active=saved.get(current.key());active.request=null;active.report=null;export(false);});reportRefreshButton.setId(R.id.report_refresh);
         handoff = text(preview, state.handedOff ? "Mailprogramm oder Auswahl bereits geöffnet; Text, Anhänge und Versand dort prüfen." : "Es wurde noch keine Mail versendet.", 14);
         recipientOffice.setOnItemSelectedListener(listener(() -> {
             if (building) return;
@@ -202,7 +220,8 @@ public final class MailReportActivity extends Activity {
             }
             showSource();
         }));
-        button(preview, "Im Mailprogramm öffnen", this::openMail).setId(R.id.mail_open);
+        reportMailButton=button(preview, "Im Mailprogramm öffnen", this::openMail);reportMailButton.setId(R.id.mail_open);
+        setExporting(exporting);
         button(preview, "Mailtext kopieren", () -> {
             if (!stillReviewed()) return;
             getSystemService(ClipboardManager.class).setPrimaryClip(ClipData.newPlainText("Meldung", "Betreff: " + subject.getText() + "\n\n" + body.getText()));
@@ -220,24 +239,56 @@ public final class MailReportActivity extends Activity {
         DraftState d = saved.get(current.key()); if (d == null) return;
         d.address = recipient.getText().toString().trim(); d.subject = subject.getText().toString(); d.body = body.getText().toString();
         d.authority = ((DistrictOption) recipientOffice.getSelectedItem()).id();
+        d.separatePhotos=separatePhotos!=null&&separatePhotos.isChecked();
         d.selectedPhotos=new java.util.HashSet<>();for(Map.Entry<String,CheckBox> entry:photoChecks.entrySet())if(entry.getValue().isChecked())d.selectedPhotos.add(entry.getKey());
     }
-    private void openMail() {
+    private void openMail(){export(true);}
+    private void setExporting(boolean busy) {
+        exporting=busy;if(reportPreviewButton!=null)reportPreviewButton.setEnabled(!busy);if(reportMailButton!=null)reportMailButton.setEnabled(!busy);if(reportRefreshButton!=null)reportRefreshButton.setEnabled(!busy);
+        if(split!=null){split.setEnabled(!busy);notes.setEnabled(!busy);appNotice.setEnabled(!busy);name.setEnabled(!busy);}
+        View prepare=findViewById(R.id.mail_prepare);if(prepare!=null)prepare.setEnabled(!busy);
+        View group=findViewById(R.id.mail_group);if(group!=null)group.setEnabled(!busy);
+        for(Row row:rows){row.selected.setEnabled(!busy);row.district.setEnabled(!busy);}for(CheckBox photo:photoChecks.values())photo.setEnabled(!busy);
+    }
+    private List<MailAttachments.Choice> chosenPhotos() {
+        List<MailAttachments.Choice> chosen=new ArrayList<>();for(MailAttachments.Choice choice:attachmentChoices)if(photoChecks.get(choice.key()).isChecked())chosen.add(choice);return chosen;
+    }
+    private void export(boolean mail) {
+        if(exporting||current==null||!stillReviewed())return;
         try {
-            // Recheck consent on handoff; opening a stale screen cannot export a revoked/deleted entry.
-            if (!stillReviewed()) return;
-            MailIntent.create(recipient.getText().toString().trim(),subject.getText().toString(),body.getText().toString());
-            List<MailAttachments.Choice> chosen=new ArrayList<>();for(MailAttachments.Choice choice:attachmentChoices)if(photoChecks.get(choice.key()).isChecked())chosen.add(choice);
-            java.util.ArrayList<Uri> photos=MailAttachments.prepare(this,chosen,current);
-            Intent intent=MailIntent.withPhotos(recipient.getText().toString().trim(),subject.getText().toString(),body.getText().toString(),photos);
-            startActivity(photos.isEmpty()?intent:Intent.createChooser(intent,"Mailprogramm für Text und Fotos auswählen")); saveCurrent(); saved.get(current.key()).handedOff = true;
-            DistrictCatalog.Authority a = selectedAuthority();
-            if (a != null) settings.edit().putString("address_" + a.id(), recipient.getText().toString().trim()).apply();
+            if(mail)MailIntent.create(recipient.getText().toString().trim(),subject.getText().toString(),body.getText().toString());
+            saveCurrent();List<MailAttachments.Choice> chosen=chosenPhotos();MailAttachments.validate(this,chosen,current);
+            Map<String,String> districtNames=new HashMap<>();for(DistrictCatalog.Authority authority:catalog.all())districtNames.put(authority.id(),authority.name());
+            ReportExport.Request request=new ReportExport.Request(current,districtNames,name.getText().toString(),notes.isChecked(),appNotice.isChecked(),chosen);
+            DraftState draft=saved.get(current.key());
+            if(request.equals(draft.request)&&draft.report!=null){deliver(mail,request,draft.report);return;}
+            setExporting(true);reportStatus.setText(R.string.report_loading);
+            android.content.Context app=getApplicationContext();String key=current.key();
+            reportTask=reportExecutor.submit(()->{
+                try {
+                    ReportExport.Result result=ReportExport.create(app,request);
+                    reportHandler.post(()->{
+                        if(isDestroyed()||isFinishing())return;setExporting(false);DraftState state=saved.get(key);
+                        if(state!=null){state.request=request;state.report=result;}
+                        if(current!=null&&current.key().equals(key))deliver(mail,request,result);
+                    });
+                }catch(Exception failure){reportHandler.post(()->{if(!isDestroyed()&&!isFinishing()){setExporting(false);reportStatus.setText(getString(R.string.report_error,failure.getMessage()==null?getString(R.string.report_generic_error):failure.getMessage()));toast(failure.getMessage()==null?"PDF konnte nicht erstellt werden.":failure.getMessage());}});}
+            });
+        }catch(IllegalArgumentException|IOException failure){toast(failure.getMessage());}
+    }
+    private void deliver(boolean mail,ReportExport.Request request,ReportExport.Result result) {
+        try {
+            if(current==null||!current.equals(request.group())||!request.name().equals(name.getText().toString())||request.notes()!=notes.isChecked()||request.notice()!=appNotice.isChecked()||!request.selected().equals(chosenPhotos())){toast("Die Auswahl hat sich geändert. Bitte den Bericht neu erstellen.");return;}
+            if(!stillReviewed())return;MailAttachments.validate(this,request.selected(),request.group());
+            reportStatus.setText(getResources().getQuantityString(R.plurals.report_ready,result.pages(),result.pages(),result.mapStatus()));
+            if(!mail){startActivity(new Intent(this,ReportPreviewActivity.class).setData(result.pdf()));return;}
+            java.util.ArrayList<Uri> photos=separatePhotos!=null&&separatePhotos.isChecked()?result.photos():new java.util.ArrayList<>();
+            Intent intent=MailIntent.withReport(recipient.getText().toString().trim(),subject.getText().toString(),body.getText().toString(),result.pdf(),photos);
+            startActivity(Intent.createChooser(intent,"Mailprogramm für PDF-Bericht auswählen"));saveCurrent();saved.get(current.key()).handedOff=true;
+            DistrictCatalog.Authority authority=selectedAuthority();if(authority!=null)settings.edit().putString("address_"+authority.id(),recipient.getText().toString().trim()).apply();
             handoff.setText(R.string.mail_handed_off);
-        } catch (IllegalArgumentException | IOException e) { toast(e.getMessage()); }
-        catch (ActivityNotFoundException e) {
-            new AlertDialog.Builder(this).setTitle("Kein Mailprogramm gefunden").setMessage("Richte ein Mailprogramm auf dem Handy ein. Du kannst den Entwurf auch über „Mailtext kopieren“ übernehmen.").setPositiveButton("Verstanden", null).show();
-        }
+        }catch(ActivityNotFoundException failure){new AlertDialog.Builder(this).setTitle("Kein Mailprogramm gefunden").setMessage("Richte ein Mailprogramm ein. Den PDF-Bericht kannst du hier weiterhin ansehen.").setPositiveButton("Verstanden",null).show();}
+        catch(IOException|IllegalArgumentException failure){toast(failure.getMessage());}
     }
     private boolean stillReviewed() {
         for (MailReports.Item item : current.items()) {
@@ -253,7 +304,7 @@ public final class MailReportActivity extends Activity {
             ArrayList<String> selected = new ArrayList<>(); for (Row row : rows) if (row.selected.isChecked()) selected.add(Long.toString(row.id)); out.putStringArrayList("selected", selected);
             Bundle all = new Bundle();
             for (Map.Entry<String, DraftState> e : saved.entrySet()) {
-                Bundle d = new Bundle(); d.putString("address", e.getValue().address); d.putString("authority", e.getValue().authority); d.putString("subject", e.getValue().subject); d.putString("body", e.getValue().body); d.putBoolean("handoff", e.getValue().handedOff);
+                Bundle d = new Bundle(); d.putString("address", e.getValue().address); d.putString("authority", e.getValue().authority); d.putString("subject", e.getValue().subject); d.putString("body", e.getValue().body); d.putBoolean("handoff", e.getValue().handedOff);d.putBoolean("separatePhotos",e.getValue().separatePhotos);
                 if(e.getValue().selectedPhotos!=null){ArrayList<String> photoIds=new ArrayList<>();for(String id:e.getValue().selectedPhotos)photoIds.add(id);d.putStringArrayList("photos",photoIds);} all.putBundle(e.getKey(), d);
             }
             out.putBundle("drafts", all); if (current != null) out.putString("group", current.key());
@@ -267,7 +318,7 @@ public final class MailReportActivity extends Activity {
         prepare(); saved.clear(); current = null;
         for (String key : draftsState.keySet()) {
             Bundle b = draftsState.getBundle(key); if (b == null) continue; DraftState d = new DraftState();
-            d.address = b.getString("address", ""); d.authority = b.getString("authority", ""); d.subject = b.getString("subject", ""); d.body = b.getString("body", ""); d.handedOff = b.getBoolean("handoff");
+            d.address = b.getString("address", ""); d.authority = b.getString("authority", ""); d.subject = b.getString("subject", ""); d.body = b.getString("body", ""); d.handedOff = b.getBoolean("handoff");d.separatePhotos=b.getBoolean("separatePhotos");
             ArrayList<String> photoIds=b.getStringArrayList("photos");if(photoIds!=null){d.selectedPhotos=new java.util.HashSet<>();for(String id:photoIds)d.selectedPhotos.add(id);} saved.put(key, d);
         }
         Spinner choice = findViewById(R.id.mail_group);
@@ -282,5 +333,5 @@ public final class MailReportActivity extends Activity {
     private AdapterView.OnItemSelectedListener listener(Runnable action) { return new AdapterView.OnItemSelectedListener() { @Override public void onItemSelected(AdapterView<?> p, View v, int position, long id) { action.run(); } @Override public void onNothingSelected(AdapterView<?> p) {} }; }
     private void toast(String value) { Toast.makeText(this, value, Toast.LENGTH_LONG).show(); }
     private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
-    @Override public void onDestroy() { if (store != null) store.close(); super.onDestroy(); }
+    @Override public void onDestroy() { if(reportTask!=null)reportTask.cancel(true);reportExecutor.shutdownNow();reportHandler.removeCallbacksAndMessages(null);if (store != null) store.close(); super.onDestroy(); }
 }

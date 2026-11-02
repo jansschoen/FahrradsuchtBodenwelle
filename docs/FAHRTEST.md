@@ -115,3 +115,12 @@ Erzeuge eine Mail mit den gewünschten freigegebenen Beobachtungen. Wiederholung
 3. In einer Messung die gemeinsame Oberfläche ändern und ein Gefährdungsmerkmal abwählen: Die Änderung muss bei allen Bündelmitgliedern erscheinen. Messwerte, Höhen, Notizen und individuelle Freigaben bleiben einzeln.
 4. Ein Foto ergänzen, die ursprüngliche Importmessung löschen und prüfen, dass das Foto bei den übrigen Messungen erhalten bleibt. Eine Mail soll es je Fundstelle nur einmal anbieten.
 5. Bündel auflösen: Gemeinsame Angaben und Fotos bleiben bei allen Einzelmessungen erhalten. Ein Foto bei einer getrennten Stelle entfernen; bei der anderen muss es weiterhin sichtbar sein. In der Mail können die Fotos beider Stellen unabhängig gewählt werden, auch nach dem Drehen des Handys.
+
+## PDF-Bericht ab 0.11.0
+
+1. Zwei freigegebene Stellen und eine ungeprüfte Stelle vorbereiten. **Meldung vorbereiten → Mailentwürfe erzeugen → PDF ansehen** wählen. Die ungeprüfte Stelle darf nicht enthalten sein.
+2. Karte und Tabelle vergleichen: Nummern, Koordinaten, Belag und ausgewählte Messungsnummern müssen zusammenpassen. Lagefelder der Tabelle im PDF prüfen; sie verlinken die OSM-Karte.
+3. Im PDF Seiten wechseln und hineinzoomen. Bei vielen Stellen, langen Notizen und mehreren Fotos dürfen keine Angaben abgeschnitten sein. Zeitangaben müssen auf Kalenderwochen beschränkt bleiben, sofern nicht bewusst eigene Notizen mit genauen Zeiten übernommen wurden.
+4. Ohne Netz vorhandene Kartenkacheln verwenden. Fehlende Teile müssen ausdrücklich gekennzeichnet werden. Mit Verbindung **PDF neu erstellen** testen.
+5. Nach der Vorschau eine Freigabe widerrufen: Der alte Bericht darf nicht an das Mailprogramm übergeben werden. Den Erstellungsdialog verlassen: Danach darf keine Mailauswahl automatisch aufgehen.
+6. Im Mailprogramm den PDF-Anhang öffnen und mit der Vorschau vergleichen. Gewählte Bilder müssen im PDF richtig nummeriert sein. Einzelne JPG-Anhänge sollen nur bei **Fotos zusätzlich einzeln anhängen** mitgegeben werden. Empfänger und tatsächliche Anhänge vor dem Versand prüfen.

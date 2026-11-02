@@ -19,6 +19,7 @@ import static org.junit.Assert.*;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = {28, 35})
+@org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
 public class ReportingWorkflowTest {
     private Application app;
     @Before public void before() {
@@ -30,16 +31,16 @@ public class ReportingWorkflowTest {
         try (FindingStore s = new FindingStore(app)) { long id = s.insert(l, null); s.review(id, "root_heave", "privater Name und 13.10.2026 10:22", reviewed); return id; }
     }
     private void prepare(MailReportActivity a) { a.findViewById(R.id.mail_prepare).performClick(); Shadows.shadowOf(Looper.getMainLooper()).idle(); }
-    @Test public void reviewedFindingOpensNativeMailDraftWithVerifiedRecipientAndNoAttachments() {
+    @Test public void reviewedFindingOpensNativeMailDraftWithVerifiedRecipientAndOnePdf() {
         finding(52.52, 13.405, true); finding(52.52, 13.405, false);
         try (ActivityController<MailReportActivity> c = Robolectric.buildActivity(MailReportActivity.class).setup()) {
             MailReportActivity a = c.get(); prepare(a);
             assertEquals("sga@ba-mitte.berlin.de", ((EditText) a.findViewById(R.id.mail_recipient)).getText().toString());
             String body = ((EditText) a.findViewById(R.id.mail_body)).getText().toString();
             assertFalse(body.contains("privater Name")); assertFalse(body.contains("10:22"));
-            a.findViewById(R.id.mail_open).performClick(); Intent intent = Shadows.shadowOf(a).getNextStartedActivity();
-            assertNotNull(intent); assertEquals(Intent.ACTION_SENDTO, intent.getAction()); assertEquals("mailto", intent.getData().getScheme());
-            assertEquals(body, intent.getStringExtra(Intent.EXTRA_TEXT)); assertFalse(intent.hasExtra(Intent.EXTRA_STREAM));
+            a.findViewById(R.id.mail_open).performClick(); PdfWorkflowSupport.waitFor(a);Intent chooser=Shadows.shadowOf(a).getNextStartedActivity();assertNotNull(chooser);Intent intent=chooser.getParcelableExtra(Intent.EXTRA_INTENT);
+            assertNotNull(intent);assertEquals(Intent.ACTION_SEND,intent.getAction());assertEquals("mailto",intent.getSelector().getData().getScheme());
+            assertEquals(body, intent.getStringExtra(Intent.EXTRA_TEXT)); assertTrue(intent.hasExtra(Intent.EXTRA_STREAM));assertEquals(1,intent.getClipData().getItemCount());assertTrue(intent.getClipData().getItemAt(0).getUri().getLastPathSegment().endsWith(".pdf"));
         }
     }
     @Test public void switchingDistrictsChangesRecipientsButPreservesEditedDrafts() {
@@ -60,7 +61,7 @@ public class ReportingWorkflowTest {
             MailReportActivity a = c.get(); prepare(a);
             EditText recipient = a.findViewById(R.id.mail_recipient); assertEquals("", recipient.getText().toString());
             a.findViewById(R.id.mail_open).performClick(); assertNull(Shadows.shadowOf(a).getNextStartedActivity());
-            recipient.setText("strassen@example.org"); a.findViewById(R.id.mail_open).performClick();
+            recipient.setText("strassen@example.org"); a.findViewById(R.id.mail_open).performClick();PdfWorkflowSupport.waitFor(a);
             assertNotNull(Shadows.shadowOf(a).getNextStartedActivity());
         }
     }

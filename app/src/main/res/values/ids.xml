@@ -45,4 +45,11 @@
     <item name="mail_open" type="id" />
     <item name="bundle_traffic_choice" type="id" />
     <item name="bundle_surface_choice" type="id" />
+    <item name="report_preview" type="id" />
+    <item name="report_status" type="id" />
+    <item name="report_separate_photos" type="id" />
+    <item name="report_page_count" type="id" />
+    <item name="report_previous" type="id" />
+    <item name="report_next" type="id" />
+    <item name="report_refresh" type="id" />
 </resources>

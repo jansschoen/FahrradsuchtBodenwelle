@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="map_options">Kartenoptionen</string>
     <string name="section_sensitivity_hint">Einzelstöße verwenden die eingestellte Schwelle. Anhaltende Vibrationen können auch darunter als Straßenabschnitt erfasst werden.</string>
     <string name="calibration_start_hint">Nach dem Fahrtstart zwei Sekunden im Stand kalibrieren.</string>
@@ -53,5 +53,17 @@
     <plurals name="photo_capacity">
         <item quantity="one">Speicher für %1$d Foto. Bereits übernommene Fotos bleiben auch oberhalb dieser Grenze erhalten.</item>
         <item quantity="other">Speicher für %1$d Fotos. Bereits übernommene Fotos bleiben auch oberhalb dieser Grenze erhalten.</item>
+    </plurals>
+    <string name="report_preview_title">Fundstellenbericht</string>
+    <string name="report_zoom_hint">Mit zwei Fingern oder Doppeltippen vergrößern; zum Verschieben ziehen.</string>
+    <!-- Page ordinal is always singular, independent of the total page count. -->
+    <string name="report_page" tools:ignore="PluralsCandidate">Seite %1$d von %2$d</string>
+    <string name="report_preview_error">Der Bericht konnte nicht geöffnet werden. Bitte zurückgehen und das PDF neu erstellen.</string>
+    <string name="report_loading">PDF wird auf dem Handy erstellt. Verfügbare Kartenteile werden ergänzt …</string>
+    <string name="report_error">PDF konnte nicht erstellt werden: %1$s</string>
+    <string name="report_generic_error">Bitte den Bericht neu erstellen.</string>
+    <plurals name="report_ready">
+        <item quantity="one">%1$d Seite · %2$s. Für neue Angaben oder andere Fotos bitte erneut erstellen.</item>
+        <item quantity="other">%1$d Seiten · %2$s. Für neue Angaben oder andere Fotos bitte erneut erstellen.</item>
     </plurals>
 </resources>

@@ -26,6 +26,26 @@ public final class MailAttachments {
         }
         return result;
     }
+    /** Validate again before reusing a previously previewed PDF, without generating extra files. */
+    public static void validate(Context context,List<Choice> selected,MailReports.Group group) throws IOException {
+        if(selected.size()>MAX_PHOTOS)throw new IllegalArgumentException("Bitte höchstens zehn Fotos für diesen Bericht auswählen.");
+        long bytes=0;for(Choice choice:selected)bytes+=choice.photo().bytes();
+        if(bytes>MAX_BYTES)throw new IllegalArgumentException("Die Fotos überschreiten 10 MB. Bitte weniger Fotos auswählen.");
+        try(FindingStore store=new FindingStore(context)) {
+            for(MailReports.Item item:group.items()) {
+                Finding current=store.get(item.finding().id());
+                if(current==null||!current.reviewed()||current.bundleKey()!=item.finding().bundleKey())throw new IOException("Eine Freigabe oder Bündelung hat sich geändert. Bitte den Bericht neu erzeugen.");
+            }
+            java.util.Set<String> seen=new java.util.HashSet<>();
+            for(Choice choice:selected) {
+                FindingPhoto photo=store.photo(choice.photo().id());boolean linked=false;
+                if(choice.place()>0&&choice.place()<=group.points().size())for(MailReports.Item item:group.points().get(choice.place()-1).observations())if(store.hasPhoto(item.finding().id(),choice.photo().id()))linked=true;
+                if(!seen.add(choice.key())||photo==null||!linked||!photo.filename().equals(choice.photo().filename()))throw new IOException("Eine Fotozuordnung hat sich geändert. Bitte den Bericht neu erzeugen.");
+                File file=PhotoFiles.localFile(context,photo.filename());
+                if(!file.isFile()||file.length()!=photo.bytes())throw new IOException("Ein ausgewähltes Foto fehlt oder ist unvollständig.");
+            }
+        }
+    }
     public static ArrayList<Uri> prepare(Context c,List<Choice> selected,MailReports.Group group) throws IOException {
         if(selected.size()>MAX_PHOTOS)throw new IllegalArgumentException("Bitte höchstens zehn Fotos für diese Mail auswählen.");
         long bytes=0;for(Choice choice:selected)bytes+=choice.photo().bytes();

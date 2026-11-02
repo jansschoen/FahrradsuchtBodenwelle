@@ -18,6 +18,7 @@ public final class PhotoShareProvider extends ContentProvider {
         if (!uri.getAuthority().equals(getContext().getPackageName()+".photos")) throw new IllegalArgumentException("Wrong authority");
         List<String> p = uri.getPathSegments();
         if (p.size()==2 && "capture".equals(p.get(0))) return PhotoFiles.captureFile(getContext(),p.get(1));
+        if (p.size()==3 && "report".equals(p.get(0))) return ReportFiles.file(getContext(),p.get(1),p.get(2));
         if (p.size()==3 && "mail".equals(p.get(0))) return PhotoFiles.outgoingFile(getContext(),p.get(1),p.get(2));
         throw new IllegalArgumentException("Unsupported photo path");
     }
@@ -32,7 +33,7 @@ public final class PhotoShareProvider extends ContentProvider {
         }
         throw new FileNotFoundException("Mail attachments are read-only");
     }
-    @Override public String getType(Uri uri) { file(uri); return "image/jpeg"; }
+    @Override public String getType(Uri uri) { file(uri); return "report".equals(uri.getPathSegments().get(0)) ? "application/pdf" : "image/jpeg"; }
     @Override public Cursor query(Uri uri,String[] projection,String selection,String[] args,String sort) {
         File file = file(uri); String[] columns = projection == null ? new String[]{OpenableColumns.DISPLAY_NAME,OpenableColumns.SIZE} : projection;
         MatrixCursor result = new MatrixCursor(columns); Object[] row = new Object[columns.length];

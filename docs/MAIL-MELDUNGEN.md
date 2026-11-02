@@ -1,4 +1,6 @@
-# Mailentwürfe und Bezirkszuordnung in 0.4.0
+# Mailentwürfe, PDF-Berichte und Bezirkszuordnung
+
+Seit **0.11.0** enthält die Mail ein kurzes Anschreiben und einen gestalteten PDF-Bericht mit Karte, Tabelle, Detailangaben und ausgewählten Fotos. [PDF-Anleitung](PDF-BERICHT.md) · [Beispielbericht mit gekennzeichneter Offline-Kartenansicht](examples/0.11.0/Fundstellenbericht-Beispiel.pdf).
 
 ## Bedienung
 
@@ -8,13 +10,13 @@
 4. **Nach Bezirk aufteilen** erstellt getrennte Entwürfe; ohne Häkchen wird die gesamte Auswahl zusammengestellt. Große Auswahlen werden vollständig auf Teile mit höchstens 20 Fundstellen aufgeteilt. Ab 0.5.0 werden bestätigte Wiederholungen als gemeinsame Fundstelle gezählt.
 5. Wähle, ob ein kurzer Hinweis auf Bodenwelle ergänzt werden soll. Ohne den Hinweis bleibt die gleiche sachliche Mail in persönlicher Form. Du kannst optional deinen Namen ergänzen. Eigene Notizen werden zunächst nicht übernommen, weil sie Namen und genaue Zeitangaben enthalten können.
 6. **Mailentwürfe erzeugen** öffnet die Vorschau. Wähle den gewünschten Bezirk beziehungsweise Teil. Prüfe Anlaufstelle und Empfängeradresse; die offizielle Kontaktseite ist verlinkt. Betreff und Text sind direkt bearbeitbar. Änderungen bleiben beim Wechsel zwischen Entwürfen und beim Drehen des Handys erhalten. Neu-Erzeugen ersetzt die bisherigen Entwürfe durch neue Vorlagen.
-7. **Im Mailprogramm öffnen** übergibt den Entwurf an das installierte Mailprogramm. Erst dort versendest du ihn. Bei fehlendem Mailprogramm erklärt die App die Möglichkeiten; **Mailtext kopieren** übernimmt Betreff und Text in die Zwischenablage.
+7. Über **PDF ansehen** den Bericht in der App prüfen; **PDF neu erstellen** aktualisiert ihn. Fotos stehen im PDF, einzelne JPG-Anhänge sind optional. **Im Mailprogramm öffnen** übergibt Anschreiben und Bericht an das installierte Mailprogramm. Erst dort versendest du ihn. Bei fehlendem Mailprogramm erklärt die App die Möglichkeiten; **Mailtext kopieren** übernimmt Betreff und Text in die Zwischenablage.
 
 Eine Übergabe wird ausdrücklich nicht als „gesendet“ bezeichnet. Die App kennt den Versand- oder Bearbeitungsstatus des externen Mailprogramms nicht. Es gibt weder SMTP-Zugang noch automatische Behördenkontakte oder einen Online-KI-Dienst. Der Text entsteht lokal aus einer festen, bearbeitbaren Vorlage.
 
 ## Inhalt und Zeitangaben
 
-Mails enthalten ausgewählte freigegebene Fundstellen mit Art, Lage, einem OSM-Kartenlink, GPS-Messqualität, verfügbarer gemessener Höhe beziehungsweise ursprünglicher Sensorreaktion und optionalen Gefährdungsmerkmalen. Verkehrsfläche/Oberfläche werden mit ihrer manuellen oder OSM-Herkunft erkennbar angegeben. Sensorwerte werden nicht als Straßenhöhe oder rechtlicher Nachweis ausgegeben. Der Text bittet höflich um Ortsprüfung, Rückmeldung und nötigenfalls Weiterleitung.
+Die beigefügten PDF-Berichte enthalten ausgewählte freigegebene Fundstellen mit Art, Lage, einem OSM-Kartenlink, GPS-Messqualität, verfügbarer gemessener Höhe beziehungsweise ursprünglicher Sensorreaktion und optionalen Gefährdungsmerkmalen. Verkehrsfläche/Oberfläche werden mit ihrer manuellen oder OSM-Herkunft erkennbar angegeben. Sensorwerte werden nicht als Straßenhöhe oder rechtlicher Nachweis ausgegeben. Der Text bittet höflich um Ortsprüfung, Rückmeldung und nötigenfalls Weiterleitung.
 
 Automatisch erzeugte Messzeitangaben enthalten ausschließlich **ISO-Kalenderwoche und ISO-Wochenjahr**, berechnet in `Europe/Berlin`, beispielsweise `KW 42/2026`. Das Wochenjahr kann am Jahreswechsel vom Kalenderjahr abweichen. Weder exakter Messzeitpunkt noch GPS-Fix-Alter, Richtung, OSM-Abfragezeit oder Fahrtspur werden in die Mail übernommen. Die Stellen werden geografisch statt nach zeitlicher Fahrtreihenfolge sortiert. Ab Version 0.5.0 sind ausgewählte bereinigte Fotoanhänge möglich. Es wird kein unveränderter Rohdatenexport angehängt.
 
@@ -51,7 +53,7 @@ Alle zwölf veröffentlichten Adressen wurden am **13. Oktober 2026** auf den na
 
 ## Technische Prüfung und nächste Verbesserungen
 
-Schema 5 fügt nur die optionale manuelle Bezirkszuordnung hinzu; Fundstellen, Sensorwerte, Klassifizierung, OSM-Korrekturen und Fahrtspur bleiben erhalten. Die Android-Übergabe verwendet `ACTION_SENDTO` mit einem korrekt kodierten `mailto:`-URI und kompatiblen Text-Extras. Sie akzeptiert einen einzelnen Empfänger, verhindert zusätzliche Header durch Zeilenumbrüche und begrenzt zu große Entwürfe.
+Schema 5 fügt nur die optionale manuelle Bezirkszuordnung hinzu; Fundstellen, Sensorwerte, Klassifizierung, OSM-Korrekturen und Fahrtspur bleiben erhalten. Die aktuelle Android-Übergabe verwendet `ACTION_SEND` beziehungsweise `ACTION_SEND_MULTIPLE`, einen Mail-Selector und eng begrenzte Leserechte für das PDF und gegebenenfalls zusätzliche Bilder. Ein korrekt kodierter `mailto:`-Entwurf bleibt als Adress-/Headerprüfung und für einfache Textübergaben verfügbar. Sie akzeptiert einen einzelnen Empfänger, verhindert zusätzliche Header durch Zeilenumbrüche und begrenzt zu große Entwürfe.
 
 Tests prüfen Reglerumkehr, Zahleneingabe, ungültige Eingaben, ISO-Wochenjahr und Berliner Zeitzone, fehlende genaue Messzeiten, Ausschluss nicht freigegebener Stellen, Bezirksaufteilung und vollständige Teilmails, repräsentative Punkte aller zwölf Bezirke, Grenzfälle, Migration, Mail-Intent, manuelle Empfänger, Widerruf der Freigabe und erhaltene Bearbeitungen beim Drehen des Geräts. Frameworktests laufen auf simuliertem Android 9 und 15. Das konkrete Mailprogramm auf dem Fairphone muss noch praktisch geprüft werden; einige Programme können vorbefüllte Angaben unterschiedlich übernehmen.
 

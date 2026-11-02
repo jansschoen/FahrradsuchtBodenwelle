@@ -118,6 +118,20 @@ public final class MailReports {
         if (hasOsm) body.append("\n\nKartendaten: © OpenStreetMap contributors, ODbL 1.0 · https://www.openstreetmap.org/copyright");
         return new Draft(subject, body.toString());
     }
+    public static Draft coverLetter(Group group,String districtName,boolean appNotice,String name) {
+        if(group.items().isEmpty()||group.items().stream().anyMatch(i->!i.finding().reviewed()))throw new IllegalArgumentException("Bitte freigegebene Messungen auswählen.");
+        int points=group.points().size();String area=districtName.isEmpty()?"":" im Bezirk "+districtName;
+        String subject="Bitte um Prüfung: "+points+(points==1?" Fundstelle":" Fundstellen")+area;
+        if(group.parts()>1)subject+=" · Teil "+group.part()+"/"+group.parts();
+        String body="Guten Tag,\n\nim Anhang sende ich Ihnen einen Bericht zu "+points+(points==1?" Fundstelle":" Fundstellen")+area+". "
+                +"Der Bericht enthält eine nummerierte Karte und eine Fundstellentabelle.\n\n"
+                +"Grundlage: "+group.items().size()+(group.items().size()==1?" ausgewählte Beobachtung. Die Angaben":" ausgewählte Beobachtungen. Die Angaben")+" sind Hinweise auf Unebenheiten und ersetzen keine Prüfung vor Ort.\n\n"
+                +"Könnten Sie die Stellen prüfen und bei bestätigtem Handlungsbedarf geeignete Maßnahmen veranlassen? Falls eine andere Stelle zuständig ist, wäre ich für eine Weiterleitung oder einen Hinweis dankbar.\n\n"
+                +"Über eine kurze Rückmeldung zum weiteren Vorgehen und gegebenenfalls ein Aktenzeichen würde ich mich freuen.\n\nVielen Dank für Ihre Unterstützung.\n\nFreundliche Grüße"
+                +(name.trim().isEmpty()?"":"\n"+name.trim());
+        if(appNotice)body+="\n\nDer Bericht wurde mit Bodenwelle zusammengestellt. Die aufgeführten Fundstellen habe ich geprüft.";
+        return new Draft(subject,body);
+    }
     private static String range(List<Double> values,int precision) {
         double min=java.util.Collections.min(values),max=java.util.Collections.max(values);
         return String.format(Locale.GERMANY,min==max?"%."+precision+"f":"%."+precision+"f–%."+precision+"f",min,max);

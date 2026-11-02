@@ -39,5 +39,22 @@ public final class MailIntent {
         mail.setClipData(clip);mail.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         mail.setSelector(new Intent(Intent.ACTION_SENDTO,Uri.parse("mailto:"+Uri.encode(recipient,"@"))));
         return mail;
+    }    public static Intent withReport(String recipient,String subject,String body,Uri pdf,java.util.ArrayList<Uri> photos) {
+        create(recipient,subject,body);
+        java.util.ArrayList<Uri> files=new java.util.ArrayList<>();files.add(pdf);files.addAll(photos);
+        Intent mail=new Intent(files.size()==1?Intent.ACTION_SEND:Intent.ACTION_SEND_MULTIPLE).setType("message/rfc822")
+                .putExtra(Intent.EXTRA_EMAIL,new String[]{recipient}).putExtra(Intent.EXTRA_SUBJECT,subject).putExtra(Intent.EXTRA_TEXT,body)
+                .putExtra(Intent.EXTRA_HTML_TEXT,html(body));
+        if(files.size()==1)mail.putExtra(Intent.EXTRA_STREAM,pdf);else mail.putParcelableArrayListExtra(Intent.EXTRA_STREAM,files);
+        android.content.ClipData clip=new android.content.ClipData("Fundstellenbericht",photos.isEmpty()?new String[]{"application/pdf"}:new String[]{"application/pdf","image/jpeg"},new android.content.ClipData.Item(pdf));
+        for(Uri photo:photos)clip.addItem(new android.content.ClipData.Item(photo));
+        mail.setClipData(clip);mail.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        mail.setSelector(new Intent(Intent.ACTION_SENDTO,Uri.parse("mailto:"+Uri.encode(recipient,"@"))));return mail;
     }
+    private static String html(String body) {
+        String escaped=body.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;").replace("\"","&quot;").replace("'","&#39;");
+        return "<html><body style=\"font-family:Arial,sans-serif;color:#153d3a;background:#f4f7f5;padding:24px\"><div style=\"max-width:640px;background:white;padding:28px;border-top:5px solid #087f73\"><h2 style=\"margin-top:0\">Hinweise zum Straßenzustand</h2><p style=\"line-height:1.6\">"
+                +escaped.replace("\n\n","</p><p style=\"line-height:1.6\">").replace("\n","<br>")+"</p><hr><p style=\"color:#526864;font-size:13px\">Nummerierte Karte und Fundstellentabelle im beigefügten PDF-Bericht.</p></div></body></html>";
+    }
+
 }

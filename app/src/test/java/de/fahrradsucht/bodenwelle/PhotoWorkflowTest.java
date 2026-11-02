@@ -25,27 +25,28 @@ import static org.junit.Assert.*;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk={28,35})
+@org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
 public class PhotoWorkflowTest {
     private Application app;
     @Before public void before(){app=RuntimeEnvironment.getApplication();app.deleteDatabase("findings.db");PhotoFiles.clearLocal(app);OsmEnricher.enabled(app,false);RecordingService.running=false;app.getSharedPreferences("mail_reports",0).edit().clear().commit();}
     private long finding(FindingStore s,double lat){Location l=new Location("gps");l.setLatitude(lat);l.setLongitude(13.405);l.setAccuracy(5);long id=s.insert(l,null);s.review(id,"root_heave","",true);return id;}
-    private void photo(FindingStore s,long id)throws Exception {String name=java.util.UUID.randomUUID()+".jpg";Files.write(PhotoFiles.localFile(app,name).toPath(),new byte[]{1,2,3});s.addPhoto(id,name,1,1,3);}
+    private void photo(FindingStore s,long id)throws Exception {String name=java.util.UUID.randomUUID()+".jpg";Files.write(PhotoFiles.localFile(app,name).toPath(),PdfWorkflowSupport.photo());s.addPhoto(id,name,12,8,PhotoFiles.localFile(app,name).length());}
     private void prepare(MailReportActivity a){a.findViewById(R.id.mail_prepare).performClick();Shadows.shadowOf(Looper.getMainLooper()).idle();}
     @Test public void mergedPlaceIsOneMailEntryAndBothPhotosReachTheMailChooser()throws Exception {
         try(FindingStore s=new FindingStore(app)){long a=finding(s,52.52),b=finding(s,52.52001);photo(s,a);photo(s,b);s.mergeBundles(List.of(-a,-b));}
         try(ActivityController<MailReportActivity> c=Robolectric.buildActivity(MailReportActivity.class).setup()){
             prepare(c.get());String body=((android.widget.EditText)c.get().findViewById(R.id.mail_body)).getText().toString();assertTrue(body.contains("2 ausgewählte Beobachtungen"));
-            c.get().findViewById(R.id.mail_open).performClick();Intent chooser=Shadows.shadowOf(c.get()).getNextStartedActivity();assertEquals(Intent.ACTION_CHOOSER,chooser.getAction());
-            Intent mail=chooser.getParcelableExtra(Intent.EXTRA_INTENT);assertEquals(Intent.ACTION_SEND_MULTIPLE,mail.getAction());assertEquals(2,mail.getClipData().getItemCount());assertTrue((chooser.getFlags()&Intent.FLAG_GRANT_READ_URI_PERMISSION)!=0);
-            assertTrue(mail.getClipData().getItemAt(0).getUri().getLastPathSegment().startsWith("Stelle-01-Foto-"));assertTrue(mail.getClipData().getItemAt(1).getUri().getLastPathSegment().startsWith("Stelle-01-Foto-"));
+            ((CheckBox)c.get().findViewById(R.id.report_separate_photos)).setChecked(true);c.get().findViewById(R.id.mail_open).performClick();PdfWorkflowSupport.waitFor(c.get());Intent chooser=Shadows.shadowOf(c.get()).getNextStartedActivity();assertEquals(Intent.ACTION_CHOOSER,chooser.getAction());
+            Intent mail=chooser.getParcelableExtra(Intent.EXTRA_INTENT);assertEquals(Intent.ACTION_SEND_MULTIPLE,mail.getAction());assertEquals(3,mail.getClipData().getItemCount());assertTrue((chooser.getFlags()&Intent.FLAG_GRANT_READ_URI_PERMISSION)!=0);
+            assertTrue(mail.getClipData().getItemAt(0).getUri().getLastPathSegment().endsWith(".pdf"));assertTrue(mail.getClipData().getItemAt(1).getUri().getLastPathSegment().startsWith("Stelle-01-Foto-"));assertTrue(mail.getClipData().getItemAt(2).getUri().getLastPathSegment().startsWith("Stelle-01-Foto-"));
         }
     }
     @Test public void explicitPhotoChoiceSurvivesRotationAndOnlyChosenPhotoIsShared()throws Exception {
         try(FindingStore s=new FindingStore(app)){long a=finding(s,52.52);photo(s,a);photo(s,a);}
         try(ActivityController<MailReportActivity> c=Robolectric.buildActivity(MailReportActivity.class).setup()){
             prepare(c.get());CheckBox first=photoCheckbox(c.get().findViewById(android.R.id.content));assertNotNull(first);first.setChecked(false);c.recreate();Shadows.shadowOf(Looper.getMainLooper()).idle();
-            assertFalse(photoCheckbox(c.get().findViewById(android.R.id.content)).isChecked());c.get().findViewById(R.id.mail_open).performClick();Intent chooser=Shadows.shadowOf(c.get()).getNextStartedActivity();Intent mail=chooser.getParcelableExtra(Intent.EXTRA_INTENT);
-            assertEquals(Intent.ACTION_SEND,mail.getAction());assertEquals(1,mail.getClipData().getItemCount());assertEquals("Stelle-01-Foto-02.jpg",mail.getClipData().getItemAt(0).getUri().getLastPathSegment());
+            assertFalse(photoCheckbox(c.get().findViewById(android.R.id.content)).isChecked());((CheckBox)c.get().findViewById(R.id.report_separate_photos)).setChecked(true);c.get().findViewById(R.id.mail_open).performClick();PdfWorkflowSupport.waitFor(c.get());Intent chooser=Shadows.shadowOf(c.get()).getNextStartedActivity();Intent mail=chooser.getParcelableExtra(Intent.EXTRA_INTENT);
+            assertEquals(Intent.ACTION_SEND_MULTIPLE,mail.getAction());assertEquals(2,mail.getClipData().getItemCount());assertEquals("Stelle-01-Foto-02.jpg",mail.getClipData().getItemAt(1).getUri().getLastPathSegment());
         }
     }
     @Test public void theSameSharedImageCanBeSelectedIndependentlyForTwoSeparatedPlacesAfterRotation()throws Exception {
@@ -53,9 +54,9 @@ public class PhotoWorkflowTest {
         try(ActivityController<MailReportActivity> c=Robolectric.buildActivity(MailReportActivity.class).setup()){
             prepare(c.get());CheckBox first=photoCheckbox(c.get().findViewById(android.R.id.content));assertNotNull(first);first.setChecked(false);
             c.recreate();Shadows.shadowOf(Looper.getMainLooper()).idle();assertFalse(photoCheckbox(c.get().findViewById(android.R.id.content)).isChecked());
-            c.get().findViewById(R.id.mail_open).performClick();Intent chooser=Shadows.shadowOf(c.get()).getNextStartedActivity();assertNotNull(chooser);
-            Intent mail=chooser.getParcelableExtra(Intent.EXTRA_INTENT);assertEquals(Intent.ACTION_SEND,mail.getAction());assertEquals(1,mail.getClipData().getItemCount());
-            assertEquals("Stelle-02-Foto-01.jpg",mail.getClipData().getItemAt(0).getUri().getLastPathSegment());
+            ((CheckBox)c.get().findViewById(R.id.report_separate_photos)).setChecked(true);c.get().findViewById(R.id.mail_open).performClick();PdfWorkflowSupport.waitFor(c.get());Intent chooser=Shadows.shadowOf(c.get()).getNextStartedActivity();assertNotNull(chooser);
+            Intent mail=chooser.getParcelableExtra(Intent.EXTRA_INTENT);assertEquals(Intent.ACTION_SEND_MULTIPLE,mail.getAction());assertEquals(2,mail.getClipData().getItemCount());
+            assertEquals("Stelle-02-Foto-01.jpg",mail.getClipData().getItemAt(1).getUri().getLastPathSegment());
         }
     }
     @Test public void cameraRequestUsesScopedOutputAndCancellationRemovesRawCapture()throws Exception {
@@ -64,7 +65,7 @@ public class PhotoWorkflowTest {
             c.get().findViewById(R.id.nav_findings).performClick();reviewButton(c.get().findViewById(android.R.id.content)).performClick();AlertDialog dialog=ShadowAlertDialog.getLatestAlertDialog();dialog.findViewById(R.id.photo_capture).performClick();
             org.robolectric.shadows.ShadowActivity.IntentForResult request=Shadows.shadowOf(c.get()).getNextStartedActivityForResult();assertEquals(android.provider.MediaStore.ACTION_IMAGE_CAPTURE,request.intent.getAction());
             android.net.Uri uri=request.intent.getParcelableExtra(android.provider.MediaStore.EXTRA_OUTPUT);assertEquals("content",uri.getScheme());assertTrue((request.intent.getFlags()&Intent.FLAG_GRANT_WRITE_URI_PERMISSION)!=0);assertEquals(uri,request.intent.getClipData().getItemAt(0).getUri());
-            try(java.io.OutputStream out=app.getContentResolver().openOutputStream(uri,"w")){out.write(new byte[]{1,2,3});}c.get().onActivityResult(request.requestCode,android.app.Activity.RESULT_CANCELED,null);assertFalse(PhotoFiles.captureFile(app,uri.getLastPathSegment()).exists());
+            try(java.io.OutputStream out=app.getContentResolver().openOutputStream(uri,"w")){out.write(PdfWorkflowSupport.photo());}c.get().onActivityResult(request.requestCode,android.app.Activity.RESULT_CANCELED,null);assertFalse(PhotoFiles.captureFile(app,uri.getLastPathSegment()).exists());
             String[] permissions=app.getPackageManager().getPackageInfo(app.getPackageName(),android.content.pm.PackageManager.GET_PERMISSIONS).requestedPermissions;assertFalse(java.util.Arrays.asList(permissions).contains(android.Manifest.permission.CAMERA));dialog.dismiss();
         }
     }

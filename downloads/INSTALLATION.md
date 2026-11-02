@@ -1,34 +1,28 @@
-# Bodenwelle 0.10.0 – Android-Testversion
+# Bodenwelle 0.11.0 – Android-Testversion
 
-[APK 0.10.0 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.10.0.apk). Installiere sie **als Update über die vorhandene App**. Bitte nicht zuerst deinstallieren. App-ID und Signatur bleiben gleich; vorhandene Messungen, Fotos, Fahrtspur und Freigaben werden übernommen.
+[APK 0.11.0 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.11.0.apk). Als Update über die vorhandene App installieren, **nicht vorher deinstallieren**. App-ID und Signatur bleiben gleich; Messungen, gemeinsame Fotos, Bündelungen, Fahrtspur und Freigaben bleiben erhalten.
 
-## Gemeinsame Angaben für gebündelte Messungen
+## Neu: PDF-Berichte für das Bezirksamt
 
-**Fotos, Verkehrsfläche, Oberfläche und zusätzliche Gefährdungsmerkmale** gelten gemeinsam für alle Messungen eines bestätigten Bündels. Das gilt beim Bündeln und für spätere Änderungen unter **Prüfen & Fotos**.
+Die Mail enthält ein kurzes, höfliches Anschreiben und einen gestalteten PDF-Bericht mit nummerierter Karte, Fundstellentabelle, gegebenenfalls ergänzenden Angaben und ausgewählten Fotos. Koordinatenfelder in der Tabelle öffnen die passende OSM-Webkarte. Die Behörde erhält GPS-Genauigkeit, Schadensart, Verkehrsfläche, Oberfläche, Kalenderwochen und nachvollziehbare Messungsnummern; Sensorreaktionen werden nicht als Schadenshöhen oder Rechtsverstöße ausgegeben.
 
-- Beim Zusammenführen werden Gefährdungsmerkmale vereinigt. Späteres An- oder Abwählen wird für alle Bündelmitglieder gespeichert.
-- Manuelle Verkehrsflächen- und Oberflächenangaben haben Vorrang. Bei widersprüchlichen manuellen Angaben musst du vor der Bestätigung einen gemeinsamen Wert oder **Unbekannt** wählen. Abbrechen übernimmt nichts.
-- Neue oder vorhandene Fotos sind bei allen Bündelmitgliedern sichtbar. Die App speichert jede bereinigte Bilddatei nur einmal. Der gemeinsame Speicher umfasst fünf Plätze je enthaltener Messung.
-- Gemeinsame Fotos bleiben beim Löschen einer einzelnen Messung für die übrigen erhalten. Das Entfernen eines Fotos in der Galerie gilt für das ganze Bündel. Nach dem Auflösen betrifft es nur die ausgewählte getrennte Fundstelle.
-- Auflösen trennt die Messungen wieder. Die übernommenen Angaben und Fotos bleiben bei allen erhalten; frühere abweichende Angaben werden dadurch nicht wiederhergestellt. Vorhandene Fotos bleiben auch oberhalb des danach kleineren Fotospeicherlimits erhalten.
-- Messungsnummern, Sensorwerte, Zeitpunkte, Koordinaten, gemessene Höhen, Schadensarten, Notizen, Bezirkszuordnungen und Versandfreigaben bleiben individuell. Eine Bearbeitung gibt keine andere Messung automatisch frei.
+1. **Fundstellen → Meldung vorbereiten → Mailentwürfe erzeugen** öffnen. Stellen und Bezirke weiterhin selbst prüfen.
+2. Gewünschte Fotos auswählen; sie werden im PDF bei der passenden Fundstelle eingebettet. **Fotos zusätzlich einzeln anhängen** ist optional und zunächst aus.
+3. **PDF ansehen** erstellt den Bericht und öffnet die interne Vorschau. Seiten einzeln wechseln, mit zwei Fingern oder Doppeltippen vergrößern und zum Lesen verschieben.
+4. Zurück zur Meldung und **Im Mailprogramm öffnen** wählen. Bei gleicher Auswahl wird exakt das zuvor geprüfte PDF übergeben. Erst im Mailprogramm wird versendet.
 
-Fotoänderungen werden wie bisher sofort gespeichert. **Abbrechen** im Prüfdialog nimmt sie nicht zurück; gemeinsame Text-/Auswahlfelder werden erst mit **Speichern** übernommen.
+**PDF neu erstellen** aktualisiert Bericht und Kartenhintergrund. Die App verwendet vorhandene OSM-Kacheln und ergänzt bei verfügbarem Internet nur den benötigten Ausschnitt. Fehlende Teile werden ausdrücklich als unvollständige Straßenkarte gekennzeichnet; alle Nummern und Koordinaten bleiben erhalten. Der Live-Abruf wird von diesem Cloud-Proxy mit HTTP 403 blockiert und muss auf dem Fairphone geprüft werden. Das öffentliche Beispiel zeigt deshalb bewusst die markierte Offline-Ansicht.
 
-## Bereits vorhandene Bündel und Meldungen
+Es bleiben höchstens 20 Fundstellen je Bericht und zehn gewählte Fotos / 10 MB möglich. Die Bezirksaufteilung bleibt erhalten. Nur ausgewählte freigegebene Messungen werden gemeldet; automatische Zeitangaben sind ausschließlich Kalenderwochen. Eigene Notizen bleiben zunächst aus. Gemeinsame Angaben und Fotos eines Bündels stehen wie bisher allen enthaltenen Messungen zur Verfügung. HTML-Gestaltung des kurzen Anschreibens wird zusätzlich angeboten; die konkrete Darstellung hängt vom Mailprogramm ab, während das PDF sein Layout behält.
 
-Die Datenbankmigration übernimmt Fotos und eindeutige gemeinsame Angaben auch in bestehende Bündel. Widersprüchliche manuelle Angaben werden bewahrt und in der Fundstellenliste mit **Gemeinsame Angaben prüfen** markiert. Über **Prüfen & Fotos** kannst du sie abgleichen. Bis dahin werden für solche alten Bündel keine neuen Mailentwürfe erzeugt.
+[PDF-Beispiel mit erfundenen Daten](../docs/examples/0.11.0/Fundstellenbericht-Beispiel.pdf) · [Vorschaubilder](../docs/examples/0.11.0/README.md) · [PDF-Anleitung und Datenschutz](../docs/PDF-BERICHT.md)
 
-Eine Mail enthält weiterhin nur ausgewählte freigegebene Messungen. Ihre gemeinsamen Fundstellenfotos erscheinen je gemeldeter Fundstelle **einmal**, auch wenn das Foto ursprünglich bei einer anderen Bündelmessung ergänzt wurde. Fotos anderer Fundstellen werden nicht angeboten. Die Fotoauswahl lässt sich individuell ändern und bleibt beim Drehen erhalten. Auch nach dem Auflösen kann dasselbe gemeinsame Bild für zwei getrennte Fundstellen unabhängig gewählt werden. Höchstens zehn Fotos / 10 MB je Mail, Kalenderwochen statt genauer Messzeiten und bewusster Versand im externen Mailprogramm bleiben bestehen.
+## Prüfung
 
-[Vorschau mit Beispieldaten](../docs/screenshots/0.10.0/README.md) · [Ausführliche Anleitung](../docs/BUENDELUNG-FOTOS.md) · [Fahrtest](../docs/FAHRTEST.md)
+290 automatisierte Tests bestehen. Neu geprüft sind echte mehrseitige PDFs, eingebettete Schrift und durchsuchbarer Text, anklickbare Kartenfelder, lange Tabellen und Notizen, identische Nummerierung mit Bündeln und Fotos, zeitlich anonymisierte Exportdaten, der Offline-Kachelcache, lesbare native Vorschau mit Seitenwechsel und Drehung, eingebettete Bilder, optionale einzelne Anhänge, unveränderte PDF-Wiederverwendung, widerrufene Freigaben, schreibgeschützte Berichtsdateien, Pfadschutz, HTML-Escaping und Abbruch ohne nachträgliche Mailöffnung. Die bisherigen Tests zu Sensorik, Migration, gemeinsamen Angaben, Datenschutz und Navigation bestehen weiterhin. Mail-Frameworktests laufen auf simuliertem Android 9 und 15, PDF-/Vorschauprüfungen mit nativer Grafikverarbeitung auf simuliertem Android 15.
 
-## Prüfstand
+Android-Build, bisherige APK-Signatur und öffentlicher Download sind geprüft. Lint meldet keine Fehler und die zwei bisherigen Hinweise zur Annotation-Abhängigkeit und zum Kartenkonstruktor. Das konkrete Mailprogramm und der Live-Kartenabruf bleiben auf dem Fairphone zu erproben. Android 8.0 oder neuer wird benötigt; die App misst keine automatische Schadenshöhe und trifft keine rechtlich verbindliche Einstufung.
 
-280 automatisierte Tests bestehen. Neue Prüfungen auf simuliertem Android 9 und 15 decken gemeinsame Metadaten, Konfliktauswahl und Abbruch, spätere Bearbeitung einschließlich Entfernen von Gefährdungsmerkmalen, individuelle Freigaben und Höhen, gemeinsame OSM-Vorschläge und manuelle Korrekturen, transiente OSM-Fehler nach Löschen der Ursprungsmessung, eine Bilddatei mit mehreren Zuordnungen, Ergänzen und Entfernen von Fotos, Auflösen und erneutes Bündeln, Löschung des ursprünglichen Fotoimports, Mailauswahl ohne Duplikate oder fremde private Fotos, getrennte Fotoauswahl nach Drehung sowie die Migration bestehender Bündel aus Schema 6 ab. Frühere Migrations-, Sensor-, Foto-, Datenschutz-, Karten- und Navigationstests bestehen weiterhin.
+PDFBox-Android (Apache 2.0) und eingebettete Noto-Sans-Schriften (SIL OFL 1.1) sorgen für eine gleichbleibende, durchsuchbare Darstellung. Lizenztexte liegen in den App-Assets.
 
-Android-Build und APK-Signatur sind geprüft. Lint meldet keine Fehler und die zwei bestehenden Hinweise zur Annotation-Abhängigkeit und zum Konstruktor der Kartenansicht. Die Vorschauen sind aus nativen Android-Ansichten mit Beispieldaten gerendert und keine Fairphone-Aufnahmen.
-
-Android 8.0 oder neuer wird benötigt. Kamera und konkretes Mailprogramm bleiben auf dem Fairphone zu erproben. Der Live-Overpass-Abruf ist aus dieser Cloud weiterhin blockiert; die OSM-Logik wird mit kontrollierten Antworten geprüft. Die App berechnet keine automatische Schadenshöhe und trifft keine rechtlich verbindliche Einstufung. Bezirksgrenzen bleiben korrigierbare Vorschläge auf dem bisherigen Datenstand.
-
-Dateigröße: 1071945 Bytes. SHA-256-Prüfsumme: [SHA256SUMS](SHA256SUMS).
+Dateigröße: 4379397 Bytes. [SHA-256-Prüfsummen](SHA256SUMS).

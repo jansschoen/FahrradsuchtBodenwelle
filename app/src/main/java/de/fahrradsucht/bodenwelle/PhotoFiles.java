@@ -117,6 +117,7 @@ public final class PhotoFiles {
         return new File(dir,filename);
     }
     public static void cleanup(Context c) {
+        ReportFiles.cleanup(c);
         prune(new File(c.getNoBackupFilesDir(),"captures"),24 * 60 * 60 * 1000L);
         prune(new File(c.getNoBackupFilesDir(),"mail-photos"),7 * 24 * 60 * 60 * 1000L);
     }
