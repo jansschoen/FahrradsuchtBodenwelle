@@ -20,7 +20,8 @@ public final class OverpassClient {
     public interface Transport { String fetch(String query) throws IOException; }
     public static final class RequestFailure extends IOException {
         public final long retryAfterMillis;
-        public RequestFailure(int status, long retryAfterMillis) { super("OSM request failed: " + status); this.retryAfterMillis = retryAfterMillis; }
+        public final int status;
+        public RequestFailure(int status, long retryAfterMillis) { super("OSM request failed: " + status); this.retryAfterMillis = retryAfterMillis;this.status=status; }
     }
     public static String fetch(String query) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) new URL(ENDPOINT).openConnection();

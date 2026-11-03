@@ -29,23 +29,28 @@ public final class OsmTags {
         else if (set("path", "cycleway", "footway").contains(highway) && designated && pedestrians) {
             if ("no".equals(tags.get("segregated"))) traffic = "shared_path";
             else if ("yes".equals(tags.get("segregated"))) traffic = "cycleway";
-            else uncertain = true;
-        } else if ("cycleway".equals(highway) && !"no".equals(bicycle) && !"yes".equals(foot)) traffic = "cycleway";
+            else {traffic="shared_unspecified";uncertain=true;}
+        } else if ("cycleway".equals(highway) && !"no".equals(bicycle) && !set("yes","designated").contains(foot)) traffic = "cycleway";
         else if ("path".equals(highway) && designated && !"yes".equals(foot) && !pedestrians) traffic = "cycleway";
-        else if (ROADS.contains(highway)) {
+        else if (set("path","cycleway","footway").contains(highway)&&!"no".equals(bicycle)
+                &&("yes".equals(bicycle)||designated||"cycleway".equals(highway))
+                &&("yes".equals(foot)||pedestrians||"footway".equals(highway))) {
+            traffic="yes".equals(tags.get("segregated"))?"cycleway":"shared_unspecified";uncertain=true;
+        } else if (ROADS.contains(highway)) {
             boolean parallel = tags.entrySet().stream().anyMatch(e -> e.getKey().startsWith("cycleway")
                     && !set("no", "none").contains(e.getValue()));
-            if (parallel) uncertain = true; else traffic = "carriageway";
+            if(parallel){traffic="road_with_cycleway";uncertain=true;}else traffic="carriageway";
         } else if (set("track", "pedestrian", "footway", "steps").contains(highway)) traffic = "other";
         String surface = switch (tags.getOrDefault("surface", "")) {
             case "asphalt" -> "asphalt";
             case "concrete", "concrete:plates", "concrete:lanes" -> "concrete";
-            case "paving_stones" -> "concrete".equals(tags.get("material")) || "concrete".equals(tags.get("surface:material")) ? "concrete_paving" : "other";
+            case "paving_stones" -> "concrete".equals(tags.get("material")) || "concrete".equals(tags.get("surface:material")) ? "concrete_paving" : "paving_unspecified";
             case "sett", "cobblestone", "unhewn_cobblestone", "cobblestone:flattened" -> "stone_paving";
             case "compacted", "fine_gravel" -> "compacted";
             case "gravel", "pebblestone" -> "gravel";
             case "ground", "dirt", "earth", "grass", "sand", "mud", "unpaved" -> "unpaved";
-            case "", "paved" -> "unknown";
+            case "paved" -> "paved_unspecified";
+            case "" -> "unknown";
             default -> "other";
         };
         return new Result(traffic, surface, uncertain);

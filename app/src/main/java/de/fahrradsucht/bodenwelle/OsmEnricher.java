@@ -1,8 +1,6 @@
 package de.fahrradsucht.bodenwelle;
 
 import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkCapabilities;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -15,11 +13,12 @@ public final class OsmEnricher {
     private static OsmWorkQueue queue;
     private static android.app.Application owner;
     private static volatile int visibleScreens;
+    private static final java.util.concurrent.ConcurrentHashMap<Long,Long> refreshes=new java.util.concurrent.ConcurrentHashMap<>();
     private OsmEnricher() {}
     public static boolean enabled(Context c) { return c.getSharedPreferences("geodata", Context.MODE_PRIVATE).getBoolean("enabled", true); }
     public static synchronized void enabled(Context c, boolean enabled) {
         c.getSharedPreferences("geodata", Context.MODE_PRIVATE).edit().putBoolean("enabled", enabled).apply();
-        if (!enabled && queue != null) queue.clear();
+        if(!enabled){refreshes.clear();if(queue!=null)queue.clear();}
     }
     public static synchronized void visible(Context c, boolean visible) {
         visibleScreens = Math.max(0, visibleScreens + (visible ? 1 : -1));
@@ -36,28 +35,28 @@ public final class OsmEnricher {
                 return () -> scheduled.cancel(false);
             }, next -> {
                 try (OsmRepository repository = new OsmRepository(app, OverpassClient::fetch, System::currentTimeMillis)) {
-                    return repository.enrich(next, online(app));
+                    long generation=refreshes.getOrDefault(next,0L);
+                    long retry=repository.enrich(next,DeviceConnectivity.canRequest(app),generation);
+                    if(retry==0)refreshes.remove(next,generation);return retry;
                 }
             }, System::currentTimeMillis, () -> enabled(app) && (visibleScreens > 0 || RecordingService.running));
         }
         queue.add(id);
+    }
+    public static void refresh(Context c,long id){if(enabled(c)){refreshes.put(id,System.currentTimeMillis());enqueue(c,id);}}
+    public static void refreshMissing(Context c){
+        if(!enabled(c))return;long since=System.currentTimeMillis();try(FindingStore store=new FindingStore(c)){for(Finding f:store.all())if("unknown".equals(f.details().traffic())||"unknown".equals(f.details().surface())){refreshes.put(f.id(),since);enqueue(c,f.id());}}
     }
     public static void pending(Context c) {
         if (!enabled(c)) return;
         try (FindingStore store = new FindingStore(c)) {
             for (Finding f : store.all()) {
                 OsmMatch m = f.details().osm();
-                boolean finished = m.hasSuggestions() || "ambiguous".equals(m.status()) || "no_match".equals(m.status());
+                boolean finished = m.hasSuggestions() || "ambiguous".equals(m.status()) || "no_match".equals(m.status()) || "gps_uncertain".equals(m.status());
                 boolean stale = System.currentTimeMillis() - m.queriedAt() > 7L * 24 * 60 * 60 * 1000;
                 boolean oldMatcher = !OsmMatcher.VERSION.equals(m.tags().get("bodenwelle:matcher_version"));
                 if (!finished || stale || oldMatcher) enqueue(c, f.id());
             }
         }
-    }
-    private static boolean online(Context c) {
-        ConnectivityManager manager = c.getSystemService(ConnectivityManager.class);
-        NetworkCapabilities capabilities = manager == null ? null : manager.getNetworkCapabilities(manager.getActiveNetwork());
-        return capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
     }
 }

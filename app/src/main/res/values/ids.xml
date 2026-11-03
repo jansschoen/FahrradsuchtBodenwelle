@@ -52,4 +52,9 @@
     <item name="report_previous" type="id" />
     <item name="report_next" type="id" />
     <item name="report_refresh" type="id" />
+    <item name="bundle_category_choice" type="id" />
+    <item name="bundle_measurements" type="id" />
+    <item name="bundle_release_scope" type="id" />
+    <item name="osm_retry" type="id" />
+    <item name="osm_diagnose" type="id" />
 </resources>

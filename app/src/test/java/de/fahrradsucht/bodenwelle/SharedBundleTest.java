@@ -77,7 +77,7 @@ public class SharedBundleTest {
             assertEquals(5.0, store.get(a).details().heightMm(), 0); assertEquals(12.0, store.get(b).details().heightMm(), 0);
             assertTrue(store.get(a).reviewed()); assertFalse(store.get(b).reviewed());
             assertEquals(originalB.timeMillis(), store.get(b).timeMillis()); assertEquals(originalB.position(), store.get(b).position());
-            assertEquals("Notiz " + b, store.get(b).note()); assertEquals(Long.valueOf(43), store.get(b).details().osm().wayId());
+            assertEquals(store.get(a).note(), store.get(b).note()); assertTrue(store.get(b).note().contains("Notiz " + b)); assertEquals(Long.valueOf(43), store.get(b).details().osm().wayId());
         }
     }
     @Test public void conflictingManualDescriptionsRequireExplicitChoicesWithoutPartialWrites() throws Exception {
@@ -102,7 +102,7 @@ public class SharedBundleTest {
                 assertEquals("shared_path", f.details().traffic()); assertEquals("concrete", f.details().surface()); assertEquals(2, f.details().hazards());
             }
             assertEquals(5.0, store.get(a).details().heightMm(), 0); assertEquals(9.0, store.get(b).details().heightMm(), 0);
-            assertEquals("root_heave", store.get(a).category()); assertEquals("Notiz " + a, store.get(a).note());
+            assertEquals("pothole", store.get(a).category()); assertEquals("Neue eigene Notiz", store.get(a).note());
             assertTrue(store.get(a).reviewed()); assertFalse(store.get(b).reviewed());
             store.setOsm(a, osm(44, "carriageway", "gravel")); assertEquals("concrete", store.get(a).details().surface()); assertEquals("concrete", store.get(b).details().surface());
         }
@@ -188,14 +188,14 @@ public class SharedBundleTest {
         }
         try (SQLiteDatabase old = app.openOrCreateDatabase("findings.db", 0, null)) { old.execSQL("DROP TABLE photo_links"); old.setVersion(6); }
         try (FindingStore upgraded = new FindingStore(app)) {
-            assertEquals(7, upgraded.getReadableDatabase().getVersion()); assertEquals(2, upgraded.count()); assertEquals(1, upgraded.routeCount());
+            assertEquals(8, upgraded.getReadableDatabase().getVersion()); assertEquals(2, upgraded.count()); assertEquals(1, upgraded.routeCount());
             assertEquals(2, upgraded.photos(a).size()); assertEquals(2, upgraded.photos(b).size()); assertEquals(2, count(upgraded, "finding_photos"));
             assertEquals(17, upgraded.get(a).details().hazards()); assertEquals(17, upgraded.get(b).details().hazards());
             assertEquals("asphalt", upgraded.get(a).details().surface()); assertEquals("concrete", upgraded.get(b).details().surface());
             assertTrue(SharedFindingDetails.from(upgraded.observations(1)).conflicting());
             upgraded.resolveShared(1, null, "asphalt"); assertEquals("asphalt", upgraded.get(b).details().surface());
             assertEquals(5.0, upgraded.get(a).details().heightMm(), 0); assertEquals(9.0, upgraded.get(b).details().heightMm(), 0);
-            assertTrue(upgraded.get(a).reviewed()); assertFalse(upgraded.get(b).reviewed()); assertEquals("Notiz " + b, upgraded.get(b).note());
+            assertTrue(upgraded.get(a).reviewed()); assertFalse(upgraded.get(b).reviewed()); assertEquals(upgraded.get(a).note(), upgraded.get(b).note()); assertTrue(upgraded.get(b).note().contains("Notiz " + b));
         }
     }
     @Test public void confirmationDialogRequiresExplicitConflictChoiceAndSupportsCancellation() {
@@ -227,7 +227,8 @@ public class SharedBundleTest {
             dialogButton(AlertDialog.BUTTON_POSITIVE); assertTrue(SharedFindingDetails.from(store.observations(1)).conflicting());
             surface.setSelection(1); dialogButton(AlertDialog.BUTTON_POSITIVE);
             assertFalse(SharedFindingDetails.from(store.observations(1)).conflicting());
-            assertNotNull(ShadowAlertDialog.getLatestAlertDialog().getListView()); assertEquals(2, ShadowAlertDialog.getLatestAlertDialog().getListView().getAdapter().getCount());
+            assertNotNull(ShadowAlertDialog.getLatestAlertDialog().findViewById(R.id.bundle_measurements));
+            assertNotNull(ShadowAlertDialog.getLatestAlertDialog().findViewById(R.id.bundle_release_scope));
         }
     }
     private <T extends View> List<T> views(View root, Class<T> type) {
@@ -239,15 +240,79 @@ public class SharedBundleTest {
         try (FindingStore store = new FindingStore(app); var controller = Robolectric.buildActivity(MainActivity.class).setup()) {
             long a = finding(store, true), b = finding(store, false); long key = store.mergeBundles(List.of(-a,-b));
             FindingActions actions = new FindingActions(controller.get(), store, () -> {}); actions.review(store.get(b));
-            ShadowAlertDialog.getLatestAlertDialog().getListView().performItemClick(null,0,0); Shadows.shadowOf(Looper.getMainLooper()).idle();
+            Shadows.shadowOf(Looper.getMainLooper()).idle();
             AlertDialog editor = ShadowAlertDialog.getLatestAlertDialog(); View root = editor.findViewById(android.R.id.content);
             assertTrue(views(root, android.widget.TextView.class).stream().anyMatch(v -> v.getText().toString().equals(app.getString(R.string.bundle_shared_hint))));
             box(root, "Verkehrsfläche selbst festlegen").setChecked(true); box(root, "Oberfläche selbst festlegen").setChecked(true);
             List<Spinner> spinners = views(root, Spinner.class); spinners.get(1).setSelection(Classification.index(Classification.ROADS, "shared_path"));
             spinners.get(2).setSelection(Classification.index(Classification.SURFACES, "concrete")); box(root, Classification.HAZARDS[4].label()).setChecked(true);
+            spinners.get(0).setSelection(Classification.index(Classification.BUMPS,"pothole"));
+            views(root,android.widget.EditText.class).get(0).setText("Ein gemeinsamer Schaden");
             dialogButton(AlertDialog.BUTTON_POSITIVE);
-            for (Finding f : store.observations(key)) { assertEquals("shared_path", f.details().traffic()); assertEquals("concrete", f.details().surface()); assertEquals(16, f.details().hazards()); }
+            for (Finding f : store.observations(key)) { assertEquals("pothole",f.category());assertEquals("Ein gemeinsamer Schaden",f.note());assertEquals("shared_path", f.details().traffic()); assertEquals("concrete", f.details().surface()); assertEquals(16, f.details().hazards()); }
             assertTrue(store.get(a).reviewed()); assertFalse(store.get(b).reviewed());
+        }
+    }
+    @Test public void sharedEditorPreservesEachRawReadingAndHeightAndRequiresExplicitConsentChanges() {
+        try(FindingStore store=new FindingStore(app)) {
+            long a=finding(store,true),b=finding(store,false);
+            store.getWritableDatabase().execSQL("UPDATE findings SET peak=72,threshold=50 WHERE id=?",new Object[]{b});
+            describe(store,a,"cycleway","asphalt",1,5.0);
+            describe(store,b,"cycleway","asphalt",2,9.0);long key=store.mergeBundles(List.of(-a,-b));
+            Finding originalA=store.get(a),originalB=store.get(b);
+            FindingDetails edit=originalA.details().reviewed(200.0,900.0,16,"shared_path",true,"concrete",true);
+            store.reviewPlace(a,"paving_displacement","Gemeinsame Beschreibung",edit,0);
+            for(Finding original:List.of(originalA,originalB)) {
+                Finding current=store.get(original.id());assertEquals(original.position(),current.position());
+                assertEquals(original.timeMillis(),current.timeMillis());assertEquals(original.peak(),current.peak());
+                assertEquals(original.threshold(),current.threshold());assertEquals(original.details().heightMm(),current.details().heightMm());
+                assertEquals(original.details().intensity(),current.details().intensity());assertEquals(original.reviewed(),current.reviewed());
+                assertEquals("paving_displacement",current.category());assertEquals("Gemeinsame Beschreibung",current.note());
+            }
+            store.reviewPlace(b,"pothole","",edit,1);assertTrue(store.get(a).reviewed());assertTrue(store.get(b).reviewed());
+            store.reviewPlace(b,"pothole","",edit,2);assertFalse(store.get(a).reviewed());assertFalse(store.get(b).reviewed());
+            store.separateBundle(key);store.review(a,"root_heave","Getrennt",true);
+            assertEquals("pothole",store.get(b).category());assertEquals("",store.get(b).note());
+        }
+    }
+    @Test public void differentCausesRequireAChoiceAndUnknownCausesAdoptTheKnownObservation() {
+        try(FindingStore store=new FindingStore(app)) {
+            long a=finding(store,true),b=finding(store,false);store.review(b,"pothole","Zweite Notiz",false);
+            assertThrows(IllegalArgumentException.class,()->store.mergeBundles(List.of(-a,-b)));
+            assertEquals(0,store.get(a).bundleId());assertEquals("root_heave",store.get(a).category());
+            store.mergeBundles(List.of(-a,-b),null,null,"pothole");
+            for(Finding f:store.observations(store.get(a).bundleKey())) {
+                assertEquals("pothole",f.category());assertTrue(f.note().contains("Zweite Notiz"));assertTrue(f.note().contains("Notiz "+a));
+            }
+            long c=finding(store,false);store.review(c,"other","",false);
+            store.mergeBundles(List.of(store.get(a).bundleKey(),-c));assertEquals("pothole",store.get(c).category());
+        }
+    }
+    @Test public void versionSevenMigrationPreservesConflictingCausesUntilExplicitResolution() {
+        long a,b;
+        try(FindingStore store=new FindingStore(app)) {
+            a=finding(store,true);b=finding(store,false);store.mergeBundles(List.of(-a,-b));
+            store.getWritableDatabase().execSQL("UPDATE findings SET category='pothole',note='Andere Beschreibung' WHERE id=?",new Object[]{b});
+        }
+        try(SQLiteDatabase old=app.openOrCreateDatabase("findings.db",0,null)){old.setVersion(7);}
+        try(FindingStore store=new FindingStore(app)) {
+            assertEquals(8,store.getReadableDatabase().getVersion());assertEquals("root_heave",store.get(a).category());assertEquals("pothole",store.get(b).category());
+            assertEquals(store.get(a).note(),store.get(b).note());assertTrue(store.get(a).note().contains("Andere Beschreibung"));
+            assertTrue(SharedFindingDetails.from(store.observations(store.get(a).bundleKey())).category().conflicting());
+            store.resolveShared(store.get(a).bundleKey(),null,null,"root_heave");
+            assertEquals("root_heave",store.get(b).category());assertTrue(store.get(a).reviewed());assertFalse(store.get(b).reviewed());
+        }
+    }
+    @Test public void individualReadingsRemainAccessibleFromTheCommonEditor() {
+        try(FindingStore store=new FindingStore(app);var controller=Robolectric.buildActivity(MainActivity.class).setup()) {
+            long a=finding(store,true),b=finding(store,false);long key=store.mergeBundles(List.of(-a,-b));
+            FindingActions actions=new FindingActions(controller.get(),store,()->{});actions.review(store.get(a));
+            ShadowAlertDialog.getLatestAlertDialog().findViewById(R.id.bundle_measurements).performClick();
+            AlertDialog chooser=ShadowAlertDialog.getLatestAlertDialog();assertEquals(2,chooser.getListView().getAdapter().getCount());
+            chooser.getListView().performItemClick(null,1,1);Shadows.shadowOf(Looper.getMainLooper()).idle();
+            assertNotNull(ShadowAlertDialog.getLatestAlertDialog().findViewById(R.id.bundle_measurements));
+            assertEquals(View.GONE,ShadowAlertDialog.getLatestAlertDialog().findViewById(R.id.bundle_release_scope).getVisibility());
+            assertEquals(2,store.observations(key).size());
         }
     }
 }

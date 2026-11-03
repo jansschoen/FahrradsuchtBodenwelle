@@ -27,10 +27,7 @@ final class ReportTiles implements ReportMap.Tiles, AutoCloseable {
         if(!tiles.isDirectory()&&!tiles.mkdirs())throw new IllegalStateException("Kartenspeicher nicht verfügbar.");
         Configuration.getInstance().setOsmdroidBasePath(base);Configuration.getInstance().setOsmdroidTileCache(tiles);
         cache=new SqlTileWriter();
-        android.net.ConnectivityManager manager=context.getSystemService(android.net.ConnectivityManager.class);
-        android.net.NetworkCapabilities capabilities=manager==null?null:manager.getNetworkCapabilities(manager.getActiveNetwork());
-        network=capabilities!=null&&capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                &&capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+        network=DeviceConnectivity.canRequest(context);
     }
     @Override public Bitmap load(ReportMapLayout.Tile tile) {
         long index=MapTileIndex.getTileIndex(tile.zoom(),tile.x(),tile.y());Bitmap cached=null;

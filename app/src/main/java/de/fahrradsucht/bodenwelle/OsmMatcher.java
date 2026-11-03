@@ -6,7 +6,7 @@ import java.util.List;
 
 /** Conservative local association, not navigation map matching or a legal survey. */
 public final class OsmMatcher {
-    public static final String VERSION = "2";
+    public static final String VERSION = "3";
     private OsmMatcher() {}
     private record Candidate(OsmWay way, double distance, double angle, double score) {}
     public static OsmMatch match(double lat, double lon, float accuracy, Float bearing, List<OsmWay> ways, long time, String source) {
@@ -15,7 +15,7 @@ public final class OsmMatcher {
     public static OsmMatch match(double lat, double lon, float accuracy, float projectionMargin, Float bearing,
                                  List<OsmWay> ways, long time, String source) {
         if (!Double.isFinite(lat) || !Double.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180
-                || !Float.isFinite(accuracy) || accuracy < 0 || accuracy > 50) return empty("no_match", time, source);
+                || !Float.isFinite(accuracy) || accuracy < 0 || accuracy > 50) return empty("gps_uncertain", time, source);
         float uncertainty = accuracy + Math.max(0, Math.min(10, projectionMargin));
         List<Candidate> candidates = new ArrayList<>();
         for (OsmWay way : ways) {
@@ -60,6 +60,14 @@ public final class OsmMatcher {
             if (!traffic.equals(tags.traffic())) traffic = "unknown";
             if (!surface.equals(tags.surface())) surface = "unknown";
             sharedTags.entrySet().removeIf(e -> !e.getValue().equals(candidate.way.tags().get(e.getKey())));
+        }
+        // An exact intersection must not depend on the order of ways in the server response.
+        boolean distinguishable = candidates.size() < 2 || candidates.get(1).score - candidates.get(0).score >= 1;
+        if(distinguishable && (("unknown".equals(traffic)&&!"unknown".equals(first.traffic()))||("unknown".equals(surface)&&!"unknown".equals(first.surface())))) {
+            Candidate best=candidates.get(0);java.util.Map<String,String> tags=new java.util.HashMap<>(best.way.tags());
+            tags.put("bodenwelle:candidate_way_ids",candidates.stream().map(c->Long.toString(c.way.id())).collect(java.util.stream.Collectors.joining(";")));
+            return new OsmMatch("nearest_suggestion",best.way.id(),tags,time,"low",best.distance,source,
+                    "unknown".equals(traffic)?first.traffic():traffic,"unknown".equals(surface)?first.surface():surface);
         }
         if ("unknown".equals(traffic) && "unknown".equals(surface)) return empty("ambiguous", time, source);
         sharedTags.put("bodenwelle:candidate_way_ids", candidates.stream().map(c -> Long.toString(c.way.id()))

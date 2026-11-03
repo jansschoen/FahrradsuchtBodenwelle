@@ -69,7 +69,11 @@ public final class FindingActions {
         SharedFindingDetails shared = SharedFindingDetails.from(members);
         if (shared.conflicting()) { resolveShared(f, shared); return; }
         if (members.size() == 1) { reviewObservation(members.get(0)); return; }
-        new AlertDialog.Builder(activity).setTitle("Beobachtung auswählen")
+        reviewEditor(new FindingBundle(f.bundleKey(),members).representative(),true);
+    }
+    private void chooseObservation(Finding f) {
+        List<Finding> members=store.observations(f.bundleKey());if(members.isEmpty()){changed.run();return;}
+        new AlertDialog.Builder(activity).setTitle("Einzelmessung auswählen")
                 .setItems(observationLabels(members), (d, index) -> reviewObservation(members.get(index)))
                 .setNegativeButton("Schließen", null)
                 .setNeutralButton("Bündelung auflösen", (d, w) -> { store.separateBundle(f.bundleKey()); changed.run(); }).show();
@@ -77,13 +81,14 @@ public final class FindingActions {
 
     private void resolveShared(Finding finding, SharedFindingDetails shared) {
         SharedFieldsForm form = new SharedFieldsForm(activity, shared);
+        ScrollView conflicts=new ScrollView(activity);conflicts.addView(form.root);
         AlertDialog dialog = new AlertDialog.Builder(activity).setTitle("Gemeinsame Angaben abgleichen")
                 .setMessage("In diesem älteren Bündel gibt es unterschiedliche manuelle Angaben. Welche sollen für alle Messungen gelten? Fotos und Gefährdungsmerkmale sind bereits gemeinsam verfügbar.")
-                .setView(form.root).setNegativeButton("Abbrechen", null).setPositiveButton("Für alle übernehmen", null).create();
+                .setView(conflicts).setNegativeButton("Abbrechen", null).setPositiveButton("Für alle übernehmen", null).create();
         dialog.show();
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             try {
-                store.resolveShared(finding.bundleKey(), form.traffic(), form.surface()); dialog.dismiss(); changed.run();
+                store.resolveShared(finding.bundleKey(), form.traffic(),form.surface(),form.category()); dialog.dismiss(); changed.run();
                 Finding current = store.get(finding.id()); if (current != null) review(current);
             } catch (IllegalArgumentException e) { toast(e.getMessage()); }
         });
@@ -116,10 +121,11 @@ public final class FindingActions {
                 .setPositiveButton("Löschen", (d, w) -> { store.delete(f.id()); changed.run(); toast("Messung gelöscht."); }).show();
     }
 
-    private void reviewObservation(Finding f) {
+    private void reviewObservation(Finding f){reviewEditor(f,false);}
+    private void reviewEditor(Finding f,boolean place) {
         Finding current = store.get(f.id()); if (current == null) { changed.run(); return; }
         f = current;
-        FindingReviewForm form = new FindingReviewForm(activity, f);
+        FindingReviewForm form = new FindingReviewForm(activity,f,place?store.observations(f.bundleKey()):null);
         if (store.observations(f.bundleKey()).size() > 1) {
             android.widget.TextView hint = new android.widget.TextView(activity); hint.setText(R.string.bundle_shared_hint);
             hint.setTextSize(15); form.root.addView(hint, 0);
@@ -132,18 +138,21 @@ public final class FindingActions {
         PhotoPanel panel = activePhotoPanel;
         form.photos.addView(panel.root);
         ScrollView scroll = new ScrollView(activity); scroll.addView(form.root);
-        AlertDialog dialog = new AlertDialog.Builder(activity).setTitle("Messung #" + f.id() + " prüfen").setView(scroll)
+        AlertDialog dialog = new AlertDialog.Builder(activity).setTitle(place?"Gemeinsame Fundstelle bearbeiten":"Messung #"+f.id()+" prüfen").setView(scroll)
                 .setNegativeButton("Abbrechen", null)
-                .setNeutralButton("Löschen", (d, w) -> confirmDelete(edited))
+                .setNeutralButton("Löschen", (d,w)->{if(place)deleteObservation(edited);else confirmDelete(edited);})
                 .setPositiveButton("Speichern", null).create();
         dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             try {
-                store.review(edited.id(), form.category(), form.note.getText().toString().trim(), form.release.isChecked(), form.details(edited));
+                if(place)store.reviewPlace(edited.id(),form.category(),form.note.getText().toString().trim(),form.details(edited),form.releaseScope.getSelectedItemPosition());
+                else store.review(edited.id(),form.category(),form.note.getText().toString().trim(),form.release.isChecked(),form.details(edited));
                 dialog.dismiss(); changed.run();
             } catch (IllegalArgumentException e) { form.height.setError(e.getMessage()); toast(e.getMessage()); }
         }));
-        dialog.setOnDismissListener(d -> { if (activePhotoPanel == panel) activePhotoPanel = null; });
-        dialog.show();
+        Runnable refresh=new Runnable(){@Override public void run(){if(dialog.isShowing()&&!activity.isDestroyed()&&!activity.isFinishing()){Finding latest=store.get(edited.id());if(latest!=null)form.refreshAutomatic(latest,store.observations(latest.bundleKey()));handler.postDelayed(this,1000);}}};
+        dialog.setOnDismissListener(d -> {handler.removeCallbacks(refresh);if (activePhotoPanel == panel) activePhotoPanel = null;});
+        form.measurements.setOnClickListener(v->{dialog.dismiss();chooseObservation(edited);});
+        dialog.show();handler.postDelayed(refresh,1000);
     }
 
     private void pickPhoto(long id) {

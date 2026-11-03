@@ -12,7 +12,7 @@ import java.util.List;
 public final class FindingStore extends SQLiteOpenHelper {
     private static final java.util.concurrent.atomic.AtomicLong CHANGES = new java.util.concurrent.atomic.AtomicLong();
     private final Context context;
-    public FindingStore(Context context) { super(context, "findings.db", null, 7); this.context = context.getApplicationContext(); }
+    public FindingStore(Context context) { super(context, "findings.db", null, 8); this.context = context.getApplicationContext(); }
     @Override public void onConfigure(SQLiteDatabase db) { db.setForeignKeyConstraintsEnabled(true); }
 
     @Override public void onCreate(SQLiteDatabase db) {
@@ -32,6 +32,7 @@ public final class FindingStore extends SQLiteOpenHelper {
         if (oldVersion < 5) addMailColumn(db);
         if (oldVersion < 6) addBundlesAndPhotos(db);
         if (oldVersion < 7) addSharedPhotos(db);
+        if (oldVersion < 8) unifyObservations(db);
     }
     private static void addBundlesAndPhotos(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE finding_bundles (id INTEGER PRIMARY KEY AUTOINCREMENT)");
@@ -52,12 +53,21 @@ public final class FindingStore extends SQLiteOpenHelper {
             applyShared(db, bundle.getValue(), SharedFindingDetails.from(bundle.getValue()));
         }
     }
+    private static void unifyObservations(SQLiteDatabase db) {
+        java.util.Map<Long,List<Finding>> bundles=new java.util.LinkedHashMap<>();
+        try(Cursor c=db.rawQuery("SELECT * FROM findings WHERE bundle_id IS NOT NULL ORDER BY id DESC",null)) {
+            while(c.moveToNext()){Finding f=readFinding(c);bundles.computeIfAbsent(f.bundleId(),unused->new ArrayList<>()).add(f);}
+        }
+        for(List<Finding> members:bundles.values())applyShared(db,members,SharedFindingDetails.from(members));
+    }
     private static void shareBundlePhotos(SQLiteDatabase db, long bundleId) {
         db.execSQL("INSERT OR IGNORE INTO photo_links(photo_id,finding_id) SELECT links.photo_id,member.id FROM photo_links links JOIN findings origin ON origin.id=links.finding_id JOIN findings member ON member.bundle_id=origin.bundle_id WHERE origin.bundle_id=?", new Object[]{bundleId});
     }
     private static void applyShared(SQLiteDatabase db, List<Finding> members, SharedFindingDetails shared) {
         for (Finding f : members) {
             ContentValues values = new ContentValues(); values.put("details", shared.apply(f.details()).json());
+            if(!shared.category().conflicting())values.put("category",shared.category().value());
+            values.put("note",shared.note());
             db.update("findings", values, "id = ?", new String[]{Long.toString(f.id())});
         }
     }
@@ -220,11 +230,8 @@ public final class FindingStore extends SQLiteOpenHelper {
         }
     }
 
-    public void review(long id, String category, String note, boolean reviewed) {
-        ContentValues v = new ContentValues();
-        v.put("category", Classification.bumpId(category)); v.put("note", note); v.put("reviewed", reviewed ? 1 : 0);
-        getWritableDatabase().update("findings", v, "id = ?", new String[]{Long.toString(id)});
-        CHANGES.incrementAndGet();
+    public void review(long id,String category,String note,boolean reviewed) {
+        Finding f=get(id);if(f!=null)review(id,category,note,reviewed,f.details());
     }
 
     public Finding get(long id) {
@@ -243,10 +250,22 @@ public final class FindingStore extends SQLiteOpenHelper {
             db.update("findings", v, "id = ?", new String[]{Long.toString(id)});
             if (current != null && current.bundleId() > 0) {
                 List<Finding> members = observations(current.bundleKey());
-                applyShared(db, members, SharedFindingDetails.edited(members, details));
+                applyShared(db, members, SharedFindingDetails.edited(members,details,category,note));
             }
             db.setTransactionSuccessful(); CHANGES.incrementAndGet();
         } finally { db.endTransaction(); }
+    }
+    /** Shared description only: never copies a reading, measured height or an implicit consent. */
+    public void reviewPlace(long id,String category,String note,FindingDetails details,int releaseMode) {
+        if(releaseMode<0||releaseMode>2)throw new IllegalArgumentException("Ungültige Freigabeauswahl.");
+        SQLiteDatabase db=getWritableDatabase();db.beginTransaction();
+        try {
+            Finding current=get(id);if(current==null)throw new IllegalArgumentException("Die Fundstelle wurde gelöscht.");
+            List<Finding> members=observations(current.bundleKey());
+            applyShared(db,members,SharedFindingDetails.edited(members,details,category,note));
+            if(releaseMode!=0)for(Finding member:members){ContentValues consent=new ContentValues();consent.put("reviewed",releaseMode==1?1:0);db.update("findings",consent,"id=?",new String[]{Long.toString(member.id())});}
+            db.setTransactionSuccessful();CHANGES.incrementAndGet();
+        }finally{db.endTransaction();}
     }
     public void setOsm(long id, OsmMatch match) {
         SQLiteDatabase db = getWritableDatabase(); db.beginTransaction();
@@ -285,7 +304,8 @@ public final class FindingStore extends SQLiteOpenHelper {
         return result;
     }
     public long mergeBundles(List<Long> keys) { return mergeBundles(keys, null, null); }
-    public long mergeBundles(List<Long> keys, String traffic, String surface) {
+    public long mergeBundles(List<Long> keys,String traffic,String surface){return mergeBundles(keys,traffic,surface,null);}
+    public long mergeBundles(List<Long> keys,String traffic,String surface,String category) {
         java.util.Set<Long> chosen = new java.util.HashSet<>(keys);
         SQLiteDatabase db = getWritableDatabase(); db.beginTransaction();
         try {
@@ -293,7 +313,7 @@ public final class FindingStore extends SQLiteOpenHelper {
             java.util.Set<Long> present = new java.util.HashSet<>();
             for (Finding f : all()) if (chosen.contains(f.bundleKey())) { members.add(f); present.add(f.bundleKey()); }
             if (present.size() < 2 || !present.equals(chosen)) throw new IllegalArgumentException("Bitte mindestens zwei vorhandene Fundstellen auswählen.");
-            SharedFindingDetails shared = SharedFindingDetails.from(members).choose(traffic, surface);
+            SharedFindingDetails shared = SharedFindingDetails.from(members).choose(traffic,surface,category);
             long id = db.insertOrThrow("finding_bundles", "id", new ContentValues());
             ContentValues v = new ContentValues(); v.put("bundle_id", id);
             for (Finding f : members) db.update("findings", v, "id = ?", new String[]{Long.toString(f.id())});
@@ -301,12 +321,13 @@ public final class FindingStore extends SQLiteOpenHelper {
             removeEmptyBundles(db); db.setTransactionSuccessful(); CHANGES.incrementAndGet(); return id;
         } finally { db.endTransaction(); }
     }
-    public void resolveShared(long bundleKey, String traffic, String surface) {
+    public void resolveShared(long bundleKey,String traffic,String surface){resolveShared(bundleKey,traffic,surface,null);}
+    public void resolveShared(long bundleKey,String traffic,String surface,String category) {
         SQLiteDatabase db = getWritableDatabase(); db.beginTransaction();
         try {
             List<Finding> members = observations(bundleKey);
             if (members.isEmpty()) throw new IllegalArgumentException("Diese Fundstelle ist nicht mehr vorhanden.");
-            applyShared(db, members, SharedFindingDetails.from(members).choose(traffic, surface));
+            applyShared(db, members, SharedFindingDetails.from(members).choose(traffic,surface,category));
             db.setTransactionSuccessful(); CHANGES.incrementAndGet();
         } finally { db.endTransaction(); }
     }

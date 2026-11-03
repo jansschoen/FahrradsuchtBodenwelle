@@ -3,87 +3,134 @@ package de.fahrradsucht.bodenwelle;
 import android.content.Context;
 import android.content.SharedPreferences;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.function.LongSupplier;
 
-/** Local bounded cache; at most one network request/minute, five-minute backoff after failure. */
+/** OSM association at the original accuracy-circle centre, with a shared rate budget and bounded cache. */
 public final class OsmRepository implements AutoCloseable {
     private static final long TTL = 7 * 24 * 60 * 60 * 1000L;
     private final FindingStore store;
     private final SharedPreferences rate;
     private final OverpassClient.Transport transport;
     private final LongSupplier clock;
+    private final OsmDiagnostics diagnostics;
+
     public OsmRepository(Context context, OverpassClient.Transport transport, LongSupplier clock) {
-        store = new FindingStore(context); rate = context.getSharedPreferences("osm_requests", Context.MODE_PRIVATE);
-        this.transport = transport; this.clock = clock;
+        store = new FindingStore(context);
+        rate = context.getSharedPreferences("osm_requests", Context.MODE_PRIVATE);
+        this.transport = transport;
+        this.clock = clock;
+        diagnostics = new OsmDiagnostics(context);
     }
-    public static String cell(double lat, double lon) { return (long) Math.floor(lat * 500) + ":" + (long) Math.floor(lon * 500); }
+    public static String cell(double lat, double lon) {
+        return (long) Math.floor(lat * 500) + ":" + (long) Math.floor(lon * 500);
+    }
     public static String query(double lat, double lon) {
         double south = Math.floor(lat * 500) / 500 - .003, west = Math.floor(lon * 500) / 500 - .003;
-        return String.format(Locale.ROOT, "[out:json][timeout:20][maxsize:4194304];way[highway](%.6f,%.6f,%.6f,%.6f);out tags geom;", south, west, south + .008, west + .008);
+        return String.format(Locale.ROOT,
+                "[out:json][timeout:20][maxsize:4194304];way[highway](%.6f,%.6f,%.6f,%.6f);out tags geom;",
+                south, west, south + .008, west + .008);
     }
-    /** Returns the earliest retry time, or zero when this item is complete. */
-    public long enrich(long id, boolean online) {
-        Finding finding = store.get(id); if (finding == null) return 0;
-        long now = clock.getAsLong(); String cell = cell(finding.latitude(), finding.longitude());
-        FindingStore.CachedOsm cached = cachedAround(finding, now);
+    public long enrich(long id, boolean online) { return enrich(id, online, 0); }
+
+    /** A manual refresh shares one new cache answer with all entries queued at the same instant. */
+    public long enrich(long id, boolean online, long refreshSince) {
+        Finding finding = store.get(id);
+        if (finding == null) return 0;
+        double lat = finding.position().gpsLatitude(), lon = finding.position().gpsLongitude();
+        long now = clock.getAsLong();
+        if (!Double.isFinite(lat) || !Double.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180
+                || !Float.isFinite(finding.accuracy()) || finding.accuracy() < 0 || finding.accuracy() > 50) {
+            mark(id, "gps_uncertain");
+            diagnostics.result("gps_uncertain", false);
+            diagnostics.waiting("Ursprüngliche GPS-Genauigkeit ist für eine Wegzuordnung nicht ausreichend.");
+            return 0;
+        }
+        FindingStore.CachedOsm cached = cachedAround(lat, lon, now);
         boolean fresh = cached != null && now >= cached.queriedAt() && now - cached.queriedAt() <= TTL;
-        if (fresh || (!online && cached != null)) {
-            apply(finding, cached, !fresh); return 0;
+        boolean refreshed = refreshSince == 0 || cached != null && cached.queriedAt() >= refreshSince;
+        if ((fresh && refreshed) || (!online && cached != null)) {
+            apply(finding, cached, !fresh, true);
+            return !online && refreshSince > 0 ? now + 60_000 : 0;
         }
-        if (!online) { mark(id, "offline"); return now + 60_000; }
+        if (!online) {
+            mark(id, "offline");
+            diagnostics.waiting("Kein Internet-fähiges aktives Netz. Erneuter Versuch bei aktiver App oder Fahrt.");
+            return now + 60_000;
+        }
         long next = rate.getLong("next_request_ms", 0);
-        if (now < next) { mark(id, "rate_limited"); return next; }
-        rate.edit().putLong("next_request_ms", now + 60_000).apply();
-        try {
-            String response = transport.fetch(query(finding.latitude(), finding.longitude()));
-            OverpassClient.parse(response); // Never cache a partial or invalid response.
-            store.cacheOsm(cell, now, response);
-            apply(finding, new FindingStore.CachedOsm(now, response), false);
-        } catch (IOException | IllegalArgumentException e) {
-            long backoff = e instanceof OverpassClient.RequestFailure failure ? Math.max(300_000, failure.retryAfterMillis) : 300_000;
-            rate.edit().putLong("next_request_ms", now + backoff).apply();
-            if (cached != null) apply(finding, cached, true); else mark(id, "error");
-            return now + backoff;
+        if (now < next) {
+            if (cached != null) apply(finding, cached, !fresh, true);
+            else mark(id, "rate_limited");
+            diagnostics.waiting("Abfragebudget: nächster Netzversuch frühestens in "
+                    + Math.max(1, (next - now + 999) / 1000) + " Sekunden.");
+            return next;
         }
-        return 0;
+        rate.edit().putLong("next_request_ms", now + 60_000).apply();
+        diagnostics.request(now);
+        diagnostics.waiting("");
+        try {
+            String response = transport.fetch(query(lat, lon));
+            List<OsmWay> ways = OverpassClient.parse(response);
+            diagnostics.success(ways.size());
+            store.cacheOsm(cell(lat, lon), now, response);
+            apply(finding, new FindingStore.CachedOsm(now, response), false, false);
+            return 0;
+        } catch (IOException | IllegalArgumentException failure) {
+            IOException error = failure instanceof IOException io ? io : new IOException(failure);
+            diagnostics.failure(error);
+            long backoff = error instanceof OverpassClient.RequestFailure request
+                    ? Math.max(300_000, request.retryAfterMillis) : 300_000;
+            long deadline = clock.getAsLong() + backoff;
+            rate.edit().putLong("next_request_ms", deadline).apply();
+            if (cached != null) apply(finding, cached, true, true);
+            else mark(id, "error");
+            diagnostics.waiting("Fehlerpause; die Aufzeichnung bleibt unabhängig verfügbar.");
+            return deadline;
+        }
     }
-    private FindingStore.CachedOsm cachedAround(Finding finding, long now) {
-        long row = (long) Math.floor(finding.latitude() * 500), column = (long) Math.floor(finding.longitude() * 500);
+    private FindingStore.CachedOsm cachedAround(double lat, double lon, long now) {
+        long row = (long) Math.floor(lat * 500), column = (long) Math.floor(lon * 500);
         FindingStore.CachedOsm newest = null;
-        // Neighbouring query boxes overlap widely; crossing a grid boundary needs no new request.
         for (long dy = -1; dy <= 1; dy++) for (long dx = -1; dx <= 1; dx++) {
             double south = (row + dy) / 500.0 - .003, west = (column + dx) / 500.0 - .003;
-            double latMargin = 50.0 / 111_000;
-            double lonMargin = latMargin / Math.max(.01, Math.cos(Math.toRadians(finding.latitude())));
-            if (finding.latitude() - latMargin < south || finding.latitude() + latMargin > south + .008
-                    || finding.longitude() - lonMargin < west || finding.longitude() + lonMargin > west + .008) continue;
+            double latMargin = 50.0 / 111_000, lonMargin = latMargin / Math.max(.01, Math.cos(Math.toRadians(lat)));
+            if (lat - latMargin < south || lat + latMargin > south + .008
+                    || lon - lonMargin < west || lon + lonMargin > west + .008) continue;
             FindingStore.CachedOsm candidate = store.cachedOsm((row + dy) + ":" + (column + dx));
-            if (candidate != null && candidate.queriedAt() <= now && (newest == null || candidate.queriedAt() > newest.queriedAt())) newest = candidate;
+            if (candidate != null && candidate.queriedAt() <= now
+                    && (newest == null || candidate.queriedAt() > newest.queriedAt())) newest = candidate;
         }
         return newest;
     }
-    private void apply(Finding finding, FindingStore.CachedOsm cached, boolean stale) {
+    private void apply(Finding finding, FindingStore.CachedOsm cached, boolean stale, boolean fromCache) {
         try {
-            Float course = finding.speed() != null && finding.speed() >= 1.4f && !"bearing_uncertain".equals(finding.position().method()) ? finding.position().bearing() : null;
-            // Projection uncertainty is not known; add a conservative heuristic margin for matching only.
-            float margin = (float) Math.min(10, Math.abs(finding.position().distanceMeters()) * .25);
-            OsmMatch match = OsmMatcher.match(finding.latitude(), finding.longitude(), finding.accuracy(), margin,
-                    course, OverpassClient.parse(cached.response()), cached.queriedAt(), OverpassClient.ENDPOINT);
-            java.util.Map<String, String> metadata = new java.util.HashMap<>(match.tags());
+            Float bearing = finding.speed() != null && finding.speed() >= 1.4f
+                    && !"bearing_uncertain".equals(finding.position().method()) ? finding.position().bearing() : null;
+            OsmMatch match = OsmMatcher.match(finding.position().gpsLatitude(), finding.position().gpsLongitude(),
+                    finding.accuracy(), bearing, OverpassClient.parse(cached.response()), cached.queriedAt(), OverpassClient.ENDPOINT);
+            Map<String, String> metadata = new HashMap<>(match.tags());
             metadata.put("bodenwelle:matcher_version", OsmMatcher.VERSION);
-            match = new OsmMatch(match.status(), match.wayId(), metadata, match.queriedAt(), match.confidence(),
-                    match.distanceMeters(), match.source(), match.traffic(), match.surface());
-            if (stale && match.hasSuggestions()) match = new OsmMatch(match.status(), match.wayId(), match.tags(), match.queriedAt(),
-                    "low", match.distanceMeters(), match.source(), match.traffic(), match.surface());
+            metadata.put("bodenwelle:position_basis", "gps_circle_center");
+            match = new OsmMatch(match.status(), match.wayId(), metadata, match.queriedAt(),
+                    stale && match.hasSuggestions() ? "low" : match.confidence(), match.distanceMeters(),
+                    match.source(), match.traffic(), match.surface());
             store.setOsm(finding.id(), match);
-        } catch (IOException e) { mark(finding.id(), "error"); }
+            diagnostics.result(match.status(), fromCache);
+            diagnostics.waiting("");
+        } catch (IOException failure) {
+            diagnostics.failure(failure);
+            mark(finding.id(), "error");
+        }
     }
     private void mark(long id, String status) {
-        // Network failures do not destroy a prior usable assignment or manual overrides.
         Finding current = store.get(id);
         if (current != null && !current.details().osm().hasSuggestions() && !current.details().hasAutomaticDescription())
-            store.setOsm(id, new OsmMatch(status, null, java.util.Collections.emptyMap(), 0, "unknown", null, OverpassClient.ENDPOINT, "unknown", "unknown"));
+            store.setOsm(id, new OsmMatch(status, null, java.util.Collections.emptyMap(), 0, "unknown", null,
+                    OverpassClient.ENDPOINT, "unknown", "unknown"));
     }
     @Override public void close() { store.close(); }
 }

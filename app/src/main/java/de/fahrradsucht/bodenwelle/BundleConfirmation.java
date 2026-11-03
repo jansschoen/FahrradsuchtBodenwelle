@@ -29,15 +29,18 @@ public final class BundleConfirmation {
                 .setMessage("Messungen " + FindingBundle.references(members) + "\n\n" + members.size()
                         + " Beobachtungen zusammenfassen? Größter Abstand der Messpunkte: " + Math.round(span)
                         + " m. Prüfe Straßenseite und benachbarte Schäden. GPS kann ungenau sein."
-                        + "\n\nFotos, Verkehrsfläche, Oberfläche und Gefährdungsmerkmale werden für alle Messungen übernommen. Manuelle Angaben haben Vorrang; Gefährdungsmerkmale werden vereinigt."
+                        + "\n\nUnebenheitsart, Beschreibung, Fotos, Verkehrsfläche, Oberfläche und Gefährdungsmerkmale werden für alle Messungen übernommen. Manuelle Angaben haben Vorrang; Gefährdungsmerkmale werden vereinigt."
                         + (shared.conflicting() ? " Abweichende manuelle Angaben bitte unten auswählen." : "")
                         + " Messwerte und einzelne Freigaben bleiben erhalten. Die Bündelung lässt sich auflösen.")
                 .setNegativeButton("Abbrechen", null).setPositiveButton("Zusammenfassen", null);
-        if (shared.conflicting()) builder.setView(form.root);
+        if (shared.conflicting()) {
+            android.widget.ScrollView scroll=new android.widget.ScrollView(activity);
+            scroll.addView(form.root);builder.setView(scroll);
+        }
         AlertDialog dialog = builder.create();
         dialog.show();
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-            try { store.mergeBundles(keys, form.traffic(), form.surface()); dialog.dismiss(); changed.run(); }
+            try { store.mergeBundles(keys, form.traffic(),form.surface(),form.category()); dialog.dismiss(); changed.run(); }
             catch (IllegalArgumentException e) { Toast.makeText(activity, e.getMessage(), Toast.LENGTH_LONG).show(); }
         });
     }

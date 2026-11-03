@@ -9,10 +9,10 @@ public final class Classification {
             "rough_road|Unebener Straßenabschnitt", "other|Sonstige Unebenheit");
     public static final Choice[] ROADS = choices("mandatory_cycleway|Benutzungspflichtiger Radweg", "cycleway|Sonstiger Radweg",
             "shared_path|Gemeinsamer Geh- und Radweg", "bicycle_road|Fahrradstraße", "carriageway|Reguläre Fahrbahn",
-            "other|Sonstige Verkehrsfläche", "unknown|Unbekannt");
+            "road_with_cycleway|Straße mit Radverkehrsanlage (Zuordnung offen)", "shared_unspecified|Weg für Fuß- und Radverkehr (Beschilderung offen)", "other|Sonstige Verkehrsfläche", "unknown|Unbekannt");
     public static final Choice[] SURFACES = choices("asphalt|Asphalt", "concrete|Beton", "concrete_paving|Betonpflaster",
             "stone_paving|Natursteinpflaster", "compacted|Wassergebundene Decke", "gravel|Schotter oder Kies",
-            "unpaved|Unbefestigter Boden", "other|Sonstige Oberfläche", "unknown|Unbekannt");
+            "unpaved|Unbefestigter Boden", "paving_unspecified|Pflaster (Material unbekannt)", "paved_unspecified|Befestigt (Material unbekannt)", "other|Sonstige Oberfläche", "unknown|Unbekannt");
     public static final Choice[] HAZARDS = choices("poor_visibility|Schlechte Sichtbarkeit der Unebenheit", "no_escape|Keine sichere Ausweichmöglichkeit",
             "downhill|Gefälle", "bend|Kurvenbereich", "standing_water|Wasseransammlung");
     private static Choice[] choices(String... values) {

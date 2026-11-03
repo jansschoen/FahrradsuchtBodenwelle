@@ -19,7 +19,7 @@ public class BundleStoreTest {
     private long insert(FindingStore store,double lat){Location l=new Location("gps");l.setLatitude(lat);l.setLongitude(13.4);l.setAccuracy(5);long id=store.insert(l,null);store.review(id,"root_heave","Notiz "+id,true);return id;}
     @Test public void confirmationPersistsAllOriginalObservationsAndCanBeReversed() {
         long a,b,key;
-        try(FindingStore s=new FindingStore(app)){a=insert(s,52.5);b=insert(s,52.50005);key=s.mergeBundles(List.of(-a,-b));assertEquals(1,s.bundles().size());assertEquals(2,s.count());assertEquals("Notiz "+a,s.get(a).note());assertTrue(s.get(b).reviewed());}
+        try(FindingStore s=new FindingStore(app)){a=insert(s,52.5);b=insert(s,52.50005);key=s.mergeBundles(List.of(-a,-b));assertEquals(1,s.bundles().size());assertEquals(2,s.count());assertEquals(s.get(b).note(),s.get(a).note());assertTrue(s.get(a).note().contains("Notiz "+a));assertTrue(s.get(a).note().contains("Notiz "+b));assertTrue(s.get(b).reviewed());}
         try(FindingStore s=new FindingStore(app)){assertEquals(key,s.get(a).bundleId());assertEquals(key,s.get(b).bundleId());s.separateBundle(key);assertEquals(2,s.bundles().size());assertEquals(52.50005,s.get(b).latitude(),0);}
     }
     @Test public void mergingExistingPlacesExpandsTheirMembersAndRejectsStaleSelectionAtomically() {
@@ -31,9 +31,18 @@ public class BundleStoreTest {
     }
     @Test public void csvKeepsOneRowPerReleasedObservationWithBundleReference() {
         try(FindingStore s=new FindingStore(app)){long a=insert(s,52.5),b=insert(s,52.50005);long key=s.mergeBundles(List.of(-a,-b));String csv=FindingCsv.exportReviewed(s.all());
-            assertEquals(3,csv.lines().count());assertTrue(csv.lines().findFirst().orElseThrow().endsWith("bundle_id,rough_section,measurement_id"));assertTrue(csv.contains(","+key+",\"\","+a+"\r\n"));
-            s.review(a,"root_heave","",false);assertEquals(2,FindingCsv.exportReviewed(s.all()).lines().count());
+            assertEquals(3,csvRows(csv));assertTrue(csv.lines().findFirst().orElseThrow().endsWith("bundle_id,rough_section,measurement_id"));assertTrue(csv.contains(","+key+",\"\","+a+"\r\n"));
+            s.review(a,"root_heave","",false);assertEquals(2,csvRows(FindingCsv.exportReviewed(s.all())));
         }
+    }
+    private long csvRows(String csv) {
+        boolean quoted=false;long rows=0;
+        for(int i=0;i<csv.length();i++) {
+            char c=csv.charAt(i);
+            if(c=='"') { if(quoted&&i+1<csv.length()&&csv.charAt(i+1)=='"')i++;else quoted=!quoted; }
+            else if(c=='\n'&&!quoted)rows++;
+        }
+        assertFalse("CSV quotes must close",quoted);return rows;
     }
     @Test public void versionFiveMigrationPreservesOriginalMetadataManualDistrictAndRoute() {
         try(android.database.sqlite.SQLiteDatabase old=app.openOrCreateDatabase("findings.db",0,null)){

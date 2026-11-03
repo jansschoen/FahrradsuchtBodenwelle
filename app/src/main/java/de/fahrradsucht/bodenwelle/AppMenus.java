@@ -41,8 +41,10 @@ public final class AppMenus {
         text(content, "Die OSM-Ergänzung fragt den Kartenausschnitt um eine Fundstelle bei overpass-api.de ab. Der Anbieter sieht Ausschnitt und IP-Adresse, keine Notizen oder Sensorwerte. Manuelle Angaben bleiben erhalten.");
         button(content, "Fehlende OSM-Angaben ergänzen", () -> {
             if (!OsmEnricher.enabled(activity)) { toast("Bitte die OSM-Ergänzung einschalten."); return; }
-            OsmEnricher.pending(activity); toast("OSM-Ergänzung angefragt. Offline bleiben die Messungen gespeichert.");
+            OsmEnricher.refreshMissing(activity); toast("OSM-Ergänzung neu angefragt. Offline bleiben die Messungen gespeichert.");
         });
+        button(content,"OSM-Abrufdiagnose",()->new AlertDialog.Builder(activity).setTitle("OSM-Abrufdiagnose").setMessage(new OsmDiagnostics(activity).summary()).setPositiveButton("Schließen",null).show());
+        text(content,"GPS-Kreismittelpunkte werden verwendet. Ein größerer Genauigkeitskreis kann Radweg, Gehweg und Fahrbahn zugleich überdecken. OSM-Vorschläge bleiben deshalb prüfbar und unsicher.");
         show("Karte & Geodaten", content);
     }
     public void data() {

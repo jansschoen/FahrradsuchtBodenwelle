@@ -24,6 +24,7 @@ public class OsmRepositoryTest {
     @Before public void before() {
         context = RuntimeEnvironment.getApplication(); context.deleteDatabase("findings.db");
         context.getSharedPreferences("osm_requests", Context.MODE_PRIVATE).edit().clear().commit();
+        context.getSharedPreferences("osm_diagnostics", Context.MODE_PRIVATE).edit().clear().commit();
         OsmEnricher.enabled(context, false);
     }
     private long finding(double lon) {
@@ -126,6 +127,46 @@ public class OsmRepositoryTest {
         try (OsmRepository repository = new OsmRepository(context, q -> { calls.incrementAndGet(); throw new OverpassClient.RequestFailure(429, 3_600_000); }, time::get)) {
             repository.enrich(id, true); time.addAndGet(300_000); repository.enrich(id, true);
             assertEquals(1, calls.get());
+        }
+    }
+    @Test public void queryAndMatchingUseOriginalGpsCircleCentreAndKeepProjectedEventPosition() {
+        long id=finding(13.4);
+        try(FindingStore store=new FindingStore(context)) {
+            store.getWritableDatabase().execSQL("UPDATE findings SET latitude=52.51,longitude=13.41,position_distance_m=1000,position_method='course_speed_time' WHERE id=?",new Object[]{id});
+            Finding original=store.get(id);
+            try(OsmRepository repository=new OsmRepository(context,query->{calls.incrementAndGet();assertEquals(OsmRepository.query(52.5,13.4),query);return RESPONSE;},time::get)) {
+                repository.enrich(id,true);
+            }
+            Finding result=store.get(id);assertEquals(original.position(),result.position());assertEquals(1,calls.get());
+            assertEquals(Long.valueOf(42),result.details().osm().wayId());assertEquals(0,result.details().osm().distanceMeters(),.001);
+            assertEquals("gps_circle_center",result.details().osm().tags().get("bodenwelle:position_basis"));
+            assertNotNull(store.cachedOsm(OsmRepository.cell(52.5,13.4)));assertNull(store.cachedOsm(OsmRepository.cell(52.51,13.41)));
+        }
+    }
+    @Test public void manualRefreshBypassesOlderFreshCacheButSharesTheNewAnswerAndRespectsRequestBudget() {
+        long a=finding(13.4),b=finding(13.40001);
+        try(OsmRepository repository=new OsmRepository(context,success(),time::get)) {
+            repository.enrich(a,true);time.addAndGet(1000);long generation=time.get();
+            assertEquals(1_060_000,repository.enrich(a,true,generation));assertEquals(1,calls.get());
+            time.addAndGet(59_000);assertEquals(0,repository.enrich(a,true,generation));
+            assertEquals(0,repository.enrich(b,true,generation));assertEquals(2,calls.get());
+            assertTrue(new OsmDiagnostics(context).summary().contains("aus Cache"));
+        }
+    }
+    @Test public void serverFailuresAreDistinguishedWithoutLeakingLocationOrNotesIntoDiagnostics() {
+        long id=finding(13.4);
+        try(FindingStore store=new FindingStore(context)) {store.review(id,"pothole","Private Ortsbeschreibung",false);}
+        try(OsmRepository repository=new OsmRepository(context,q->{throw new OverpassClient.RequestFailure(403,0);},time::get)) {
+            long next=repository.enrich(id,true);assertEquals(time.get()+300_000,next);
+            String diagnosis=new OsmDiagnostics(context).summary();assertTrue(diagnosis.contains("HTTP 403"));assertTrue(diagnosis.contains("Fehlerpause"));
+            assertFalse(diagnosis.contains("52.5"));assertFalse(diagnosis.contains("13.4"));assertFalse(diagnosis.contains("Private Ortsbeschreibung"));
+        }
+    }
+    @Test public void accuracyAboveFiftyMetresPreventsEvenANetworkRequest() {
+        long id=finding(13.4);
+        try(FindingStore store=new FindingStore(context);OsmRepository repository=new OsmRepository(context,success(),time::get)) {
+            store.getWritableDatabase().execSQL("UPDATE findings SET accuracy=51 WHERE id=?",new Object[]{id});
+            assertEquals(0,repository.enrich(id,true));assertEquals(0,calls.get());assertEquals("gps_uncertain",store.get(id).details().osm().status());
         }
     }
 }

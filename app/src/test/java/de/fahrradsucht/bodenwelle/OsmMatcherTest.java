@@ -30,7 +30,7 @@ public class OsmMatcherTest {
         assertEquals(Long.valueOf(42), match(5, 180f, north(42, 13.4)).wayId());
     }
     @Test public void poorGpsMissingGeometryAndDistantWaysCannotBeMatched() {
-        assertEquals("no_match", match(51, 0f, north(42, 13.4)).status());
+        assertEquals("gps_uncertain", match(51, 0f, north(42, 13.4)).status());
         assertEquals("no_match", match(5, 0f, north(42, 13.41)).status());
         assertEquals("no_match", match(5, 0f, new OsmWay(2, List.of(), Map.of("highway", "cycleway"))).status());
         assertEquals("no_match", match(5, 0f).status());
@@ -41,14 +41,23 @@ public class OsmMatcherTest {
         assertEquals("low", match(40, 0f, north(42, 13.4)).confidence());
         assertEquals("no_match", match(5, 0f, north(42, 13.401)).status());
     }
-    @Test public void conflictingParallelWaysOnlySupplyTheirCommonSurface() {
+    @Test public void conflictingParallelWaysOfferTheNearestWayOnlyAsAnUncertainSuggestion() {
         OsmWay road = new OsmWay(43, north(43, 13.4001).geometry(), Map.of("highway", "residential", "surface", "asphalt"));
         OsmMatch result = match(10, 0f, north(42, 13.4), road);
-        assertEquals("area_suggestion", result.status()); assertEquals("unknown", result.traffic()); assertEquals("asphalt", result.surface());
+        assertEquals("nearest_suggestion", result.status()); assertEquals("cycleway", result.traffic()); assertEquals("asphalt", result.surface());
+        assertEquals("low", result.confidence()); assertFalse(result.assigned()); assertTrue(result.hasSuggestions());
+        assertEquals(Long.valueOf(42), result.wayId()); assertEquals("42;43", result.tags().get("bodenwelle:candidate_way_ids"));
         OsmWay gravel = new OsmWay(44, road.geometry(), Map.of("highway", "residential", "surface", "gravel"));
-        assertEquals("ambiguous", match(10, 0f, north(42, 13.4), gravel).status());
-        OsmWay missing = new OsmWay(45, road.geometry(), Map.of("highway", "residential"));
-        assertEquals("ambiguous", match(10, 0f, north(42, 13.4), missing).status());
+        assertEquals("asphalt", match(10, 0f, north(42, 13.4), gravel).surface());
+        OsmWay missing = new OsmWay(45, north(45, 13.4).geometry(), Map.of("highway", "residential"));
+        result = match(10, 0f, missing, gravel);
+        assertEquals("area_suggestion", result.status()); assertEquals("carriageway", result.traffic());
+        assertEquals("unknown", result.surface()); // Never borrow the material from a different, farther road.
+    }
+    @Test public void indistinguishableConflictsDoNotDependOnResponseOrder() {
+        OsmWay other = new OsmWay(43, north(43, 13.4).geometry(), Map.of("highway", "residential", "surface", "gravel"));
+        assertEquals("ambiguous", match(10, null, north(42, 13.4), other).status());
+        assertEquals("ambiguous", match(10, null, other, north(42, 13.4)).status());
     }
     @Test public void projectionMarginWidensUncertaintyWithoutRejectingValidGps() {
         OsmMatch result = OsmMatcher.match(52.5, 13.4, 25, 10, 0f, List.of(north(42, 13.4)), 1234, "test");
