@@ -91,4 +91,19 @@ public class ReportingWorkflowTest {
             assertThrows(IllegalArgumentException.class, () -> MailIntent.create(invalid, "Betreff", body));
         assertThrows(IllegalArgumentException.class, () -> MailIntent.create("amt@example.org", "Betreff\nBcc: X", body));
     }
+    @Test public void personalIntroductionIsEditableSavedLocallyAndSurvivesRotation() {
+        finding(52.52,13.405,true);
+        try(var controller=Robolectric.buildActivity(MailReportActivity.class).setup()) {
+            EditText intro=controller.get().findViewById(R.id.mail_introduction);assertEquals("",intro.getText().toString());
+            intro.setText("Ich fahre täglich mit dem Rad durch Berlin.");
+            ((EditText)controller.get().findViewById(R.id.mail_name)).setText("Alex");prepare(controller.get());
+            assertTrue(((EditText)controller.get().findViewById(R.id.mail_body)).getText().toString().contains(intro.getText().toString()));
+            assertEquals(intro.getText().toString(),app.getSharedPreferences("mail_reports",0).getString("introduction",""));
+            controller.recreate();assertEquals("Ich fahre täglich mit dem Rad durch Berlin.",((EditText)controller.get().findViewById(R.id.mail_introduction)).getText().toString());
+            assertTrue(((EditText)controller.get().findViewById(R.id.mail_body)).getText().toString().contains("Alex"));
+        }
+        try(var controller=Robolectric.buildActivity(MailReportActivity.class).setup()) {
+            assertEquals("Ich fahre täglich mit dem Rad durch Berlin.",((EditText)controller.get().findViewById(R.id.mail_introduction)).getText().toString());
+        }
+    }
 }

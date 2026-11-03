@@ -119,18 +119,39 @@ public final class MailReports {
         return new Draft(subject, body.toString());
     }
     public static Draft coverLetter(Group group,String districtName,boolean appNotice,String name) {
+        return coverLetter(group,districtName,appNotice,name,"");
+    }
+    public static Draft coverLetter(Group group,String districtName,boolean appNotice,String name,String introduction) {
         if(group.items().isEmpty()||group.items().stream().anyMatch(i->!i.finding().reviewed()))throw new IllegalArgumentException("Bitte freigegebene Messungen auswählen.");
         int points=group.points().size();String area=districtName.isEmpty()?"":" im Bezirk "+districtName;
-        String subject="Bitte um Prüfung: "+points+(points==1?" Fundstelle":" Fundstellen")+area;
+        String subject="Hinweise auf Schlaglöcher und Unebenheiten: "+points+(points==1?" Fundstelle":" Fundstellen")+area;
         if(group.parts()>1)subject+=" · Teil "+group.part()+"/"+group.parts();
-        String body="Guten Tag,\n\nim Anhang sende ich Ihnen einen Bericht zu "+points+(points==1?" Fundstelle":" Fundstellen")+area+". "
-                +"Der Bericht enthält eine nummerierte Karte und eine Fundstellentabelle.\n\n"
-                +"Grundlage: "+group.items().size()+(group.items().size()==1?" ausgewählte Beobachtung. Die Angaben":" ausgewählte Beobachtungen. Die Angaben")+" sind Hinweise auf Unebenheiten und ersetzen keine Prüfung vor Ort.\n\n"
-                +"Könnten Sie die Stellen prüfen und bei bestätigtem Handlungsbedarf geeignete Maßnahmen veranlassen? Falls eine andere Stelle zuständig ist, wäre ich für eine Weiterleitung oder einen Hinweis dankbar.\n\n"
-                +"Über eine kurze Rückmeldung zum weiteren Vorgehen und gegebenenfalls ein Aktenzeichen würde ich mich freuen.\n\nVielen Dank für Ihre Unterstützung.\n\nFreundliche Grüße"
-                +(name.trim().isEmpty()?"":"\n"+name.trim());
-        if(appNotice)body+="\n\nDer Bericht wurde mit Bodenwelle zusammengestellt. Die aufgeführten Fundstellen habe ich geprüft.";
-        return new Draft(subject,body);
+        StringBuilder body=new StringBuilder("Guten Tag,\n\n");
+        if(!introduction.trim().isEmpty())body.append(introduction.trim()).append("\n\n");
+        body.append(introduction.trim().isEmpty()?"ich möchte Sie dabei unterstützen, Schlaglöcher und andere Unebenheiten":"Ich möchte Sie dabei unterstützen, Schlaglöcher und andere Unebenheiten")
+                .append(area).append(" zu finden und gezielt zu prüfen. Dafür habe ich Hinweise aus Fahrradfahrten zusammengestellt. ")
+                .append("Im beigefügten PDF sind ").append(points).append(points==1?" Fundstelle":" Fundstellen")
+                .append(" mit einer nummerierten Karte, einer Tabelle und gegebenenfalls Fotos dokumentiert. Grundlage sind ")
+                .append(group.items().size()).append(group.items().size()==1?" ausgewählte Beobachtung.\n\n":" ausgewählte Beobachtungen.\n\n");
+        boolean sensors=group.items().stream().anyMatch(i->i.finding().peak()!=null);
+        if(sensors)body.append("Die automatischen Hinweise entstehen aus der vertikalen Beschleunigung eines am Fahrradlenker befestigten Smartphones. ")
+                .append("Die App ordnet auffälligen Erschütterungen eine GPS-Position zu; ergänzend sind manuelle Markierungen möglich. ")
+                .append("Die aufgeführten Stellen habe ich anschließend geprüft und für diese Meldung ausgewählt.\n\n")
+                .append("Geschwindigkeit, Bereifung, Halterung und Fahrweise beeinflussen die Sensorreaktion; Fehlalarme sind möglich. ")
+                .append("Die Beschleunigung liefert keine verlässliche Schadenshöhe. ");
+        else body.append("Die Stellen wurden auf Fahrradfahrten markiert, anschließend geprüft und für diese Meldung ausgewählt. ");
+        body.append("GPS-Positionen können abweichen; die jeweilige Genauigkeit steht im Bericht. ")
+                .append("Die Hinweise ersetzen keine fachliche Prüfung und erlauben keine Aussage darüber, ob rechtliche Grenzwerte verletzt sind. ");
+        if(group.items().stream().anyMatch(i->i.finding().details().heightMm()!=null))
+            body.append("Höhenangaben im Bericht stammen ausschließlich aus gesonderten eigenen Messungen vor Ort. ");
+        body.append("Zum Schutz der Fahrtdaten sind Messzeitpunkte nur als Kalenderwochen angegeben.\n\n")
+                .append("Könnten Sie die Stellen prüfen und bei bestätigtem Handlungsbedarf geeignete Maßnahmen veranlassen? ")
+                .append("Falls eine andere Stelle zuständig ist, wäre ich für eine Weiterleitung oder einen Hinweis dankbar.\n\n")
+                .append("Über eine kurze Rückmeldung zum weiteren Vorgehen und gegebenenfalls ein Aktenzeichen würde ich mich freuen. ")
+                .append("Vielen Dank für Ihre Unterstützung.\n\nFreundliche Grüße");
+        if(!name.trim().isEmpty())body.append('\n').append(name.trim());
+        if(appNotice)body.append("\n\nDer Bericht wurde mit Bodenwelle zusammengestellt.");
+        return new Draft(subject,body.toString());
     }
     private static String range(List<Double> values,int precision) {
         double min=java.util.Collections.min(values),max=java.util.Collections.max(values);

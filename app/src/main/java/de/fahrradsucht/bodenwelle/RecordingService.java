@@ -67,6 +67,7 @@ public final class RecordingService extends Service implements SensorEventListen
         if (intent != null && STOP.equals(intent.getAction())) {
             boolean saved = saveUpdate(detector.finish());
             running = false;
+            RideReviewState.end(this,store);
             if (saved) status = "Fahrt beendet. Fundstellen bleiben auf diesem Handy.";
             stopSelf();
             return START_NOT_STICKY;
@@ -141,6 +142,7 @@ public final class RecordingService extends Service implements SensorEventListen
             failStart("Keine Standortquelle konnte gestartet werden. Bitte Standort und Berechtigungen prüfen.");
             return START_NOT_STICKY;
         }
+        RideReviewState.begin(this,store);
         wakeLock = getSystemService(PowerManager.class).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Bodenwelle:ride");
         // Screen-off sensor sampling; bounded recording to avoid forgotten battery use.
         wakeLock.acquire(6 * 60 * 60 * 1_000L);
@@ -287,7 +289,7 @@ public final class RecordingService extends Service implements SensorEventListen
 
     @Override public void onDestroy() {
         running = false;
-        if (store != null) saveUpdate(detector.finish());
+        if (store != null) {saveUpdate(detector.finish());RideReviewState.end(this,store);}
         handler.removeCallbacksAndMessages(null);
         if (sensors != null) sensors.unregisterListener(this);
         if (locationSource != null) locationSource.stop();

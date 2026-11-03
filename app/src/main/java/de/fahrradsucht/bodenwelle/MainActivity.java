@@ -137,6 +137,7 @@ public final class MainActivity extends Activity {
             } else if (openMapAfterStart && android.os.SystemClock.elapsedRealtime() - serviceRequestedAt > 10_000) {
                 showStartFailure("Android hat den Start noch nicht bestätigt. Bitte die App geöffnet lassen und erneut versuchen.");
             }
+            RideReviewState.maybeLaunch(MainActivity.this,store);
             handler.postDelayed(this, 1_000);
         }
     };

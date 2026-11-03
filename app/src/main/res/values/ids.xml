@@ -57,4 +57,10 @@
     <item name="bundle_release_scope" type="id" />
     <item name="osm_retry" type="id" />
     <item name="osm_diagnose" type="id" />
+    <item name="mail_introduction" type="id" />
+    <item name="ride_review_map" type="id" />
+    <item name="ride_review_summary" type="id" />
+    <item name="ride_review_merge" type="id" />
+    <item name="ride_review_skip" type="id" />
+    <item name="ride_review_finish" type="id" />
 </resources>

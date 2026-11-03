@@ -71,6 +71,7 @@ public final class MapActivity extends Activity {
             status.setText(!RecordingService.running || RecordingService.lastAction.isEmpty()
                     ? RecordingService.status : getString(R.string.ride_status_with_action, RecordingService.status, RecordingService.lastAction));
             rideControls.setVisibility(RecordingService.running ? View.VISIBLE : View.GONE);
+            RideReviewState.maybeLaunch(MapActivity.this,store);
             handler.postDelayed(this, 1_000);
         }
     };

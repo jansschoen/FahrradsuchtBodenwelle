@@ -85,6 +85,7 @@ public class ClassificationMigrationTest {
             assertEquals("m/s²", f.details().intensity().unit()); assertNull(f.details().heightMm());
         }
     }
+    @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
     @Test public void mapMarkerColorChangesAfterReviewWithoutAddingAFinding() {
         Location l = new Location("gps"); l.setLatitude(52.5); l.setLongitude(13.4); l.setAccuracy(5);
         try (FindingStore store = new FindingStore(context)) {
@@ -92,12 +93,12 @@ public class ClassificationMigrationTest {
             try (org.robolectric.android.controller.ActivityController<MapActivity> controller = org.robolectric.Robolectric.buildActivity(MapActivity.class).setup()) {
                 org.osmdroid.views.MapView map = map(controller.get().findViewById(android.R.id.content)); assertNotNull(map);
                 org.osmdroid.views.overlay.Marker before = marker(map);
-                assertEquals(Intensity.evaluate(null, 48.0).color(), ((android.graphics.drawable.GradientDrawable) before.getIcon()).getColor().getDefaultColor());
+                assertEquals(Intensity.evaluate(null, 48.0).color(), backgroundColor(before.getIcon()));
                 Finding f = store.get(id);
                 store.review(id, "pothole", "gemessen", true, f.details().reviewed(5.0, f.peak(), 0, "unknown", false, "unknown", false));
                 org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idleFor(java.time.Duration.ofSeconds(1));
                 org.osmdroid.views.overlay.Marker after = marker(map);
-                assertEquals(Intensity.evaluate(5.0, 48.0).color(), ((android.graphics.drawable.GradientDrawable) after.getIcon()).getColor().getDefaultColor());
+                assertEquals(Intensity.evaluate(5.0, 48.0).color(), backgroundColor(after.getIcon()));
                 assertTrue(after.getTitle().contains("Geprüfte")); assertEquals(1, store.count());
             }
         }
@@ -118,5 +119,11 @@ public class ClassificationMigrationTest {
             CheckBox found = checkbox(group.getChildAt(i), label); if (found != null) return found;
         }
         return null;
+    }
+    private int backgroundColor(android.graphics.drawable.Drawable icon) {
+        android.graphics.Bitmap bitmap=android.graphics.Bitmap.createBitmap(icon.getIntrinsicWidth(),icon.getIntrinsicHeight(),android.graphics.Bitmap.Config.ARGB_8888);
+        icon.setBounds(0,0,bitmap.getWidth(),bitmap.getHeight());icon.draw(new android.graphics.Canvas(bitmap));
+        float density=context.getResources().getDisplayMetrics().density;
+        int color=bitmap.getPixel((int)(bitmap.getWidth()/2-4*density),(int)(8*density));bitmap.recycle();return color;
     }
 }

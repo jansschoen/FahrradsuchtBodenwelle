@@ -52,4 +52,19 @@ public class MailReportsTest {
         MailReports.Group g = MailReports.groups(List.of(new MailReports.Item(early, "01", "automatic"), new MailReports.Item(late, "01", "automatic")), true).get(0);
         assertEquals(1, g.items().get(0).finding().id());
     }
+    @Test public void coverLetterExplainsPurposeMethodAndLimitsWithoutInventingIdentity() {
+        MailReports.Group group=MailReports.groups(List.of(new MailReports.Item(finding(1,true,"2026-10-13T07:24:19Z","PRIVATE"),"01","manual")),true).get(0);
+        String body=MailReports.coverLetter(group,"Mitte",false,"","").body();
+        for(String expected:List.of("Schlaglöcher","gezielt zu prüfen","vertikalen Beschleunigung","GPS","Bereifung","Fehlalarme","keine verlässliche Schadenshöhe","keine Aussage","Kalenderwochen"))assertTrue(expected,body.contains(expected));
+        assertFalse(body.contains("PRIVATE"));assertFalse(body.contains("Bodenwelle"));assertFalse(body.contains("07:24"));assertFalse(body.contains("13.10.2026"));assertFalse(body.contains("Mein Name"));
+        String personal=MailReports.coverLetter(group,"Mitte",true,"Alex","Ich fahre täglich durch Berlin.").body();
+        assertTrue(personal.contains("Ich fahre täglich durch Berlin.\n\nIch möchte"));assertTrue(personal.contains("Freundliche Grüße\nAlex"));assertTrue(personal.contains("mit Bodenwelle zusammengestellt"));
+    }
+    @Test public void manualOnlyLetterDoesNotClaimASensorMeasurement() {
+        Finding original=finding(1,true,"2026-10-13T07:24:19Z","");
+        Finding manual=new Finding(original.id(),original.timeMillis(),original.latitude(),original.longitude(),original.accuracy(),null,null,null,"manual","pothole","",true,0);
+        var group=MailReports.groups(List.of(new MailReports.Item(manual,"01","manual")),true).get(0);
+        String body=MailReports.coverLetter(group,"Mitte",false,"","").body();
+        assertFalse(body.contains("vertikalen Beschleunigung"));assertTrue(body.contains("auf Fahrradfahrten markiert"));assertTrue(body.contains("GPS-Positionen können abweichen"));
+    }
 }

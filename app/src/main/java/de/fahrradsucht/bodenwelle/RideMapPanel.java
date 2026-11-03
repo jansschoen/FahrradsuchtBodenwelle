@@ -7,10 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
-import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.os.Bundle;
-import android.graphics.drawable.GradientDrawable;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
@@ -22,17 +19,12 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.ScrollView;
-import org.osmdroid.config.Configuration;
-import org.osmdroid.config.IConfigurationProvider;
-import org.osmdroid.tileprovider.tilesource.XYTileSource;
-import org.osmdroid.tileprovider.tilesource.TileSourcePolicy;
 import org.osmdroid.util.BoundingBox;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.Polyline;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -76,21 +68,7 @@ public final class RideMapPanel extends LinearLayout {
         super(activity);
         this.activity = activity; this.store = store; this.requestLocation = requestLocation; this.review = review;
         setOrientation(VERTICAL);
-        File base = new File(activity.getNoBackupFilesDir(), "osm");
-        File cache = new File(base, "tiles");
-        if (!cache.isDirectory() && !cache.mkdirs()) throw new IllegalStateException("Map cache unavailable");
-        IConfigurationProvider config = Configuration.getInstance();
-        config.setOsmdroidBasePath(base);
-        config.setOsmdroidTileCache(cache);
-        config.setUserAgentValue("Bodenwelle/" + BuildConfig.VERSION_NAME + " (de.fahrradsucht.bodenwelle; https://github.com/jansschoen/FahrradsuchtBodenwelle)");
-        config.setTileDownloadThreads((short) 2);
-        config.setTileFileSystemCacheMaxBytes(60 * 1024 * 1024L);
-        config.setTileFileSystemCacheTrimBytes(48 * 1024 * 1024L);
-        map = new MapView(activity);
-        map.setTileSource(new XYTileSource("OSM", 0, 19, 256, ".png",
-                new String[]{"https://tile.openstreetmap.org/"}, "© OpenStreetMap contributors",
-                new TileSourcePolicy(2, TileSourcePolicy.FLAG_NO_BULK | TileSourcePolicy.FLAG_NO_PREVENTIVE
-                        | TileSourcePolicy.FLAG_USER_AGENT_MEANINGFUL)));
+        map = MapTiles.create(activity);
         map.setMultiTouchControls(true);
         map.setTilesScaledToDpi(true);
         map.getController().setZoom(16.0);
@@ -277,11 +255,13 @@ public final class RideMapPanel extends LinearLayout {
             marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
             String label = cluster.count() == 1 ? "#" + finding.id() : "×" + cluster.count();
             boolean marked = cluster.bundles().stream().anyMatch(b -> selected.contains(b.key()));
-            marker.setIcon(new MarkerBadge(label, cluster.intensity(), marked));
+            int releasedCount=(int)cluster.bundles().stream().mapToLong(FindingBundle::reviewedCount).sum();
+            int preparedCount=(int)cluster.bundles().stream().filter(b->!SharedFindingDetails.from(b.observations()).conflicting()).mapToLong(FindingBundle::reviewedCount).sum();
+            marker.setIcon(new FindingMarkerBadge(getResources(),label,cluster.intensity(),marked,preparedCount,cluster.count()));
             marker.setRelatedObject(cluster);
-            boolean released = cluster.bundles().stream().allMatch(b -> b.reviewedCount() == b.observations().size());
+            boolean released = preparedCount==cluster.count();
             marker.setTitle((released ? "Geprüfte Fundstelle" : "Fundstelle mit offenen Beobachtungen")
-                    + " · " + cluster.count() + " Messung(en)" + (marked ? " · ausgewählt" : ""));
+                    + " · " + releasedCount+"/"+cluster.count()+" freigegeben" + (marked ? " · ausgewählt" : ""));
             marker.setSnippet(cluster.bundles().stream().map(FindingBundle::references).collect(java.util.stream.Collectors.joining(", ")));
             marker.setOnMarkerClickListener((m, view) -> {
                 choose(MapClusters.atMarker(cluster, clusters, shownZoom, org.osmdroid.util.TileSystem.getTileSize(), dp(50)));
@@ -337,23 +317,6 @@ public final class RideMapPanel extends LinearLayout {
         long[] keys = state.getLongArray("mapSelected"); if (keys != null) for (long key : keys) selected.add(key);
         shownZoom = -1; refresh();
     }
-    private final class MarkerBadge extends GradientDrawable {
-        private final String label;
-        private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        MarkerBadge(String label, Intensity intensity, boolean selected) {
-            this.label = label; paint.setTextSize(dp(13)); paint.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
-            paint.setTextAlign(Paint.Align.CENTER);
-            paint.setColor(intensity.level() <= 1 || intensity.level() == 5 ? Color.WHITE : Color.rgb(27, 48, 46));
-            setColor(intensity.color()); setCornerRadius(dp(18));
-            setSize(Math.max(dp(36), (int) paint.measureText(label) + dp(18)), dp(36));
-            setStroke(dp(selected ? 4 : 2), selected ? TEAL : Color.WHITE);
-        }
-        @Override public void draw(Canvas canvas) {
-            super.draw(canvas); android.graphics.Rect bounds = getBounds();
-            canvas.drawText(label, bounds.exactCenterX(), bounds.exactCenterY() - (paint.ascent() + paint.descent()) / 2, paint);
-        }
-    }
-
     private void refreshPositionStatus() {
         if (locationStatus == null) return;
         boolean fine = activity.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;

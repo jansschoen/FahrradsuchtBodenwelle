@@ -112,7 +112,7 @@ Erzeuge eine Mail mit den gewünschten freigegebenen Beobachtungen. Wiederholung
 
 1. Zwei Messungen derselben Stelle unterschiedlich ergänzen: ein Foto und Asphalt bei der einen, ein weiteres Foto und zusätzliche Gefährdungsmerkmale bei der anderen. Bündeln und prüfen, dass beide Messungen dieselbe Galerie, Verkehrsfläche/Oberfläche und vereinigte Gefährdungsmerkmale zeigen.
 2. Bei zwei widersprüchlichen manuellen Oberflächen muss die Bestätigung eine Auswahl verlangen. Zuerst abbrechen: Beide ursprünglichen Angaben bleiben erhalten. Dann einen gemeinsamen Wert wählen und bestätigen.
-3. In einer Messung die gemeinsame Oberfläche ändern und ein Gefährdungsmerkmal abwählen: Die Änderung muss bei allen Bündelmitgliedern erscheinen. Messwerte, Höhen, Notizen und individuelle Freigaben bleiben einzeln.
+3. In einer Messung die gemeinsame Oberfläche ändern und ein Gefährdungsmerkmal abwählen: Die Änderung muss bei allen Bündelmitgliedern erscheinen. Messwerte, Höhen und individuelle Freigaben bleiben einzeln; seit 0.12.0 gehört die Beschreibung zur gemeinsamen Fundstelle.
 4. Ein Foto ergänzen, die ursprüngliche Importmessung löschen und prüfen, dass das Foto bei den übrigen Messungen erhalten bleibt. Eine Mail soll es je Fundstelle nur einmal anbieten.
 5. Bündel auflösen: Gemeinsame Angaben und Fotos bleiben bei allen Einzelmessungen erhalten. Ein Foto bei einer getrennten Stelle entfernen; bei der anderen muss es weiterhin sichtbar sein. In der Mail können die Fotos beider Stellen unabhängig gewählt werden, auch nach dem Drehen des Handys.
 
@@ -124,3 +124,12 @@ Erzeuge eine Mail mit den gewünschten freigegebenen Beobachtungen. Wiederholung
 4. Ohne Netz vorhandene Kartenkacheln verwenden. Fehlende Teile müssen ausdrücklich gekennzeichnet werden. Mit Verbindung **PDF neu erstellen** testen.
 5. Nach der Vorschau eine Freigabe widerrufen: Der alte Bericht darf nicht an das Mailprogramm übergeben werden. Den Erstellungsdialog verlassen: Danach darf keine Mailauswahl automatisch aufgehen.
 6. Im Mailprogramm den PDF-Anhang öffnen und mit der Vorschau vergleichen. Gewählte Bilder müssen im PDF richtig nummeriert sein. Einzelne JPG-Anhänge sollen nur bei **Fotos zusätzlich einzeln anhängen** mitgegeben werden. Empfänger und tatsächliche Anhänge vor dem Versand prüfen.
+
+## Anschreiben, Freigabezeichen und Fahrtende ab 0.13.0
+
+1. Eine optionale persönliche Vorstellung und einen Namen eintragen, neue Mailentwürfe erzeugen und Text prüfen. Vorstellung, Anliegen und Messgrenzen müssen enthalten sein; genaue Messzeiten und ungeprüfte Messungen bleiben ausgeschlossen. Entwurf bearbeiten und Handy drehen: Angaben bleiben erhalten. Noch keine Mail versenden.
+2. Eine Fundstelle freigeben: Auf kleiner und großer Karte erscheint ein grüner Haken am farbigen Messpunkt. Freigabe zurücknehmen: Der Haken verschwindet. In einer Anzeigegruppe oder einem Bündel mit offenen Messungen erscheint höchstens ein grüner Strich, kein vollständiger Haken. Farbe und Nummer bleiben sichtbar.
+3. Vor einer Fahrt einen älteren Punkt behalten; auf der neuen Fahrt mehrere nahe und einen entfernten Treffer aufnehmen. Nur im Stand markieren. Fahrt beenden: Die Kartenprüfung zeigt Paare bis einschließlich fünf Metern, darunter auch Vergleiche mit älteren Punkten. Alte Punkte untereinander und entfernte Treffer sollen keinen neuen Dialog erzeugen.
+4. **Nein, getrennt lassen** wählen: Originale bleiben einzeln. **Ja, zusammenfassen …** erst abbrechen, dann erneut öffnen und bestätigen. Unterschiedliche Angaben müssen abgleichbar sein. Messwerte und einzelne Freigaben bleiben erhalten.
+5. Im Vergleich das Handy drehen: Dasselbe offene Paar bleibt sichtbar. **Prüfung jetzt beenden** oder die Zurück-Taste schließt sofort; ungeprüfte Paare bleiben gespeichert und weiterhin über Fundstellen/Karte erreichbar.
+6. Die Fahrt bei ausgeschaltetem Display über die Benachrichtigung beenden. Beim nächsten Öffnen der App erscheint die Prüfung, sofern passende neue Treffer existieren. Ohne neue oder nahe Punkte bleibt sie aus. Prüfen, dass durch Schließen keine Messung verschwindet und der Ablauf nicht bei jedem erneuten Öffnen wieder startet.

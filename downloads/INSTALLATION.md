@@ -1,30 +1,37 @@
-# Bodenwelle 0.12.0 – Android-Testversion
+# Bodenwelle 0.13.0 – Android-Testversion
 
-[APK 0.12.0 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.12.0.apk). Als Update über die vorhandene App installieren, **nicht vorher deinstallieren**. App-ID und Signatur bleiben gleich; Messungen, gemeinsame Fotos, Bündelungen, Fahrtspur und Freigaben bleiben erhalten.
+[APK 0.13.0 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.13.0.apk). Als Update installieren, **nicht vorher deinstallieren**. App-ID und Signatur bleiben gleich; vorhandene Messungen, gemeinsame Fotos, Bündelungen, Fahrtspur und Freigaben bleiben erhalten.
 
-## Neu: gemeinsame Beobachtung und verständlichere OSM-Vorschläge
+## Neues Anschreiben
 
-**Prüfen & Fotos** öffnet bei einem Bündel direkt die gemeinsame Fundstelle. Unebenheitsart, Beschreibung, Gefährdungsmerkmale, Verkehrsfläche und Oberfläche gelten nach dem Speichern für alle enthaltenen Messungen; Fotos sind weiterhin gemeinsam. Messungsnummern, Zeitpunkte, Koordinaten, Sensorwerte, Schwellen und tatsächlich gemessene Höhen bleiben einzeln erhalten. **Einzelmessungen, Höhen und Freigaben ansehen** führt zu den Originalmessungen. Freigaben bleiben standardmäßig unverändert und können nur über eine ausdrückliche Auswahl für alle geändert werden.
+Die Mail erklärt das Anliegen, die Verwaltung beim Auffinden und gezielten Prüfen von Schlaglöchern und Unebenheiten zu unterstützen. Bei Sensordaten beschreibt sie vertikale Beschleunigung am Fahrradlenker und GPS-Zuordnung. Geschwindigkeit, Reifen, Halterung und Fahrweise beeinflussen die Reaktion; Fehlalarme und GPS-Abweichungen sind möglich. Eine automatische Schadenshöhe oder rechtliche Bewertung wird nicht behauptet. Rein manuelle Meldungen werden entsprechend beschrieben. Die Kalenderwochen-Anonymisierung bleibt erhalten.
 
-Beim Zusammenfassen bleiben unterschiedliche vorhandene Notizen zunächst als gemeinsame Absätze erhalten. Bekannte widersprüchliche Unebenheitsarten erfordern eine Auswahl. Auch bestehende Bündel werden beim Update angepasst; abweichende bekannte Arten bleiben bis zur Auswahl erhalten. Auflösen trennt die Messungen, stellt frühere unterschiedliche Beschreibungen jedoch nicht wieder her.
+Unter **Meldung vorbereiten → Kurze persönliche Vorstellung** kannst du ein bis zwei eigene Sätze ergänzen. Name und Vorstellung sind optional, werden lokal gespeichert und in neue Entwürfe übernommen. **Mailentwürfe erzeugen** übernimmt Änderungen und ersetzt bisherige Entwürfe. Die Vorstellung wird nicht zusätzlich ins PDF aufgenommen. Das Anschreiben bleibt bearbeitbar; erst das externe Mailprogramm versendet. [Mail-Anleitung](../docs/MAIL-MELDUNGEN.md).
 
-Die OSM-Abfrage verwendet jetzt den **ursprünglichen GPS-Mittelpunkt**. Die zeitlich korrigierte Ereignisposition bleibt gespeichert. Der Kreismittelpunkt ist weiterhin eine Schätzung. Ein ungenauer GPS-Kreis kann Radweg, Gehweg und Fahrbahn zugleich überdecken. Der Suchradius bleibt 50 m, weil größere Radien eher fremde Nachbarwege einbeziehen.
+## Freigaben auf der Karte
 
-Bei mehreren unterscheidbaren Wegen kann der bestbewertete Weg einen ausdrücklich **unsicheren Vorschlag** liefern. Allgemeinere Angaben wie **Pflaster (Material unbekannt)** bleiben erhalten. Gleichwertige Widersprüche oder fehlende Belagsangaben werden nicht erfunden. Ein Internet-fähiges Netz braucht keine zusätzliche Android-Validierung mehr. Manuelle Korrekturen bleiben geschützt.
+Ein **grüner Haken** am farbigen Messpunkt kennzeichnet vollständig freigegebene, konfliktfreie Fundstellen. Ein **grüner Strich** zeigt teilweise vorbereitete Gruppen; offene Messungen erhalten keinen Haken. Nummer und Intensitätsfarbe bleiben sichtbar. Die Symbole aktualisieren sich auf kleiner und großer Karte auch beim Widerrufen einer Freigabe. **Sie bestätigen keinen Versand.**
 
-1. **Prüfen & Fotos → Verkehrsfläche und Oberfläche prüfen** öffnen.
-2. **OSM-Vorschlag neu abfragen** fordert neue Daten an; bei geöffneter Bearbeitung aktualisiert sich der automatische Vorschlag. Die Minutenlimits und Fehlerpausen bleiben bestehen.
-3. **OSM-Abrufdiagnose** zeigt Netzfehler, HTTP-Status, Cache-Nutzung und Zuordnung. Sie enthält keine Koordinaten, Notizen oder Sensorwerte. Unter **Mehr → Karte & Geodaten** stehen Diagnose und eine erneute Abfrage fehlender Angaben ebenfalls bereit.
-4. Eine manuell gesetzte Angabe **Unbekannt** bleibt erhalten. Häkchen bei **selbst festlegen** entfernen und Speichern übernimmt wieder die automatische Auswertung.
+## Kartenprüfung nach Fahrtende
 
-Der echte Overpass-Abruf wurde am 3. November 2026 erneut beim HTTPS-Tunnel durch den Cloud-Proxy mit HTTP 403 blockiert. Die tatsächliche Erreichbarkeit auf dem Fairphone und die Ursache bisheriger unbekannter Werte müssen dort geprüft werden. Eine sichtbare OSM-Karte bestätigt nur den unabhängigen Kartenkachelabruf. [OSM-Erklärung und Grenzen](../docs/KLASSIFIZIERUNG-OSM.md) · [Bündelungsanleitung](../docs/BUENDELUNG-FOTOS.md) · [Bild der gemeinsamen Bearbeitung](../docs/screenshots/0.12.0/README.md).
+Bei nahen Treffern öffnet sich nach Fahrtende eine Prüfung für Paare mit mindestens einer neuen Messung und **höchstens fünf Metern Abstand**. Neue Messungen werden mit neuen und älteren Fundstellen verglichen. Die Karte zeigt beide Punkte mit getrennten A-/B-Beschriftungen und Messungsnummern. GPS-Genauigkeit, Art und Koordinaten stehen darüber; längere Angaben lassen sich scrollen.
 
-Die PDF-Berichte mit Karte, Tabelle, Fotos und interner Vorschau aus 0.11.0 bleiben enthalten. [PDF-Anleitung](../docs/PDF-BERICHT.md) · [Beispiel mit erfundenen Daten und gekennzeichneter Offline-Karte](../docs/examples/0.11.0/Fundstellenbericht-Beispiel.pdf).
+- **Ja, zusammenfassen …** öffnet die gemeinsame Bestätigung, bei Bedarf mit Konfliktauswahl. Erst Bestätigen speichert.
+- **Nein, getrennt lassen** zeigt das nächste Paar ohne Änderungen.
+- **Prüfung jetzt beenden** oder die Zurück-Taste schließt sofort. Sämtliche Messungen bleiben erhalten.
+
+Drehen erhält den aktuellen Vergleich. Bereits gebündelte oder gelöschte Paare werden übersprungen. Bei Fahrtende über die Benachrichtigung wartet die Prüfung auf eine sichtbare Haupt- oder Kartenansicht; es wird keine Oberfläche aus dem Hintergrund geöffnet. Ohne passende neue Treffer bleibt die Prüfung aus. Nach dem Schließen wird sie nicht bei jedem erneuten Öffnen wiederholt. Die allgemeinen Vorschläge unter vier Metern bleiben unverändert. [Ausführliche Anleitung und Grenzen](../docs/FAHRTENDE-PRUEFUNG.md).
+
+OSM-Karten brauchen verfügbare oder bereits zwischengespeicherte Kacheln; Punkte und Koordinaten bleiben auch ohne Hintergrund sichtbar. Der Live-OSM-Abruf ist aus dieser Cloud durch den Proxy blockiert und muss auf dem Gerät geprüft werden. Die Screenshots zeigen ausdrücklich lokale Beispieldaten ohne geladenen Straßenhintergrund.
 
 ## Prüfung
 
-307 automatisierte Tests bestehen. Neue Prüfungen decken gemeinsame Art und Beschreibung, Erhalt unterschiedlicher Rohmesswerte und tatsächlicher Höhen, ausdrückliche Freigaben, Konfliktauswahl, Migration von Schema 7 auf 8, direkte gemeinsame Bearbeitung und Zugang zu Originalmessungen ab. OSM-Tests prüfen den ursprünglichen GPS-Mittelpunkt trotz abweichender korrigierter Position, unsichere Nachbarweg-Vorschläge, unvertauschte fehlende Beläge, gleichwertige Kreuzungskandidaten, frische manuelle Abfragen mit gemeinsamem Cache und Anfragebudget, HTTP-Diagnosen ohne private Daten, Netze ohne Android-Validierung und nachgeladene Vorschläge ohne Überschreiben ungespeicherter manueller Angaben. Die bisherigen Sensor-, Foto-, PDF-, Mail- und Navigationstests bestehen weiterhin. Frameworktests laufen auf simuliertem Android 9 und 15; PDF-/Fotoprüfungen mit nativer Grafikverarbeitung auf simuliertem Android 15.
+333 Projekttests bestehen, ergänzt um eine native Bildvorschau. Die neuen Prüfungen umfassen Anschreibenziel und Messgrenzen, rein manuelle Meldungen ohne Sensorbehauptung, persönliche Vorstellung mit lokaler Speicherung und Drehung, Freigabezeichen auf beiden Karten, Widerruf und gemischte Gruppen, ungeklärte alte Bündel ohne vollständigen Haken, Abstand einschließlich fünf Metern, neue/alte Treffer ohne reine Altpaare, keine automatische Verkettung, sofortiges Beenden, Überspringen, Bestätigung/Abbruch, Drehung, bereits gebündelte Paare, ID-Grenzen und Fahrtende über den Service. Die bisherigen Sensor-, OSM-, PDF-, Foto-, Mail- und Navigationstests bestehen weiterhin. Frameworktests laufen auf simuliertem Android 9 und 15; Grafik-, Foto- und PDF-Prüfungen nutzen native Grafikverarbeitung.
 
-Android-Build und Lint sind geprüft. Lint meldet keine Fehler und die zwei bisherigen Hinweise zur Annotation-Abhängigkeit und zum Kartenkonstruktor. Die bisherige APK-Signatur ist bestätigt; der öffentliche Download wird bytegenau geprüft. Das konkrete Gerät, Mailprogramm und der Live-OSM-Abruf bleiben praktisch zu erproben. Android 8.0 oder neuer wird benötigt; die App misst keine automatische Schadenshöhe und trifft keine rechtlich verbindliche Einstufung.
+Android-Build und Lint sind geprüft. Lint meldet keine Fehler und die zwei bisherigen Hinweise zur Annotation-Abhängigkeit und zum Kartenkonstruktor. Kleine Fahrtstatus-Übergänge werden bewusst synchron gespeichert, damit sie vor Serviceende beziehungsweise Start der einmaligen Prüfung dauerhaft vorliegen. Die bisherige APK-Signatur bleibt erhalten; der öffentliche Download wird bytegenau geprüft. Ein tatsächlicher Fairphone-Test von GPS, Kartenabruf, Display-Drehung und Mailprogramm bleibt nötig. Android 8.0 oder neuer wird benötigt.
 
-Dateigröße: 4395200 Bytes. [SHA-256-Prüfsummen](SHA256SUMS).
+[Bilder der neuen Oberfläche](../docs/screenshots/0.13.0/README.md).
+
+PDF-Berichte mit Karte, Tabelle, Fotos und interner Vorschau sowie gemeinsame Beschreibungen aus 0.12.0 bleiben enthalten. [PDF-Anleitung](../docs/PDF-BERICHT.md) · [Vor-Ort-Testplan](../docs/FAHRTEST.md) · [SHA-256-Prüfsummen](SHA256SUMS).
+
+Dateigröße: 4413467 Bytes. SHA-256: `a35f0a2d211e8ca3d61d37b818a9c0ca99bed213e32a9abd844018025372204b`.

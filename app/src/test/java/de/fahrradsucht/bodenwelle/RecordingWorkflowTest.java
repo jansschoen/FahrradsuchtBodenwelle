@@ -286,4 +286,14 @@ public class RecordingWorkflowTest {
         }
         return null;
     }
+    @Test public void successfulRideAndNotificationStopPersistTheNewFindingBoundaries() {
+        long old;
+        try(FindingStore store=new FindingStore(app)){old=store.insert(fix(LocationManager.GPS_PROVIDER,5),null);}
+        RecordingService recording=start();assertTrue(app.getSharedPreferences("ride_review",0).getBoolean("active",false));
+        recording.onLocationChanged(fix(LocationManager.GPS_PROVIDER,5));
+        recording.onStartCommand(new Intent(app,RecordingService.class).setAction(RecordingService.MARK),0,2);
+        recording.onStartCommand(new Intent(app,RecordingService.class).setAction(RecordingService.STOP),0,3);
+        var state=app.getSharedPreferences("ride_review",0);assertFalse(state.getBoolean("active",true));assertTrue(state.getBoolean("pending",false));
+        assertEquals(old,state.getLong("pending_after",-1));assertTrue(state.getLong("pending_through",-1)>old);
+    }
 }

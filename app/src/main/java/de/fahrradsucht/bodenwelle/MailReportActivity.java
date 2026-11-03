@@ -36,7 +36,7 @@ public final class MailReportActivity extends Activity {
     private SharedPreferences settings;
     private LinearLayout content, drafts;
     private CheckBox split, appNotice, notes;
-    private EditText name, recipient, subject, body;
+    private EditText name, introduction, recipient, subject, body;
     private Spinner recipientOffice;
     private TextView source, handoff;
     private final List<Row> rows = new ArrayList<>();
@@ -113,6 +113,10 @@ public final class MailReportActivity extends Activity {
         notes = check(content, "Eigene Notizen übernehmen", false);
         text(content, "Automatische Zeitangaben werden auf Kalenderwochen reduziert. Notizen sind zunächst aus: Sie können Namen oder genaue Datumsangaben enthalten. Fahrtspur und Rohdatenexport werden nicht angehängt.", 14);
         text(content, "Dein Name (optional)", 15); name = edit(content, settings.getString("name", ""), false); name.setId(R.id.mail_name);
+        text(content,"Kurze persönliche Vorstellung (optional)",15);
+        introduction=edit(content,settings.getString("introduction",""),true);introduction.setId(R.id.mail_introduction);
+        introduction.setMinLines(2);introduction.setMaxLines(4);introduction.setHint("Ein bis zwei Sätze über dich und deinen Bezug zum Radfahren.");
+        text(content,"Die Vorstellung wird lokal gespeichert und in neue Mailentwürfe eingefügt. Änderungen anschließend mit „Mailentwürfe erzeugen“ übernehmen.",14);
         button(content, "Mailentwürfe erzeugen", this::prepare).setId(R.id.mail_prepare);
         drafts = column(); content.addView(drafts);
         if (state != null) restore(state);
@@ -128,7 +132,7 @@ public final class MailReportActivity extends Activity {
     private void prepare() {
         if(exporting)return;
         saveCurrent(); saved.clear(); current = null;
-        settings.edit().putBoolean("split", split.isChecked()).putBoolean("notice", appNotice.isChecked()).putString("name", name.getText().toString().trim()).apply();
+        settings.edit().putBoolean("split", split.isChecked()).putBoolean("notice", appNotice.isChecked()).putString("name", name.getText().toString().trim()).putString("introduction",introduction.getText().toString().trim()).apply();
         List<MailReports.Item> items = new ArrayList<>();
         for (Row row : rows) if (row.selected.isChecked()) {
             Finding f = store.get(row.id); if (f == null || !f.reviewed()) continue;
@@ -173,7 +177,7 @@ public final class MailReportActivity extends Activity {
                     && group.items().stream().allMatch(i -> i.districtId().equals(group.items().get(0).districtId()))) office = group.items().get(0).districtId();
             DistrictCatalog.Authority a = catalog.get(office);
             if (a != null) { state.authority = a.id(); state.address = settings.getString("address_" + a.id(), a.email()); }
-            MailReports.Draft template = MailReports.coverLetter(group, group.districtId().isEmpty() ? "" : catalog.name(group.districtId()), appNotice.isChecked(), name.getText().toString());
+            MailReports.Draft template = MailReports.coverLetter(group, group.districtId().isEmpty() ? "" : catalog.name(group.districtId()), appNotice.isChecked(), name.getText().toString(),introduction.getText().toString());
             state.subject = template.subject(); state.body = template.body(); saved.put(group.key(), state);
         }
         List<DistrictOption> offices = new ArrayList<>(); offices.add(new DistrictOption("", "Andere Anlaufstelle / eigene E-Mail"));
@@ -245,7 +249,7 @@ public final class MailReportActivity extends Activity {
     private void openMail(){export(true);}
     private void setExporting(boolean busy) {
         exporting=busy;if(reportPreviewButton!=null)reportPreviewButton.setEnabled(!busy);if(reportMailButton!=null)reportMailButton.setEnabled(!busy);if(reportRefreshButton!=null)reportRefreshButton.setEnabled(!busy);
-        if(split!=null){split.setEnabled(!busy);notes.setEnabled(!busy);appNotice.setEnabled(!busy);name.setEnabled(!busy);}
+        if(split!=null){split.setEnabled(!busy);notes.setEnabled(!busy);appNotice.setEnabled(!busy);name.setEnabled(!busy);introduction.setEnabled(!busy);}
         View prepare=findViewById(R.id.mail_prepare);if(prepare!=null)prepare.setEnabled(!busy);
         View group=findViewById(R.id.mail_group);if(group!=null)group.setEnabled(!busy);
         for(Row row:rows){row.selected.setEnabled(!busy);row.district.setEnabled(!busy);}for(CheckBox photo:photoChecks.values())photo.setEnabled(!busy);
@@ -300,7 +304,7 @@ public final class MailReportActivity extends Activity {
     @Override public void onSaveInstanceState(Bundle out) {
         saveCurrent();
         if (split != null) {
-            out.putBoolean("split", split.isChecked()); out.putBoolean("notice", appNotice.isChecked()); out.putBoolean("notes", notes.isChecked()); out.putString("name", name.getText().toString());
+            out.putBoolean("split", split.isChecked()); out.putBoolean("notice", appNotice.isChecked()); out.putBoolean("notes", notes.isChecked()); out.putString("name", name.getText().toString());out.putString("introduction",introduction.getText().toString());
             ArrayList<String> selected = new ArrayList<>(); for (Row row : rows) if (row.selected.isChecked()) selected.add(Long.toString(row.id)); out.putStringArrayList("selected", selected);
             Bundle all = new Bundle();
             for (Map.Entry<String, DraftState> e : saved.entrySet()) {
@@ -312,7 +316,7 @@ public final class MailReportActivity extends Activity {
         super.onSaveInstanceState(out);
     }
     private void restore(Bundle state) {
-        split.setChecked(state.getBoolean("split", true)); appNotice.setChecked(state.getBoolean("notice", true)); notes.setChecked(state.getBoolean("notes")); name.setText(state.getString("name", ""));
+        split.setChecked(state.getBoolean("split", true)); appNotice.setChecked(state.getBoolean("notice", true)); notes.setChecked(state.getBoolean("notes")); name.setText(state.getString("name", ""));introduction.setText(state.getString("introduction",""));
         ArrayList<String> selected = state.getStringArrayList("selected"); if (selected != null) for (Row row : rows) row.selected.setChecked(selected.contains(Long.toString(row.id)));
         Bundle draftsState = state.getBundle("drafts"); if (draftsState == null || draftsState.isEmpty()) return;
         prepare(); saved.clear(); current = null;
