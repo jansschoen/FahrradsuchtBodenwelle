@@ -1,4 +1,4 @@
-# Klassifizierung und OSM – Stand 0.12.0
+# Klassifizierung und OSM – Stand 0.14.0
 
 ## Architektur und Umsetzung
 
@@ -101,3 +101,11 @@ Ab Version 0.4.0 steigen die Zahlenwerte des Sensitivitätsreglers nach rechts; 
 ## Straßenabschnitte
 
 Seit 0.7.0 ergänzt `rough_road` die Kategorie **Unebener Straßenabschnitt**. Die optionale Abschnittsgeometrie bleibt beim Prüfen und bei OSM-Ergänzungen erhalten. Anfang und Ende sind GPS-Schätzungen, die Länge stammt aus Geschwindigkeit und Zeit. Quelle, Unsicherheit und einzelne Freigaben bleiben nachvollziehbar. Die CSV-Spalte `rough_section` enthält die optionalen Abschnittsmetadaten als JSON; die bisherigen Spalten bleiben in derselben Reihenfolge. [Erkennungslogik und Bedienung](KALIBRIERUNG-ABSCHNITTE.md).
+
+## Park-/Privat-Hinweise ab 0.14.0
+
+Matcher 4 behält die räumliche Straßen-/Belagszuordnung aus Version 3 bei und ergänzt `OsmPlaceContext`. Dieselbe begrenzte Overpass-Abfrage liefert zusätzlich Park-/Gartenflächen und explizite `access=private`-/`ownership=private`-Objekte. Geschlossene Flächen werden am ursprünglichen GPS-Mittelpunkt geprüft. Multipolygone berücksichtigen Außenringe und Innenlöcher; fehlende oder offene Ringe liefern keinen positiven Flächennachweis. Private Straßen-Tags werden nur beim zugeordneten Weg bis fünf Metern Abstand und ursprünglicher Genauigkeit bis 25 m verwendet, nicht aus einem widersprüchlichen Nachbarweg-Vorschlag.
+
+Zusätzliche `is_in`-Abfragen an Mitte und Ecken des bisherigen Ausschnitts ergänzen große umschließende Flächen, deren Randknoten nicht im Ausschnitt liegen. Diese Auswahl ist keine vollständige Katasterabfrage. Ein neuer Cache-Namensraum `context2:` verhindert, dass alte Antworten ohne Flächenabfrage als aktuelle Flächenabdeckung gelten. Anfragebudget, HTTPS-Endpunkt, Antwortlimit, Fehlerpausen und Offline-Speicherung bleiben erhalten. Bei ausgeschalteter Ergänzung wird kein zweiter Standortdienst benutzt und keine Eigentumserkennung erfunden.
+
+Die lokalen OSM-Metadaten `bodenwelle:park`, `bodenwelle:private_access` und `bodenwelle:private_ownership` nennen jeweils die zugrundeliegende OSM-Weg-/Relations-ID. Sie gehören zur einzelnen Messung und werden beim Bündeln nicht als Eigentumsangabe auf andere Koordinaten kopiert. Die Datenschutzeinstellungen bleiben unverändert: Der Anbieter erhält den angefragten Ausschnitt, keine Notizen, Fotos oder Sensorwerte. [Prüfablauf und Grenzen](PARK-PRIVAT-PRUEFUNG.md).

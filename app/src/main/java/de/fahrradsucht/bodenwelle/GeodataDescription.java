@@ -28,7 +28,8 @@ public final class GeodataDescription {
     }
     public static String details(FindingDetails d) {
         OsmMatch m = d.osm();
-        return summary(d) + (m.wayId() == null ? "" : "\nOSM-Weg: " + m.wayId())
+        String context=OsmPlaceContext.reason(d.osm());
+        return summary(d) + (context.isEmpty()?"":"\nZuständigkeit prüfen: "+context) + (m.wayId() == null ? "" : "\nOSM-Weg: " + m.wayId())
                 + (m.queriedAt() == 0 ? "" : "\nAbgefragt: " + Instant.ofEpochMilli(m.queriedAt()))
                 + (m.source().isEmpty() ? "" : "\nQuelle: " + m.source())
                 + (m.tags().isEmpty() ? "" : "\nOSM-Tags: " + new java.util.TreeMap<>(m.tags()))

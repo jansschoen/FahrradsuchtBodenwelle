@@ -49,6 +49,7 @@ public final class AppMenus {
     }
     public void data() {
         LinearLayout content = column();
+        Button contexts=button(content,"Park-/Privatbereich prüfen",()->activity.startActivity(new android.content.Intent(activity,RideReviewActivity.class).putExtra("after",0L).putExtra("through",Long.MAX_VALUE).putExtra("context",true).putExtra("pairs",false)));contexts.setId(R.id.context_review_open);contexts.setEnabled(!RecordingService.running);
         text(content, store.count() + " Messungen auf diesem Handy. Fahrtspur und Fundstellen können getrennt gelöscht werden.");
         Button route = button(content, "Gespeicherte Fahrtspur löschen", () -> confirm("Fahrtspur löschen?",
                 "Die gespeicherte Strecke wird entfernt. Deine Fundstellen bleiben erhalten.", store::clearRoute));

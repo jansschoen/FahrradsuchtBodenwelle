@@ -26,14 +26,21 @@ public final class OsmRepository implements AutoCloseable {
         diagnostics = new OsmDiagnostics(context);
     }
     public static String cell(double lat, double lon) {
-        return (long) Math.floor(lat * 500) + ":" + (long) Math.floor(lon * 500);
+        return "context2:" + (long) Math.floor(lat * 500) + ":" + (long) Math.floor(lon * 500);
     }
     public static String query(double lat, double lon) {
         double south = Math.floor(lat * 500) / 500 - .003, west = Math.floor(lon * 500) / 500 - .003;
-        return String.format(Locale.ROOT,
-                "[out:json][timeout:20][maxsize:4194304];way[highway](%.6f,%.6f,%.6f,%.6f);out tags geom;",
-                south, west, south + .008, west + .008);
+        String box=String.format(Locale.ROOT,"(%.6f,%.6f,%.6f,%.6f)",south,west,south+.008,west+.008);
+        String containing="(";
+        for(double[] point:new double[][]{{south,west},{south,west+.008},{south+.008,west},{south+.008,west+.008},{south+.004,west+.004}})
+            containing+=String.format(Locale.ROOT,"is_in(%.6f,%.6f);",point[0],point[1]);
+        containing+=")->.containing;(area.containing[leisure~\"^(park|garden)$\"];area.containing[access=private];area.containing[ownership=private];)->.context;";
+        return "[out:json][timeout:20][maxsize:4194304];"+containing+"(way[highway]"+box+";"
+                +"way[leisure~\"^(park|garden)$\"]"+box+";relation[leisure~\"^(park|garden)$\"]"+box+";"
+                +"way[access=private]"+box+";relation[access=private]"+box+";"
+                +"way[ownership=private]"+box+";relation[ownership=private]"+box+";way(pivot.context);relation(pivot.context););out tags geom;";
     }
+
     public long enrich(long id, boolean online) { return enrich(id, online, 0); }
 
     /** A manual refresh shares one new cache answer with all entries queued at the same instant. */
@@ -100,7 +107,7 @@ public final class OsmRepository implements AutoCloseable {
             double latMargin = 50.0 / 111_000, lonMargin = latMargin / Math.max(.01, Math.cos(Math.toRadians(lat)));
             if (lat - latMargin < south || lat + latMargin > south + .008
                     || lon - lonMargin < west || lon + lonMargin > west + .008) continue;
-            FindingStore.CachedOsm candidate = store.cachedOsm((row + dy) + ":" + (column + dx));
+            FindingStore.CachedOsm candidate = store.cachedOsm("context2:"+(row + dy) + ":" + (column + dx));
             if (candidate != null && candidate.queriedAt() <= now
                     && (newest == null || candidate.queriedAt() > newest.queriedAt())) newest = candidate;
         }
@@ -115,6 +122,7 @@ public final class OsmRepository implements AutoCloseable {
             Map<String, String> metadata = new HashMap<>(match.tags());
             metadata.put("bodenwelle:matcher_version", OsmMatcher.VERSION);
             metadata.put("bodenwelle:position_basis", "gps_circle_center");
+            metadata.putAll(OsmPlaceContext.inspect(cached.response(),finding.position().gpsLatitude(),finding.position().gpsLongitude(),finding.accuracy(),match));
             match = new OsmMatch(match.status(), match.wayId(), metadata, match.queriedAt(),
                     stale && match.hasSuggestions() ? "low" : match.confidence(), match.distanceMeters(),
                     match.source(), match.traffic(), match.surface());

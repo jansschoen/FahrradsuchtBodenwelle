@@ -169,4 +169,14 @@ public class OsmRepositoryTest {
             assertEquals(0,repository.enrich(id,true));assertEquals(0,calls.get());assertEquals("gps_uncertain",store.get(id).details().osm().status());
         }
     }
+    @Test public void parkEvidenceUsesOriginalGpsCentreEvenIfEventPositionIsOutsideAndSurvivesOfflineCache() {
+        long id=finding(13.4);
+        String park="{\"type\":\"way\",\"id\":90,\"tags\":{\"leisure\":\"park\"},\"geometry\":[{\"lat\":52.499,\"lon\":13.399},{\"lat\":52.499,\"lon\":13.401},{\"lat\":52.501,\"lon\":13.401},{\"lat\":52.501,\"lon\":13.399},{\"lat\":52.499,\"lon\":13.399}]}";
+        String response=RESPONSE.replace("{\"elements\":[","{\"elements\":["+park+",");
+        try(FindingStore store=new FindingStore(context);OsmRepository repo=new OsmRepository(context,q->{assertTrue(q.contains("is_in("));assertTrue(q.contains("relation[access=private]"));return response;},time::get)) {
+            store.getWritableDatabase().execSQL("UPDATE findings SET latitude=52.51 WHERE id=?",new Object[]{id});repo.enrich(id,true);
+            assertEquals("way/90",store.get(id).details().osm().tags().get(OsmPlaceContext.PARK));assertEquals(52.51,store.get(id).latitude(),0);
+            repo.enrich(id,false);assertTrue(OsmPlaceContext.suggested(store.get(id)));
+        }
+    }
 }

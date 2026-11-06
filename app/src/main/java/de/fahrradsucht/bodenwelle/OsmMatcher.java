@@ -6,7 +6,7 @@ import java.util.List;
 
 /** Conservative local association, not navigation map matching or a legal survey. */
 public final class OsmMatcher {
-    public static final String VERSION = "3";
+    public static final String VERSION = "4";
     private OsmMatcher() {}
     private record Candidate(OsmWay way, double distance, double angle, double score) {}
     public static OsmMatch match(double lat, double lon, float accuracy, Float bearing, List<OsmWay> ways, long time, String source) {

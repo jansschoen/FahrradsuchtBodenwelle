@@ -26,12 +26,14 @@ public final class BundleActivity extends Activity {
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy · HH:mm").withZone(ZoneId.of("Europe/Berlin"));
     private FindingStore store;
     private LinearLayout content;
+    private final List<SuggestionMapPreview> previews=new ArrayList<>();
     @Override public void onCreate(Bundle state) {
         super.onCreate(state); store = new FindingStore(this);
         if (Build.VERSION.SDK_INT >= 30) getWindow().setDecorFitsSystemWindows(false);
     }
     @Override public void onResume() { super.onResume(); render(); }
     private void render() {
+        for(SuggestionMapPreview preview:previews)preview.active(false);previews.clear();
         ScrollView scroll = new ScrollView(this); scroll.setBackgroundColor(0xfff4f7f5);
         content = new LinearLayout(this); content.setOrientation(LinearLayout.VERTICAL);
         content.setPadding(dp(20), dp(16), dp(20), dp(24)); scroll.addView(content);
@@ -39,6 +41,7 @@ public final class BundleActivity extends Activity {
             android.graphics.Insets b = insets.getInsets(WindowInsets.Type.systemBars());
             v.setPadding(dp(20) + b.left, dp(16) + b.top, dp(20) + b.right, dp(24) + b.bottom); return insets;
         });
+        scroll.setOnScrollChangeListener((v,x,y,oldx,oldy)->previews.forEach(SuggestionMapPreview::updateVisibility));
         setContentView(scroll); button(content, "Zurück", this::finish);
         text(content, "Mehrfachtreffer bündeln", 26, true);
         text(content, "Dieselbe Unebenheit mehrfach gemessen? Vergleiche die nummerierten Messungen und bestätige die passenden Fundstellen. Originale, Freigaben und Fotos bleiben erhalten.", 16, false);
@@ -59,6 +62,9 @@ public final class BundleActivity extends Activity {
             double span = 0;
             for (Finding a : members) for (Finding b : members) span = Math.max(span, BundleSuggestions.distance(a, b));
             text(group, String.format(Locale.GERMANY, "Messpunkte bis %.1f m auseinander", span), 14, false);
+            SuggestionMapPreview preview=new SuggestionMapPreview(this,members);previews.add(preview);
+            group.addView(preview,new LinearLayout.LayoutParams(-1,dp(210)));
+            text(group,getString(R.string.suggestion_map_hint),12,false);
             for (FindingBundle bundle : suggestion) observationRows(group, bundle);
             button(group, "Als dieselbe Fundstelle bestätigen", () -> confirm(suggestion.stream().map(FindingBundle::key).collect(Collectors.toList())));
         }
@@ -80,6 +86,7 @@ public final class BundleActivity extends Activity {
             for (int i = 0; i < keys.size(); i++) if (boxes.get(i).isChecked()) selected.add(keys.get(i));
             confirm(selected);
         }).setId(R.id.bundle_merge);
+        scroll.post(()->previews.forEach(p->p.active(true)));
     }
     private void observationRows(LinearLayout parent, FindingBundle bundle) {
         for (Finding f : bundle.observations()) {
@@ -106,5 +113,6 @@ public final class BundleActivity extends Activity {
         b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xffe8f2ee)); parent.addView(b); b.setOnClickListener(v -> action.run()); return b;
     }
     private int dp(int x) { return Math.round(x * getResources().getDisplayMetrics().density); }
+    @Override public void onPause(){previews.forEach(p->p.active(false));super.onPause();}
     @Override public void onDestroy() { store.close(); super.onDestroy(); }
 }

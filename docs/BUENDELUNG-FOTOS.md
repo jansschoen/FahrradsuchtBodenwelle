@@ -65,3 +65,9 @@ Die Karte enthält alle gespeicherten Fundstellen ohne die frühere Grenze von 5
 Fundstellen verschwinden weder bei einer neuen Fahrt noch nach einer bestimmten Zeit. Die Fundstellenliste lädt zunächst 100 passende Einträge und bietet **Weitere Fundstellen anzeigen**. Bewusstes Löschen entfernt die ausgewählte Originalmessung nach Rückfrage.
 
 CSV ergänzt hinten **measurement_id**; bisherige Spalten bleiben an derselben Stelle. Mailentwürfe nennen nur Nummern der ausgewählten, freigegebenen Messungen. Die Kalenderwochen-Anonymisierung und Fotos mit Mailpositionsnummern bleiben erhalten.
+
+## Kartenausschnitte ab 0.14.0
+
+Jede automatische Vorschlagskarte unter **Mehrfachtreffer bündeln** enthält direkt einen Kartenausschnitt um die zugehörigen Messpunkte. Nummern und Verbindungslinien unterscheiden auch sehr nahe Positionen. Die Karte lässt sich verschieben und zoomen. Die Darstellung verwendet den bestehenden OSM-Kachelcache und dieselben Downloadregeln wie die Fahrtkarte; nicht sichtbare Vorschläge erzeugen keine zusätzlichen Kartenabrufe. Ohne Internet können bereits gespeicherte Kartenteile angezeigt werden. Messpunkte und Nummern hängen nicht von neu geladenen Kartenteilen ab.
+
+Auch das normale Löschen über Liste beziehungsweise Kartenpunkt und das Löschen eines Park-/Privat-Prüfvorschlags zeigen in der letzten Bestätigung die Karte der ausgewählten Einzelmessung. Eine Karte oder ein OSM-Hinweis löst selbst keine Löschung aus. [Park-/Privat-Prüfung](PARK-PRIVAT-PRUEFUNG.md).

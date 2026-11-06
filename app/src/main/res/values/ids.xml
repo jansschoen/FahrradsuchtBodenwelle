@@ -63,4 +63,7 @@
     <item name="ride_review_merge" type="id" />
     <item name="ride_review_skip" type="id" />
     <item name="ride_review_finish" type="id" />
+    <item name="suggestion_map" type="id" />
+    <item name="context_review_delete" type="id" />
+    <item name="context_review_open" type="id" />
 </resources>

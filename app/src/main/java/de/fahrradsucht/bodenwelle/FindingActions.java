@@ -111,14 +111,7 @@ public final class FindingActions {
     }
 
     private void confirmDelete(Finding f) {
-        String message = "Messung #" + f.id() + " vom " + DATE.format(Instant.ofEpochMilli(f.timeMillis()))
-                + "\n" + Classification.label(Classification.BUMPS, f.category())
-                + "\n\nDiese Messung wird aus der App gelöscht. Fotos bleiben erhalten, solange sie noch zu einer anderen Messung gehören."
-                + (f.bundleId() > 0 ? " Weitere Messungen dieser Fundstelle bleiben erhalten." : "")
-                + " Bereits exportierte Kopien bleiben erhalten.";
-        new AlertDialog.Builder(activity).setTitle("Messung löschen?").setMessage(message)
-                .setNegativeButton("Abbrechen", null)
-                .setPositiveButton("Löschen", (d, w) -> { store.delete(f.id()); changed.run(); toast("Messung gelöscht."); }).show();
+        DeletionConfirmation.show(activity,f,()->{store.delete(f.id());changed.run();toast("Messung gelöscht.");});
     }
 
     private void reviewObservation(Finding f){reviewEditor(f,false);}

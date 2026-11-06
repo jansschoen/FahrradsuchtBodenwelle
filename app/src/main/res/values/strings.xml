@@ -70,4 +70,15 @@
     <string name="osm_retry">OSM-Vorschlag neu abfragen</string>
     <string name="osm_diagnose">OSM-Abrufdiagnose</string>
     <string name="ride_review_hint">© OpenStreetMap contributors · GPS kann ungenau sein. Prüfe Straßenseite und benachbarte Schäden. Ohne Kartenhintergrund bleiben Punkte und Koordinaten sichtbar.</string>
+    <string name="suggestion_map_title">Karte der vorgeschlagenen Fundstelle</string>
+    <string name="suggestion_map_description">Karte für Messungen %1$s</string>
+    <string name="suggestion_map_hint">© OpenStreetMap contributors · Nummern entsprechen den Messungen. Karte verschieben und zoomen; ohne Verbindung sind gespeicherte Kartenteile nutzbar.</string>
+    <string name="context_review_keep">Behalten und weiter</string>
+    <string name="context_review_separate">Nein, getrennt lassen</string>
+    <string name="context_review_limit">Parks können zum Bezirksamt gehören, häufig zum Grünflächenamt. Privater Zugang beweist kein Privateigentum. OSM und GPS sind Hinweise; Zuständigkeit bitte selbst prüfen.</string>
+    <!-- The two numbers are an ordinal progress indicator, not a count of a noun. -->
+    <string name="context_review_summary" tools:ignore="PluralsCandidate">Zum Löschen vorgeschlagen · %1$d von %2$d\nMessung #%3$d\n%4$s\nBitte vor dem Löschen prüfen: Parks können zum Bezirksamt gehören. OSM und GPS bestätigen weder Eigentumsverhältnisse noch Zuständigkeit.</string>
+    <string name="map_copyright">© OpenStreetMap contributors</string>
+    <!-- A measurement identifier, not a plural count. -->
+    <string name="delete_measurement_details" tools:ignore="PluralsCandidate">Messung #%1$d vom %2$s\n%3$s%4$s\n\nNur diese Messung wird gelöscht. Andere Bündelmitglieder und die Fahrtspur bleiben erhalten. Fotos bleiben bestehen, solange sie noch anderen Messungen zugeordnet sind. Bereits exportierte Kopien bleiben erhalten.</string>
 </resources>
