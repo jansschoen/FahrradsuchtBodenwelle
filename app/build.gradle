@@ -10,8 +10,8 @@ android {
         applicationId 'de.fahrradsucht.bodenwelle'
         minSdk 26
         targetSdk 35
-        versionCode 16
-        versionName '0.14.0'
+        versionCode 17
+        versionName '0.15.0'
         testInstrumentationRunner 'android.test.InstrumentationTestRunner'
     }
     compileOptions {
@@ -27,7 +27,7 @@ android {
     testOptions {
         unitTests.includeAndroidResources = true
         unitTests.all {
-            ['http.proxyHost', 'http.proxyPort', 'https.proxyHost', 'https.proxyPort', 'javax.net.ssl.trustStore', 'user.home'].each { key ->
+            ['http.proxyHost', 'http.proxyPort', 'https.proxyHost', 'https.proxyPort', 'javax.net.ssl.trustStore', 'user.home', 'bodenwelle.browser.fixture'].each { key ->
                 if (System.getProperty(key) != null) systemProperty key, System.getProperty(key)
             }
             systemProperty 'robolectric.dependency.repo.url', 'https://repo.maven.apache.org/maven2'

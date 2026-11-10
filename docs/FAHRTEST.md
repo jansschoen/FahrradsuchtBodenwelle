@@ -133,3 +133,15 @@ Erzeuge eine Mail mit den gewünschten freigegebenen Beobachtungen. Wiederholung
 4. **Nein, getrennt lassen** wählen: Originale bleiben einzeln. **Ja, zusammenfassen …** erst abbrechen, dann erneut öffnen und bestätigen. Unterschiedliche Angaben müssen abgleichbar sein. Messwerte und einzelne Freigaben bleiben erhalten.
 5. Im Vergleich das Handy drehen: Dasselbe offene Paar bleibt sichtbar. **Prüfung jetzt beenden** oder die Zurück-Taste schließt sofort; ungeprüfte Paare bleiben gespeichert und weiterhin über Fundstellen/Karte erreichbar.
 6. Die Fahrt bei ausgeschaltetem Display über die Benachrichtigung beenden. Beim nächsten Öffnen der App erscheint die Prüfung, sofern passende neue Treffer existieren. Ohne neue oder nahe Punkte bleibt sie aus. Prüfen, dass durch Schließen keine Messung verschwindet und der Ablauf nicht bei jedem erneuten Öffnen wieder startet.
+
+## Lokale Browserbearbeitung ab 0.15.0
+
+1. Fahrt beenden und unter **Mehr → Daten verwalten → Am Computer bearbeiten / Rückimport** die HTML-Datei speichern. Auf einen Computer übertragen und mit einem aktuellen Browser öffnen. Liste, Karte und Angaben müssen zu denselben Messungsnummern gehören. Diese lokale Dateinavigation ist im Cloud-Browser durch dessen Richtlinie blockiert und muss auf einem echten Computer geprüft werden.
+2. Einen Kartenpunkt auswählen, Verkehrsfläche, Oberfläche, Art, Notiz und Gefährdungsmerkmale ändern, ein Foto ergänzen und eine tatsächlich gemessene Höhe eintragen. Zwei Stellen bündeln und gemeinsame Angaben prüfen. Löschen erst abbrechen, dann an einem Testeintrag ausführen und rückgängig machen.
+3. Internet abschalten beziehungsweise den OSM-Schalter deaktivieren: Punkte, Spur, Fotos und Bearbeitung müssen weiter verfügbar sein. Mit Internet den echten Straßenhintergrund prüfen. Die Cloud-Browserbilder zeigen absichtlich den Offlinefall.
+4. **Bearbeitete Datei speichern** wählen und im Downloadordner prüfen. Diese neue Datei wieder im Browser öffnen: Änderungen und Fotos müssen enthalten sein. Die ursprüngliche Datei soll unverändert bleiben.
+5. Vor dem Rückimport auf dem Handy eine neue Testmessung erfassen und eine schon exportierte Stelle anders bearbeiten. Datei öffnen: Der Konflikt muss beide Stände und gegebenenfalls Fotos zeigen. Ohne Auswahl darf keine Übernahme stattfinden. Zuerst abbrechen; anschließend bewusst Handy oder Browser auswählen und bestätigen.
+6. Nach dem Rückimport neue Handymessung, aktuelle Spur, Rohwerte und individuelle Freigaben kontrollieren. **Letzten Import rückgängig machen** ausprobieren: Auch gelöschte Testmessungen sollen zurückkehren; später erfasste Messungen und die aktuelle Spur bleiben erhalten. **Letzte Importsicherung speichern** testen.
+7. Dieselbe Bearbeitungsrunde erneut importieren: Die App muss eine frische Exportdatei verlangen. Für weitere Änderungen eine neue Datei vom Handy exportieren. Keine Deinstallation zwischen Export und Rückimport.
+
+[Ausführliche Anleitung und Grenzen](BROWSER-NACHBEARBEITUNG.md).

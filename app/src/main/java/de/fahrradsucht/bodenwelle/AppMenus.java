@@ -49,13 +49,14 @@ public final class AppMenus {
     }
     public void data() {
         LinearLayout content = column();
+        button(content,"Am Computer bearbeiten / Rückimport",()->activity.startActivity(new Intent(activity,BrowserExchangeActivity.class))).setId(R.id.browser_open);
         Button contexts=button(content,"Park-/Privatbereich prüfen",()->activity.startActivity(new android.content.Intent(activity,RideReviewActivity.class).putExtra("after",0L).putExtra("through",Long.MAX_VALUE).putExtra("context",true).putExtra("pairs",false)));contexts.setId(R.id.context_review_open);contexts.setEnabled(!RecordingService.running);
         text(content, store.count() + " Messungen auf diesem Handy. Fahrtspur und Fundstellen können getrennt gelöscht werden.");
         Button route = button(content, "Gespeicherte Fahrtspur löschen", () -> confirm("Fahrtspur löschen?",
                 "Die gespeicherte Strecke wird entfernt. Deine Fundstellen bleiben erhalten.", store::clearRoute));
         route.setId(R.id.delete_route); route.setEnabled(!RecordingService.running && store.routeCount() > 0);
         Button all = button(content, "Alle Fundstellen löschen", () -> confirm("Alle Fundstellen löschen?",
-                "Die Messungen, Bündelungen und zugehörigen Fotos werden aus der App entfernt. Fahrtspur, Albumoriginale und bereits exportierte Kopien bleiben erhalten.", store::deleteAll));
+                "Die Messungen, Bündelungen, zugehörigen Fotos und lokalen Browser-Importsicherungen werden aus der App entfernt. Fahrtspur, Albumoriginale und bereits exportierte Kopien bleiben erhalten.", store::deleteAll));
         all.setId(R.id.delete_all); all.setEnabled(!RecordingService.running && store.count() > 0);
         if (RecordingService.running) text(content, "Zum Löschen gespeicherter Daten zuerst die Fahrt beenden.");
         text(content, "Einzelne Messungen löschst du direkt unter „Fundstellen“ oder über ihren Kartenpunkt. CSV und Mail findest du im Bereich „Fundstellen“.");

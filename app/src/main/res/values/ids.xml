@@ -66,4 +66,12 @@
     <item name="suggestion_map" type="id" />
     <item name="context_review_delete" type="id" />
     <item name="context_review_open" type="id" />
+    <item name="browser_open" type="id" />
+    <item name="browser_export" type="id" />
+    <item name="browser_import" type="id" />
+    <item name="browser_backup" type="id" />
+    <item name="browser_restore" type="id" />
+    <item name="browser_status" type="id" />
+    <item name="browser_back" type="id" />
+    <item name="browser_apply" type="id" />
 </resources>

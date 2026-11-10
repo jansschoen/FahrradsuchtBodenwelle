@@ -188,7 +188,7 @@ public class SharedBundleTest {
         }
         try (SQLiteDatabase old = app.openOrCreateDatabase("findings.db", 0, null)) { old.execSQL("DROP TABLE photo_links"); old.setVersion(6); }
         try (FindingStore upgraded = new FindingStore(app)) {
-            assertEquals(8, upgraded.getReadableDatabase().getVersion()); assertEquals(2, upgraded.count()); assertEquals(1, upgraded.routeCount());
+            assertEquals(9, upgraded.getReadableDatabase().getVersion()); assertEquals(2, upgraded.count()); assertEquals(1, upgraded.routeCount());
             assertEquals(2, upgraded.photos(a).size()); assertEquals(2, upgraded.photos(b).size()); assertEquals(2, count(upgraded, "finding_photos"));
             assertEquals(17, upgraded.get(a).details().hazards()); assertEquals(17, upgraded.get(b).details().hazards());
             assertEquals("asphalt", upgraded.get(a).details().surface()); assertEquals("concrete", upgraded.get(b).details().surface());
@@ -296,7 +296,7 @@ public class SharedBundleTest {
         }
         try(SQLiteDatabase old=app.openOrCreateDatabase("findings.db",0,null)){old.setVersion(7);}
         try(FindingStore store=new FindingStore(app)) {
-            assertEquals(8,store.getReadableDatabase().getVersion());assertEquals("root_heave",store.get(a).category());assertEquals("pothole",store.get(b).category());
+            assertEquals(9,store.getReadableDatabase().getVersion());assertEquals("root_heave",store.get(a).category());assertEquals("pothole",store.get(b).category());
             assertEquals(store.get(a).note(),store.get(b).note());assertTrue(store.get(a).note().contains("Andere Beschreibung"));
             assertTrue(SharedFindingDetails.from(store.observations(store.get(a).bundleKey())).category().conflicting());
             store.resolveShared(store.get(a).bundleKey(),null,null,"root_heave");

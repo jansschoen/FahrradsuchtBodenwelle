@@ -81,4 +81,8 @@
     <string name="map_copyright">© OpenStreetMap contributors</string>
     <!-- A measurement identifier, not a plural count. -->
     <string name="delete_measurement_details" tools:ignore="PluralsCandidate">Messung #%1$d vom %2$s\n%3$s%4$s\n\nNur diese Messung wird gelöscht. Andere Bündelmitglieder und die Fahrtspur bleiben erhalten. Fotos bleiben bestehen, solange sie noch anderen Messungen zugeordnet sind. Bereits exportierte Kopien bleiben erhalten.</string>
+    <string name="browser_working">Projektdatei wird verarbeitet … Bitte kurz warten.</string>
+    <string name="browser_preview_ready">Vorschau bereit. Bitte Änderungen und Konflikte prüfen.</string>
+    <string name="browser_photo_page">Foto %1$d/%2$d</string>
+    <string name="browser_photo_unreadable">Foto %1$d/%2$d · Bild nicht lesbar</string>
 </resources>

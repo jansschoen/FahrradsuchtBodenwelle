@@ -1,31 +1,35 @@
-# Bodenwelle 0.14.0 – Android-Testversion
+# Bodenwelle 0.15.0 – Android-Testversion
 
-[APK 0.14.0 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.14.0.apk). Als Update über die vorhandene App installieren, **nicht vorher deinstallieren**. App-ID und Signatur bleiben gleich; Messungen, Bündelungen, gemeinsame Fotos, Fahrtspur und Freigaben bleiben erhalten.
+[APK 0.15.0 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.15.0.apk). Als Update über die vorhandene App installieren, **nicht vorher deinstallieren**. App-ID und Signatur bleiben gleich; Messungen, Bündelungen, gemeinsame Fotos, Fahrtspur und Freigaben bleiben erhalten. Android 8.0 oder neuer wird benötigt.
 
-## Kartenausschnitte direkt bei Vorschlägen und beim Löschen
+## Eine Datei für die Bearbeitung am Computer
 
-Unter **Mehrfachtreffer bündeln** enthält jeder automatische Vorschlag eine Karte um genau die zugehörigen Messpunkte. Die Nummern passen zu den Einträgen darunter; versetzte Beschriftungen unterscheiden auch sehr nahe Positionen. Karten lassen sich verschieben und zoomen. Sie werden automatisch geladen, sobald sie sichtbar sind. Nicht sichtbare Vorschläge erzeugen keine zusätzlichen Kartenabrufe und geben ihre Kartenansicht wieder frei.
+1. Fahrt beenden. **Mehr → Daten verwalten → Am Computer bearbeiten / Rückimport → Projektdatei für den Browser speichern** öffnen.
+2. Die gespeicherte HTML-Datei auf den Computer übertragen und dort im aktuellen Browser öffnen. Sie enthält bereits Editor, Messdaten, Fotos und letzte Fahrtspur. Es gibt keine Installation oder Anmeldung.
+3. Über Liste und Karte eine Stelle auswählen. Art, Beschreibung, Verkehrsfläche, Oberfläche, Gefährdungsmerkmale, Fotos, Bündelung, individuell gemessene Höhe, Freigabe und Bezirk lassen sich bearbeiten. Originalmesswerte sind schreibgeschützt.
+4. **Bearbeitete Datei speichern** wählen und den angebotenen Download im Downloadordner prüfen. Die neue HTML-Datei zurück auf das Handy kopieren und über **Bearbeitete Projektdatei öffnen** auswählen.
+5. Vorschau und gegebenenfalls Konflikte prüfen. Erst **Sichern und importieren** übernimmt Änderungen. Neue Handymessungen und die aktuelle Spur bleiben erhalten. Eine vollständige lokale Sicherung ermöglicht **Letzten Import rückgängig machen**.
 
-Auch die letzte Löschbestätigung enthält jetzt direkt den Kartenausschnitt und die Messungsnummer. Das gilt sowohl für normales Löschen aus Liste/Karte als auch für die neuen Park-/Privat-Vorschläge. Erst **Messung löschen** entfernt die ausgewählte Einzelmessung. Abbrechen verändert nichts; andere Bündelmitglieder, die Fahrtspur und weiterhin verwendete gemeinsame Fotos bleiben nach den bisherigen Regeln erhalten.
+Für jede weitere Bearbeitungsrunde nach erfolgreichem Rückimport eine **neue Datei vom Handy exportieren**. Die Rückgabe gehört zur ursprünglichen App-Installation; Deinstallation oder das Löschen der App-Daten entfernt die Exportgrundlage. Die Datei enthält genaue Zeiten, Standorte und private Angaben. Für das Bezirksamt weiterhin die gesonderte PDF-/Mail-Funktion verwenden.
 
-Die Karten verwenden den vorhandenen OSM-Kachelcache. Mit Internet werden benötigte Kartenteile geladen; offline sind vorhandene Kacheln nutzbar. Messpunkte und Nummern bleiben auch ohne neuen Hintergrund sichtbar. Die Cloud-Verbindung zum OSM-Kachelserver wurde am **6. November 2026** erneut beim HTTPS-Tunnel mit HTTP 403 blockiert; die Bilder zeigen deshalb ehrlich den nicht geladenen Hintergrund. Das ist kein Nachweis für einen Fehler auf deinem Handy.
+[Ausführliche Anleitung einschließlich Größenlimits](../docs/BROWSER-NACHBEARBEITUNG.md) · [Bilder](../docs/screenshots/0.15.0/README.md) · [Beispiel mit erfundenen Daten als ZIP herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-Browser-Beispiel.zip).
 
-## Park-/Privat-Hinweise nach Fahrtende
+## Karte online und offline
 
-Die optionale OSM-Abfrage berücksichtigt zusätzlich Park-/Gartenflächen, privaten Zugang und ausdrücklich privat gekennzeichnete Flächen. Bekannte Hinweise zu neuen Messungen erscheinen nach Fahrtende vor dem Bündelungsvergleich, mit Karte und dem erkannten Grund. **Behalten und weiter** lässt die Messung unverändert. **Diese Messung löschen …** öffnet erst die separate Bestätigung mit Karte. **Prüfung jetzt beenden** und Zurück schließen sofort, ohne offene Messungen zu löschen.
+Im Browser zeigt die Karte nummerierte Stellen, gemeinsame Bündel, Freigabehaken, GPS-Genauigkeitskreis und optional die letzte Fahrtspur. Klicks öffnen die Beschreibung, überlappende Punkte eine Auswahl. Suchen und Filtern wirken auch auf die Karte.
 
-**Parks können zum Bezirksamt gehören, häufig zum Grünflächenamt.** Privater Zugang beweist kein Privateigentum. OSM ist kein Kataster und entscheidet nicht über die zuständige Verwaltung. Daher werden diese Funde zur eigenen Prüfung angeboten und niemals allein aufgrund der Erkennung gelöscht. Ungenaues GPS und fehlende/veraltete OSM-Daten begrenzen die Erkennung.
-
-Kommt ein passender OSM-Hinweis erst später an, kann einmalig eine ergänzende Nachprüfung erscheinen. Nach bewusstem sofortigem Beenden werden solche verspäteten automatischen Hinweise unterdrückt. Unter **Mehr → Daten verwalten → Park-/Privatbereich prüfen** sind vorhandene Hinweise auch später zugänglich. Dieser Einstieg ist während der Fahrt deaktiviert. Bei Stopp über die Benachrichtigung wartet die Prüfung auf eine sichtbare Haupt- oder Kartenansicht. [Anleitung und Grenzen](../docs/PARK-PRIVAT-PRUEFUNG.md).
+Nur der OSM-Straßenhintergrund benötigt Internet; Messpunkte, Fotos, Spur und Bearbeitung bleiben offline verfügbar. Der Hintergrund lässt sich abschalten. Kartenabrufe übertragen den angefragten Ausschnitt und die IP-Adresse an den Anbieter, keine Beschreibungen, Fotos oder Sensorwerte. Eine vollständige Offline-Straßenkarte ist nicht enthalten.
 
 ## Prüfung und Grenzen
 
-351 Projekttests bestehen, ergänzt um zwei native Bildprüfungen. Neue Tests prüfen Polygon-Innen-/Außenlagen, Innenlöcher und zusammengesetzte Parkgrenzen, unvollständige Geometrien, private Zugangs-/Eigentumshinweise ohne Gleichsetzung, keine Übernahme eines mehrdeutigen Nachbarwegs, Abfrage am ursprünglichen GPS-Mittelpunkt trotz verschobener Ereignisposition, Offline-Cache, nachträgliche Hinweise, einmaliges Öffnen, sofortiges Beenden, Behalten, Abbruch und bestätigtes Löschen einer einzelnen Bündelmessung. Die Kartenprüfungen decken automatische Vorschauen, begrenzte Erzeugung nur sichtbarer Karten, korrekte Zentrierung und Freigabe beim Verlassen ab. Die bisherigen Sensor-, OSM-, PDF-, Foto-, Mail- und Freigabetests bestehen weiter.
+382 Android-Prüfungen bestehen. Die neuen Prüfungen decken Export und Rückgabe aller Beschreibungsfelder, neue Handymessungen, Konfliktauswahl, Vorschauänderungen, Galerieübernahme, gemeinsame Fotos, Bündeländerungen, Löschen, Sicherung und Wiederherstellung einschließlich älterer ungeklärter Bündel ab. Rohdatenänderungen und fremde Exportdateien werden abgewiesen. Neue Fotos werden als JPEG ohne ursprüngliche EXIF-Orts-/Zeitangaben aufbereitet. Datenbankmigration auf Schema 9, Dateidialoge und der native Importablauf sind geprüft.
 
-Android-Build und Lint sind geprüft. Lint meldet keine Fehler und die zwei bisherigen Hinweise zur Annotation-Abhängigkeit und zum Kartenkonstruktor. Frameworktests laufen auf simuliertem Android 9 und 15; native Grafikprüfungen und Flächenparser-Tests auf simuliertem Android 15. Die bisherige APK-Signatur bleibt erhalten; der öffentliche Download wird bytegenau geprüft.
+Zusätzlich wurde ein echter Androidexport in Chromium bearbeitet, mit einem neuen Foto gespeichert und erfolgreich zurückimportiert. Die Browserprüfung verwendet echte Bedienelemente, Dateiauswahl und Downloadereignisse. Die gespeicherte Datei wurde erneut geöffnet und in Android auf unveränderte Rohwerte, neue Handyaufzeichnungen und Fahrtspur geprüft.
 
-Der Live-Overpass-Abruf war am 6. November 2026 ebenfalls durch den Cloud-Proxy blockiert. Die erweiterte Abfrage und praktische Erkennung auf dem Fairphone müssen deshalb mit **OSM-Abrufdiagnose** geprüft werden. Bei fehlenden Daten wird kein Eigentums- oder Zuständigkeitsstatus erfunden. Android 8.0 oder neuer wird benötigt.
+**Die Cloud-Browserrichtlinie blockiert das direkte Öffnen von `file://`.** Der Test hat denselben HTML-Inhalt als Testdokument gerendert. Der Doppelklick auf deinem Computer, Firefox, Safari und das reale Fairphone sind damit noch nicht geprüft. Die Browserprüfung blockiert OSM-Kacheln absichtlich; die Bilder zeigen entsprechend den Offline-Rasterhintergrund. Der reale Straßenhintergrund muss am Computer mit erreichbarem Kartenserver geprüft werden.
 
-[Bilder der neuen Oberfläche](../docs/screenshots/0.14.0/README.md) · [Bündelung und Fotos](../docs/BUENDELUNG-FOTOS.md) · [OSM-Dokumentation](../docs/KLASSIFIZIERUNG-OSM.md) · [SHA-256-Prüfsummen](SHA256SUMS).
+Build und Lint bestehen; Lint meldet keine Fehler und zwei bisherige Hinweise zur Annotation-Abhängigkeit und zum Kartenkonstruktor. Die APK verwendet die bisherige Signatur. Die [Prüfsummen](SHA256SUMS) gehören zu den bereitgestellten Dateien.
 
-Dateigröße: 4432375 Bytes. SHA-256: `3885460931103de7d2013a865073c2568d2a32ea16f0c00f478d2ca35c2f55a1`.
+Die bisherigen Funktionen einschließlich Kartenprüfung nach Fahrtende, Park-/Privat-Hinweisen, Bündelung, Fotos, PDF und Mail sind weiterhin enthalten. [Anleitung für den Fahrtest](../docs/FAHRTEST.md).
+
+APK-Dateigröße: 4511462 Bytes. SHA-256: `06e6e605e3fe1a93fdcbc01daf1a47ff89a60248c323b21725780c9e407b7f2d`.

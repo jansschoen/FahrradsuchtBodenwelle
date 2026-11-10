@@ -12,7 +12,7 @@ import java.util.List;
 public final class FindingStore extends SQLiteOpenHelper {
     private static final java.util.concurrent.atomic.AtomicLong CHANGES = new java.util.concurrent.atomic.AtomicLong();
     private final Context context;
-    public FindingStore(Context context) { super(context, "findings.db", null, 8); this.context = context.getApplicationContext(); }
+    public FindingStore(Context context) { super(context, "findings.db", null, 9); this.context = context.getApplicationContext(); }
     @Override public void onConfigure(SQLiteDatabase db) { db.setForeignKeyConstraintsEnabled(true); }
 
     @Override public void onCreate(SQLiteDatabase db) {
@@ -23,6 +23,7 @@ public final class FindingStore extends SQLiteOpenHelper {
         addMailColumn(db);
         addBundlesAndPhotos(db);
         addSharedPhotos(db);
+        addBrowserImports(db);
     }
 
     @Override public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -33,7 +34,9 @@ public final class FindingStore extends SQLiteOpenHelper {
         if (oldVersion < 6) addBundlesAndPhotos(db);
         if (oldVersion < 7) addSharedPhotos(db);
         if (oldVersion < 8) unifyObservations(db);
+        if (oldVersion < 9) addBrowserImports(db);
     }
+    private static void addBrowserImports(SQLiteDatabase db){db.execSQL("CREATE TABLE IF NOT EXISTS browser_imports(export_id TEXT PRIMARY KEY,applied_ms INTEGER NOT NULL,backup TEXT NOT NULL DEFAULT '')");}
     private static void addBundlesAndPhotos(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE finding_bundles (id INTEGER PRIMARY KEY AUTOINCREMENT)");
         db.execSQL("ALTER TABLE findings ADD COLUMN bundle_id INTEGER REFERENCES finding_bundles(id)");
@@ -294,6 +297,7 @@ public final class FindingStore extends SQLiteOpenHelper {
         db.insertWithOnConflict("osm_cache", null, v, SQLiteDatabase.CONFLICT_REPLACE);
         db.execSQL("DELETE FROM osm_cache WHERE cell NOT IN (SELECT cell FROM osm_cache ORDER BY queried_at DESC LIMIT 64)");
     }
+    static void browserChanged(){CHANGES.incrementAndGet();}
     public long revision() { return CHANGES.get(); }
 
     public List<FindingBundle> bundles() {
@@ -420,10 +424,10 @@ public final class FindingStore extends SQLiteOpenHelper {
         SQLiteDatabase db = getWritableDatabase(); db.beginTransaction(); List<FindingPhoto> files = new ArrayList<>();
         try {
             try (Cursor c = db.rawQuery("SELECT id,finding_id,filename,width,height,bytes FROM finding_photos", null)) { while (c.moveToNext()) files.add(readPhoto(c)); }
-            db.delete("findings", null, null); db.delete("finding_bundles", null, null);
+            db.delete("findings", null, null); db.delete("finding_bundles", null, null);db.delete("browser_imports",null,null);
             db.setTransactionSuccessful();
         } finally { db.endTransaction(); }
-        removeLocalPhotos(files); CHANGES.incrementAndGet();
+        removeLocalPhotos(files); BrowserProject.clearLocal(context);CHANGES.incrementAndGet();
     }
     private void removeLocalPhotos(List<FindingPhoto> photos) {
         for (FindingPhoto photo : photos) PhotoFiles.localFile(context, photo.filename()).delete();
