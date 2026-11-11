@@ -1,6 +1,8 @@
 # Fundstellen am Computer bearbeiten · ab 0.15.0
 
-**Neu in 0.16.0:** [Bündelangaben vergleichen und sicher speichern](BUENDEL-ANGABEN.md). Der Browser bietet **Änderungen übernehmen**, einen Vergleich nur bei abweichenden gemeinsamen Angaben und eindeutige Exportnamen.
+**Neu in 0.17.0:** [Dauerhafte Bündel, Kartenklicks und Messbasis](BUENDEL-SPEICHERUNG.md).
+
+**Seit 0.16.0:** [Bündelangaben vergleichen und sicher speichern](BUENDEL-ANGABEN.md). Der Browser bietet **Änderungen übernehmen**, einen Vergleich nur bei abweichenden gemeinsamen Angaben und eindeutige Exportnamen.
 
 **Kartenkorrektur 0.15.1:** Zeigt eine bisherige Datei „403 – Access blocked“, öffne sie im [korrigierten Browsereditor](BROWSER-KARTENFEHLER.md). Dafür musst du weder neu aufzeichnen noch erneut vom Handy exportieren.
 
@@ -20,7 +22,7 @@ Nach einem erfolgreichen Rückimport für jede weitere Bearbeitungsrunde **eine 
 
 ## Karte und Übersicht
 
-Die zoombare Karte verwendet seit **0.15.1 OpenFreeMap mit OpenStreetMap-Daten**, dargestellt durch die eingebettete Bibliothek MapLibre GL JS. Ein Klick auf einen Punkt öffnet die zugehörigen Angaben. Nummern entsprechen den ursprünglichen Messungsnummern; **×** bezeichnet ein Bündel. Überlappende Punkte öffnen eine Auswahl. Ein grüner Haken zeigt eine vollständig freigegebene Fundstelle. Suchfeld und Statusfilter wirken auf Liste und Karte. Große Listen werden zunächst in Portionen von 200 Stellen angezeigt.
+Die zoombare Karte verwendet seit **0.15.1 OpenFreeMap mit OpenStreetMap-Daten**, dargestellt durch die eingebettete Bibliothek MapLibre GL JS. Ein Klick auf einen Punkt öffnet die zugehörigen Angaben. Ein bestätigtes Bündel erscheint als eine Fundstelle mit der kleinsten enthaltenen Messungsnummer. Die Originale bleiben innerhalb der Fundstelle einsehbar. Überlappende Punkte öffnen eine Auswahl. Ein grüner Haken zeigt eine vollständig freigegebene Fundstelle. Suchfeld und Statusfilter wirken auf Liste und Karte. Große Listen werden zunächst in Portionen von 200 Stellen angezeigt.
 
 Die letzte Fahrtspur lässt sich ein- und ausblenden. Bei einer ausgewählten Stelle erscheint der GPS-Genauigkeitskreis. **Alle Stellen** zeigt den gefilterten Überblick; **Auswahl** zentriert die ausgewählte Stelle. Verschieben und Zoomen ändern keine Koordinaten. Als Lagebasis dienen die gespeicherten Messpunkte, nicht der Rand des Genauigkeitskreises. Bei Bündeln wird der Mitgliedspunkt mit der besten angegebenen GPS-Genauigkeit dargestellt.
 
@@ -33,7 +35,7 @@ Der Straßenkarten-Schalter steuert ausschließlich den Hintergrund. Nur der Kar
 - Art der Unebenheit und Beschreibung / Notiz.
 - Alle zusätzlichen Gefährdungsmerkmale sowie manuelle Verkehrsfläche und Oberfläche. **Automatisch / Exportstand** nutzt die beim Export vorhandenen OSM-Angaben. Der Browser führt keine neue Overpass-Abfrage durch.
 - Fotos ergänzen, ansehen und aus der gemeinsamen Galerie entfernen. Neue Fotos werden lokal verkleinert und als neue JPEG-Kopie gespeichert. Android bereitet sie beim Import nochmals auf; ursprüngliche EXIF-Orts-/Zeitangaben werden nicht übernommen. Sichtbare Bildinhalte bleiben zu prüfen.
-- Messungen derselben Stelle über die Auswahlkästchen bündeln oder eine bestehende Bündelung auflösen. Widersprüchliche bekannte Arten und manuelle Belagsangaben verlangen einen gemeinsamen Wert. Die gemeinsame Galerie bietet fünf Fotoplätze je enthaltener Messung; vorhandene Galerien bleiben nach dem Auflösen erhalten.
+- Messungen derselben Stelle über **Auf Karte bündeln** oder die Auswahlkästchen bündeln oder eine bestehende Bündelung auflösen. Widersprüchliche bekannte Arten und manuelle Belagsangaben verlangen einen gemeinsamen Wert. Die gemeinsame Galerie bietet fünf Fotoplätze je enthaltener Messung; vorhandene Galerien bleiben nach dem Auflösen erhalten.
 - Tatsächlich vor Ort gemessene Höhe, individuelle Freigabe und Bezirkszuordnung je Messung. Die App berechnet keine Höhe aus der Erschütterung.
 - Einzelne Stellen oder die Auswahl löschen, Löschungen rückgängig machen und gelöschte Einträge über den Filter als Einzelmessung wiederherstellen. Dabei werden die ursprünglichen Angaben und die noch in der Datei enthaltenen Fotos übernommen. Eine Browserlöschung wirkt erst nach bestätigtem Rückimport auf das Handy.
 
@@ -47,7 +49,7 @@ Nach dem Export kannst du auf dem Handy weiter aufzeichnen. Neu hinzugekommene M
 
 Die App vergleicht Ausgangskopie, Browserbearbeitung und aktuellen Handystand. Nur auf dem Handy geänderte Angaben bleiben erhalten; nur im Browser geänderte Angaben können übernommen werden. Wurde dieselbe Stelle auf beiden Seiten verändert, zeigt die Vorschau beide Stände und verlangt ausdrücklich **Handy beibehalten** oder **Browser übernehmen**. Fotos beider Stände lassen sich in der Konfliktprüfung ansehen. Es gibt keine vorausgewählte Konfliktlösung.
 
-Die Entscheidung gilt für die gesamte zusammenhängende Gruppe, auch wenn nur unterschiedliche Felder bearbeitet wurden. Das erhält gemeinsame Bündelangaben. Beim Umgruppieren können später hinzugekommene Handymessungen aus dem alten Bündel getrennt werden; ihre Daten bleiben erhalten. Ändert sich der Handystand nach der Vorschau erneut, bricht die Übernahme ab und verlangt eine neue Prüfung.
+Die Entscheidung wird für die gesamte zusammenhängende Gruppe getroffen. Bei reinen Beschreibungsänderungen bleiben die aktuelle Handygruppierung, neue Mitglieder und neue Handyfotos erhalten; geänderte gemeinsame Browserfelder gelten für alle aktuellen Mitglieder. Ausdrücklich im Browser aufgelöste Bündel können getrennt werden. Würde eine neue Browserbündelung einen Teil eines inzwischen erweiterten Handybündels unbeabsichtigt herauslösen, verlangt die App einen frischen Export. [Details](BUENDEL-SPEICHERUNG.md). Ändert sich der Handystand nach der Vorschau erneut, bricht die Übernahme ab und verlangt eine neue Prüfung.
 
 Vor jeder tatsächlichen Übernahme legt die App eine vollständige lokale HTML-Sicherung an. **Letzten Import rückgängig machen** stellt deren Messungen einschließlich gelöschter Einträge wieder her und sichert vorher wiederum den aktuellen Stand. Später neu erfasste Messungen und die aktuelle Fahrtspur bleiben dabei erhalten. **Letzte Importsicherung speichern** kopiert die Sicherung an einen selbst gewählten Ort. Bis zu drei interne HTML-Sicherungen bleiben erhalten. **Alle Fundstellen löschen**, Deinstallation oder das Löschen der App-Daten entfernt auch interne Importsicherungen; externe Dateien bleiben eigenständige Kopien.
 
@@ -61,7 +63,7 @@ Für den Rückimport liest Android ausschließlich den eingebetteten Datenblock 
 
 ## Prüfstand
 
-390 automatisierte Android-Prüfungen bestehen, einschließlich Export aller Datenfelder, Konflikten, neuen Handymessungen, gemeinsamen Fotos, Löschungen, Rücknahme, Metadatenbereinigung und Datenbankmigration auf Schema 9. Android-Build und Lint sind geprüft. Lint enthält keine Fehler; zwei ältere Hinweise betreffen die Annotation-Abhängigkeit und einen Kartenkonstruktor.
+405 automatisierte Android-Prüfungen bestehen, einschließlich Export aller Datenfelder, Konflikten, neuen Handymessungen, gemeinsamen Fotos, Löschungen, Rücknahme, Metadatenbereinigung und Datenbankmigration auf Schema 9. Android-Build und Lint sind geprüft. Lint enthält keine Fehler; zwei ältere Hinweise betreffen die Annotation-Abhängigkeit und einen Kartenkonstruktor.
 
 Zusätzlich wurde eine tatsächliche Android-Projektdatei in Chromium bearbeitet, mit neuem Foto und Bündelung gespeichert und die gespeicherte Datei erfolgreich in Android zurückimportiert. Messwerte, nachträgliche Handymessungen und Spur blieben erhalten. Die Browserprüfung enthält auch Dateiauswahl, Kartenbedienung, Suche, Lösch-Rücknahme und das erneute Öffnen der gespeicherten Daten.
 

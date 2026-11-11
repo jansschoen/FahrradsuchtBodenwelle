@@ -122,7 +122,7 @@ public final class MainActivity extends Activity {
             int count = store.count();
             if (displayedRunning != RecordingService.running || (selectedTab == FINDINGS
                     && (count != displayedCount || displayedRevision != store.revision()))) render();
-            if (rideCount != null) rideCount.setText(getResources().getQuantityString(R.plurals.finding_count, count, count));
+            if (rideCount != null){int places=store.placeCount();rideCount.setText(getResources().getQuantityString(R.plurals.finding_count,places,places));}
             if (lastAction != null) {
                 lastAction.setText(RecordingService.lastAction);
                 lastAction.setVisibility(RecordingService.lastAction.isEmpty() ? View.GONE : View.VISIBLE);
@@ -216,7 +216,7 @@ public final class MainActivity extends Activity {
             equalWidth(mark); equalWidth(startButton);
         }
         startButton.setId(R.id.ride_start_button);
-        rideCount = addText(ride, getResources().getQuantityString(R.plurals.finding_count, displayedCount, displayedCount), 14, GREEN, true);
+        int places=store.placeCount();rideCount = addText(ride, getResources().getQuantityString(R.plurals.finding_count, places, places), 14, GREEN, true);
         lastAction = addText(ride, RecordingService.lastAction, 14, INK, false);
         lastAction.setVisibility(RecordingService.lastAction.isEmpty() ? View.GONE : View.VISIBLE);
         LinearLayout mapCard = card(content);
@@ -234,7 +234,8 @@ public final class MainActivity extends Activity {
         long reviewed = bundles.stream().mapToLong(FindingBundle::reviewedCount).sum();
         int count = bundles.stream().mapToInt(b -> b.observations().size()).sum();
         addText(content, "Fundstellen", 30, INK, true);
-        addText(content, (count - reviewed) + " offen · " + reviewed + " freigegeben", 15, GREEN, true);
+        addText(content,getResources().getQuantityString(R.plurals.finding_count,bundles.size(),bundles.size())+" · Messungen: "+count,15,GREEN,true);
+        addText(content, "Messungen: "+(count - reviewed) + " offen · " + reviewed + " freigegeben", 14, GREEN, false);
         if (displayedRunning) addText(content, "Die Fahrt läuft weiter. Bitte nur im sicheren Stand prüfen.", 14, INK, false);
         if (count == 0) {
             LinearLayout empty = card(content);
@@ -276,6 +277,8 @@ public final class MainActivity extends Activity {
             addText(item, state + (nearKeys.contains(bundle.key()) ? " · zusammenfassbar" : ""), 13, GREEN, true);
             if (SharedFindingDetails.from(bundle.observations()).conflicting()) addText(item, "Gemeinsame Angaben prüfen", 14, GREEN, true);
             addText(item, bundle.title(), 20, INK, true);
+            addText(item,bundle.placeLabel()+(bundle.observations().size()>1?" · bestätigtes Bündel":""),15,GREEN,true);
+            TextView evidence=addText(item,bundle.evidence().label(),13,GREEN,true);evidence.setOnClickListener(v->new AlertDialog.Builder(this).setTitle("Messbasis").setMessage(bundle.evidence().explanation()).setPositiveButton("Schließen",null).show());
             addText(item, bundle.referenceLabel(), 14, GREEN, true);
             addText(item, DATE.format(Instant.ofEpochMilli(f.timeMillis()))
                     + (bundle.observations().size() > 1 ? " · " + bundle.observations().size() + " Beobachtungen" : ""), 14, INK, false);
@@ -310,6 +313,7 @@ public final class MainActivity extends Activity {
         Finding f = bundle.representative();
         LinearLayout details = column(); details.setPadding(dp(20), dp(8), dp(20), dp(12));
         addText(details, bundle.title(), 20, INK, true);
+        addText(details,bundle.placeLabel()+"\n"+bundle.evidence().explanation(),14,GREEN,false);
         addText(details, bundle.referenceLabel() + "\nMessdetails: #" + f.id(), 14, GREEN, true);
         if (!f.note().isEmpty()) addText(details, f.note(), 16, INK, false);
         if (bundle.observations().size() > 1) addText(details, bundle.observations().size() + " Beobachtungen · "

@@ -233,6 +233,7 @@ public final class FindingStore extends SQLiteOpenHelper {
         }
     }
 
+    public int placeCount(){try(Cursor row=getReadableDatabase().rawQuery("SELECT COUNT(*) FROM (SELECT COALESCE(bundle_id,-id) AS place FROM findings GROUP BY place)",null)){row.moveToFirst();return row.getInt(0);}}
     public void review(long id,String category,String note,boolean reviewed) {
         Finding f=get(id);if(f!=null)review(id,category,note,reviewed,f.details());
     }

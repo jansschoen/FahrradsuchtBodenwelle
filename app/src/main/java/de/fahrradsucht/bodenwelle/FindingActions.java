@@ -123,6 +123,7 @@ public final class FindingActions {
             android.widget.TextView hint = new android.widget.TextView(activity); hint.setText(R.string.bundle_shared_hint);
             hint.setTextSize(15); form.root.addView(hint, 0);
         }
+        android.widget.TextView basis=new android.widget.TextView(activity);basis.setText(EvidenceScore.from(store.observations(f.bundleKey())).label());basis.setTextSize(14);form.root.addView(basis,0);
         final Finding edited = f;
         activePhotoPanel = new PhotoPanel(activity, store, f.id(), new PhotoPanel.Actions() {
             @Override public void pick(long id) { pickPhoto(id); }
@@ -130,11 +131,11 @@ public final class FindingActions {
         });
         PhotoPanel panel = activePhotoPanel;
         form.photos.addView(panel.root);
-        ScrollView scroll = new ScrollView(activity); scroll.addView(form.root);
+        ScrollView scroll = FormDialog.content(activity,form.root);
         AlertDialog dialog = new AlertDialog.Builder(activity).setTitle(place?"Gemeinsame Fundstelle bearbeiten":"Messung #"+f.id()+" prüfen").setView(scroll)
                 .setNegativeButton("Abbrechen", null)
                 .setNeutralButton("Löschen", (d,w)->{if(place)deleteObservation(edited);else confirmDelete(edited);})
-                .setPositiveButton(place?"Für alle speichern":"Speichern", null).create();
+                .setPositiveButton("Speichern", null).create();
         dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             try {
                 if(place)store.reviewPlace(edited.id(),form.category(),form.note.getText().toString().trim(),form.details(edited),form.releaseScope.getSelectedItemPosition());
@@ -145,7 +146,7 @@ public final class FindingActions {
         Runnable refresh=new Runnable(){@Override public void run(){if(dialog.isShowing()&&!activity.isDestroyed()&&!activity.isFinishing()){Finding latest=store.get(edited.id());if(latest!=null)form.refreshAutomatic(latest,store.observations(latest.bundleKey()));handler.postDelayed(this,1000);}}};
         dialog.setOnDismissListener(d -> {handler.removeCallbacks(refresh);if (activePhotoPanel == panel) activePhotoPanel = null;});
         form.measurements.setOnClickListener(v->{dialog.dismiss();chooseObservation(edited);});
-        dialog.show();handler.postDelayed(refresh,1000);
+        dialog.show();FormDialog.prepare(dialog);dialog.getButton(AlertDialog.BUTTON_POSITIVE).setId(R.id.finding_save);handler.postDelayed(refresh,1000);
     }
 
     private void pickPhoto(long id) {

@@ -37,12 +37,13 @@ public final class BundleActivity extends Activity {
         ScrollView scroll = new ScrollView(this); scroll.setBackgroundColor(0xfff4f7f5);
         content = new LinearLayout(this); content.setOrientation(LinearLayout.VERTICAL);
         content.setPadding(dp(20), dp(16), dp(20), dp(24)); scroll.addView(content);
-        if (Build.VERSION.SDK_INT >= 30) content.setOnApplyWindowInsetsListener((v, insets) -> {
+        LinearLayout page=new LinearLayout(this);page.setOrientation(LinearLayout.VERTICAL);page.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));LinearLayout footer=new LinearLayout(this);footer.setOrientation(LinearLayout.VERTICAL);footer.setPadding(dp(16),dp(8),dp(16),dp(8));footer.setBackgroundColor(0xffffffff);page.addView(footer);
+        if (Build.VERSION.SDK_INT >= 30) page.setOnApplyWindowInsetsListener((v, insets) -> {
             android.graphics.Insets b = insets.getInsets(WindowInsets.Type.systemBars());
-            v.setPadding(dp(20) + b.left, dp(16) + b.top, dp(20) + b.right, dp(24) + b.bottom); return insets;
+            v.setPadding(b.left,b.top,b.right,b.bottom); return insets;
         });
         scroll.setOnScrollChangeListener((v,x,y,oldx,oldy)->previews.forEach(SuggestionMapPreview::updateVisibility));
-        setContentView(scroll); button(content, "Zurück", this::finish);
+        setContentView(page); button(content, "Zurück", this::finish);
         text(content, "Mehrfachtreffer bündeln", 26, true);
         text(content, "Dieselbe Unebenheit mehrfach gemessen? Vergleiche die nummerierten Messungen und bestätige die passenden Fundstellen. Originale, Freigaben und Fotos bleiben erhalten.", 16, false);
         List<FindingBundle> all = store.bundles();
@@ -70,30 +71,39 @@ public final class BundleActivity extends Activity {
         }
         text(content, "Fundstellen selbst auswählen", 20, true);
         text(content, "Auch für ungenaues GPS geeignet. Die Bestätigung zeigt nochmals alle Nummern und den größten Abstand.", 14, false);
-        List<Long> keys = new ArrayList<>(); List<CheckBox> boxes = new ArrayList<>();
+        List<Long> keys = new ArrayList<>(); List<CheckBox> boxes = new ArrayList<>();Button[] mergeButton={null};
         for (FindingBundle bundle : all) {
             LinearLayout item = card();
             CheckBox chosen = new CheckBox(this);
             chosen.setText(getString(R.string.bundle_choice, bundle.title(), bundle.referenceLabel())); chosen.setTextSize(16); chosen.setTextColor(INK);
             item.addView(chosen); keys.add(bundle.key()); boxes.add(chosen);
+            chosen.setOnCheckedChangeListener((v,checked)->{if(mergeButton[0]!=null){int n=(int)boxes.stream().filter(CheckBox::isChecked).count();mergeButton[0].setEnabled(n>=2);mergeButton[0].setText(getString(R.string.bundle_selection_count,n));}});
             observationRows(item, bundle);
             if (bundle.observations().size() > 1) button(item, "Diese Bündelung auflösen", () -> new AlertDialog.Builder(this)
                     .setTitle("Beobachtungen wieder einzeln anzeigen?").setMessage("Alle Messungen und Fotos bleiben erhalten.")
                     .setNegativeButton("Abbrechen", null).setPositiveButton("Auflösen", (d, w) -> { store.separateBundle(bundle.key()); render(); }).show());
         }
-        button(content, "Ausgewählte Fundstellen bündeln", () -> {
+        mergeButton[0]=button(footer, "Ausgewählte Fundstellen bündeln", () -> {
             List<Long> selected = new ArrayList<>();
             for (int i = 0; i < keys.size(); i++) if (boxes.get(i).isChecked()) selected.add(keys.get(i));
             confirm(selected);
-        }).setId(R.id.bundle_merge);
+        });mergeButton[0].setId(R.id.bundle_merge);mergeButton[0].setEnabled(false);mergeButton[0].setText(getString(R.string.bundle_selection_count,0));
         scroll.post(()->previews.forEach(p->p.active(true)));
     }
     private void observationRows(LinearLayout parent, FindingBundle bundle) {
+        LinearLayout rows=parent;
+        if(bundle.confirmed()) {
+            text(parent,bundle.placeLabel()+" · "+bundle.evidence().label(),14,true);
+            rows=new LinearLayout(this);rows.setOrientation(LinearLayout.VERTICAL);rows.setVisibility(android.view.View.GONE);
+            LinearLayout originals=rows;
+            Button toggle=button(parent,"Einzelmessungen anzeigen ("+bundle.observations().size()+")",()->{boolean show=originals.getVisibility()!=android.view.View.VISIBLE;originals.setVisibility(show?android.view.View.VISIBLE:android.view.View.GONE);});
+            toggle.setContentDescription("Originalmessungen für "+bundle.placeLabel()+" ein- oder ausblenden");parent.addView(rows);
+        }
         for (Finding f : bundle.observations()) {
-            TextView title = text(parent, "#" + f.id() + "   " + (f.reviewed() ? "✓ Freigegeben" : "○ Offen"), 16, true);
+            TextView title = text(rows, "#" + f.id() + "   " + (f.reviewed() ? "✓ Freigegeben" : "○ Offen"), 16, true);
             title.setTextColor(GREEN);
             String measured = f.peak() == null ? "Manuell markiert" : String.format(Locale.GERMANY, "Sensorreaktion: %.1f m/s²", f.peak());
-            text(parent, DATE.format(Instant.ofEpochMilli(f.timeMillis())) + "\n" + measured
+            text(rows, DATE.format(Instant.ofEpochMilli(f.timeMillis())) + "\n" + measured
                     + String.format(Locale.GERMANY, " · GPS ± %.0f m", f.accuracy()), 14, false);
         }
     }

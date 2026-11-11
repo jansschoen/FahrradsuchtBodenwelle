@@ -1,4 +1,6 @@
-# Bündelangaben vergleichen und sicher speichern · 0.16.0
+# Bündelangaben vergleichen und sicher speichern · ab 0.16.0
+
+**Ergänzung 0.17.0:** [Dauerhafte Bündel, sichtbare Speichertasten, Kartenklicks und Messbasis](BUENDEL-SPEICHERUNG.md).
 
 ## Vergleich nur bei unterschiedlichen gemeinsamen Angaben
 
@@ -13,7 +15,7 @@ Die vollständigen gemeinsamen Werte sind sichtbar und bearbeitbar, auch wenn nu
 
 **Fotos werden immer vereinigt**, auch bei Auswahl einer Quelle. Gleiche vorhandene Fotozuordnungen zählen nur einmal. Beschreibung, Art, Belag, Gefährdungsmerkmale und Galerie gelten anschließend bei allen Bündelmitgliedern. Höhen, Sensorwerte, ursprüngliche Positionen, Zeitpunkte, Bezirke und individuelle Freigaben bleiben erhalten.
 
-Erst **Bündeln & übernehmen** bestätigt das Ergebnis. Abbrechen verändert keine Bündelung oder Beschreibung. Haben sich die ausgewählten Handydaten während der Prüfung geändert, verlangt die App einen erneuten Vergleich. Das verhindert das Überschreiben neuerer Angaben.
+Erst **Bündel speichern** (App) beziehungsweise **Bündeln & übernehmen** (Browser) bestätigt das Ergebnis. Abbrechen verändert keine Bündelung oder Beschreibung. Haben sich die ausgewählten Handydaten während der Prüfung geändert, verlangt die App einen erneuten Vergleich. Das verhindert das Überschreiben neuerer Angaben.
 
 ## Änderungen im Browser übernehmen und als Datei sichern
 
@@ -25,7 +27,7 @@ Eingaben bleiben zunächst im Formular. **Änderungen übernehmen** übernimmt s
 
 **Rückgängig / Wiederholen** behandelt eine Übernahme als einen gemeinsamen Schritt. Bei älteren, noch uneinheitlichen Bündeln verlangt **Gemeinsame Angaben abgleichen** eine ausdrückliche Vereinheitlichung, bevor normale gemeinsame Bearbeitung möglich ist.
 
-In der App schreibt **Für alle speichern** die gemeinsame Bearbeitung direkt in den lokalen Speicher. Für die spätere Browserbearbeitung wird wie bisher eine Projektdatei exportiert.
+In der App schreibt **Speichern** die gemeinsame Bearbeitung direkt in den lokalen Speicher. Für die spätere Browserbearbeitung wird wie bisher eine Projektdatei exportiert.
 
 ## Eindeutige Dateinamen
 
@@ -41,12 +43,12 @@ Auch unmittelbar aufeinanderfolgende Speichervorgänge schlagen verschiedene Nam
 
 ## Vorhandene Projekte öffnen
 
-Den [Browsereditor 0.16.0 als ZIP herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-Browser-0.16.0.zip), entpacken, **Bodenwelle-Browser.html** öffnen und über **Projektdatei öffnen** die bisherige gespeicherte HTML-Datei auswählen. Ihre Messungen, Fotos und Bearbeitungen bleiben erhalten. Ein erneuter Handyexport ist dafür nicht erforderlich. App 0.16.0 als Update installieren, ohne vorher zu deinstallieren.
+Den [Browsereditor 0.17.0 als ZIP herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-Browser-0.17.0.zip), entpacken, **Bodenwelle-Browser.html** öffnen und über **Projektdatei öffnen** die bisherige gespeicherte HTML-Datei auswählen. Ihre Messungen, Fotos und Bearbeitungen bleiben erhalten. Ein erneuter Handyexport ist dafür nicht erforderlich. App 0.17.0 als Update installieren, ohne vorher zu deinstallieren.
 
 Die OSM-basierte OpenFreeMap-Karte aus 0.15.1 bleibt enthalten. Der Straßenhintergrund braucht Internet und WebGL; Daten und Bearbeitung bleiben ohne Hintergrund verfügbar.
 
 ## Prüfung und Grenzen
 
-390 automatisierte Android-Prüfungen decken unter anderem die kurze Bestätigung trotz unterschiedlicher Einzelhöhen/Freigaben, Quellenwahl, Abbruch, gemeinsame Fotoübernahme, Schutz vor veralteten Vorschauen und eindeutige Android-Dateinamen ab. Die Browserprüfungen testen das Übernehmen für alle Mitglieder, letzte Texteingaben ohne Fokuswechsel, Download und erneutes Öffnen, Quellenwahl, Abbruch, gleiche Angaben, uneinheitliche Altbündel und neue eindeutige Dateinamen. Eine tatsächlich gespeicherte Datei wird in Android zurückimportiert und dort auf gemeinsame Beschreibung, Belag und Gefährdungsmerkmale sowie erhaltene neue Handymessungen, Rohwerte und Spur geprüft.
+405 automatisierte Android-Prüfungen decken unter anderem die kurze Bestätigung trotz unterschiedlicher Einzelhöhen/Freigaben, Quellenwahl, Abbruch, gemeinsame Fotoübernahme, Schutz vor veralteten Vorschauen und eindeutige Android-Dateinamen ab. Die Browserprüfungen testen das Übernehmen für alle Mitglieder, letzte Texteingaben ohne Fokuswechsel, Download und erneutes Öffnen, Quellenwahl, Abbruch, gleiche Angaben, uneinheitliche Altbündel und neue eindeutige Dateinamen. Eine tatsächlich gespeicherte Datei wird in Android zurückimportiert und dort auf gemeinsame Beschreibung, Belag und Gefährdungsmerkmale sowie erhaltene neue Handymessungen, Rohwerte und Spur geprüft.
 
 Direkte `file://`-Navigation und die Live-Verbindung zu OpenFreeMap sind in der Cloud durch Browser-/Netzwerkrichtlinien blockiert. Die Browserprüfungen rendern denselben HTML-Inhalt als Testdokument; die Kartenprüfung verwendet den echten WebGL-Renderer mit künstlichen Antworten. Reales Fairphone, Firefox und Safari bleiben praktische Prüfungen. [Prüfkommandos](../tools/browser/README.md).

@@ -20,6 +20,9 @@ public record FindingBundle(long key, List<Finding> observations) {
         return observations.stream().map(f->Classification.label(Classification.BUMPS,f.category())).distinct().collect(java.util.stream.Collectors.joining(" / "));
     }
     public boolean confirmed() { return key > 0; }
+    public long referenceId(){return observations.stream().mapToLong(Finding::id).min().orElse(0);}
+    public String placeLabel(){return "Fundstelle #"+referenceId();}
+    public EvidenceScore evidence(){return EvidenceScore.from(observations);}
     /** Stable local IDs survive editing, bundling, splitting and subsequent rides. */
     public String references() { return references(observations); }
     public String referenceLabel() { return (observations.size() == 1 ? "Messung " : "Messungen ") + references(); }

@@ -29,6 +29,9 @@
     <item name="photo_capture" type="id" />
     <item name="bundle_open" type="id" />
     <item name="bundle_merge" type="id" />
+    <item name="bundle_save" type="id" />
+    <item name="finding_save" type="id" />
+    <item name="edit_form_scroll" type="id" />
     <item name="location_accuracy" type="id" />
     <item name="ride_start_status" type="id" />
     <item name="ride_start_button" type="id" />

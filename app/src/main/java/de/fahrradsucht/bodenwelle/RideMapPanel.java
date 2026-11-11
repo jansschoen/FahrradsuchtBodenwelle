@@ -253,14 +253,14 @@ public final class RideMapPanel extends LinearLayout {
             Finding finding = cluster.representative(); Marker marker = new Marker(map);
             marker.setPosition(new GeoPoint(finding.latitude(), finding.longitude()));
             marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
-            String label = cluster.count() == 1 ? "#" + finding.id() : "×" + cluster.count();
+            String label = cluster.bundles().size()==1?"#"+cluster.bundles().get(0).referenceId():"×"+cluster.bundles().size();
             boolean marked = cluster.bundles().stream().anyMatch(b -> selected.contains(b.key()));
             int releasedCount=(int)cluster.bundles().stream().mapToLong(FindingBundle::reviewedCount).sum();
             int preparedCount=(int)cluster.bundles().stream().filter(b->!SharedFindingDetails.from(b.observations()).conflicting()).mapToLong(FindingBundle::reviewedCount).sum();
             marker.setIcon(new FindingMarkerBadge(getResources(),label,cluster.intensity(),marked,preparedCount,cluster.count()));
             marker.setRelatedObject(cluster);
             boolean released = preparedCount==cluster.count();
-            marker.setTitle((released ? "Geprüfte Fundstelle" : "Fundstelle mit offenen Beobachtungen")
+            marker.setTitle((cluster.bundles().size()==1?cluster.bundles().get(0).placeLabel():cluster.bundles().size()+" nahe Fundstellen")+" · "+cluster.count()+" Messung(en) · "+(released ? "geprüft" : "teilweise offen")
                     + " · " + releasedCount+"/"+cluster.count()+" freigegeben" + (marked ? " · ausgewählt" : ""));
             marker.setSnippet(cluster.bundles().stream().map(FindingBundle::references).collect(java.util.stream.Collectors.joining(", ")));
             marker.setOnMarkerClickListener((m, view) -> {

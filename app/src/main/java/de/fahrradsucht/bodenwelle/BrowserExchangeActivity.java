@@ -55,7 +55,7 @@ public final class BrowserExchangeActivity extends Activity {
         try(FindingStore store=new FindingStore(this)){BrowserMerge merge=new BrowserMerge(BrowserSnapshot.edits(next.base),next.edits,BrowserSnapshot.currentEdits(store));if(loaded!=null)loaded.close();loaded=next;plan=merge;handler.post(()->showPreview(restored));}catch(Exception e){next.close();throw e;}});}
     private void showPreview(Bundle restored){if(closed)return;preview.removeAllViews();choices.clear();
         text(preview,"Rückimport prüfen",22);text(preview,plan.parts.size()+" betroffene Stelle(n) / verbundene Gruppen · "+plan.conflicts()+" Konflikt(e). Neue Handymessungen und die aktuelle Fahrtspur bleiben erhalten.",15);
-        text(preview,"Konflikte werden für zusammenhängende Bündel gemeinsam entschieden. „Browser“ kann auch Löschungen oder das Wiederherstellen einer am Handy gelöschten Messung umfassen. Bei geänderter Bündelung bleiben später hinzugekommene Handymessungen erhalten und werden gegebenenfalls getrennt.",14);
+        text(preview,"Konflikte werden für zusammenhängende Bündel gemeinsam entschieden. „Browser“ kann auch Löschungen oder Wiederherstellungen umfassen. Bei reinen Beschreibungsänderungen bleiben die aktuelle Handygruppierung und neue Mitglieder erhalten; geänderte gemeinsame Angaben gelten für alle. Nur ausdrücklich aufgelöste Bündel werden getrennt. Bei einer sonst drohenden Teilabtrennung wird ein aktueller Export verlangt.",14);
         for(BrowserMerge.Part part:plan.parts)if(part.conflict()) {
             text(preview,"Messungen #"+String.join(", #",part.ids()),18);text(preview,"HANDY\n"+part.phone()+"\n\nBROWSER\n"+part.browser(),14);
             Map<String,File> phonePhotos=new LinkedHashMap<>(),browserPhotos=new LinkedHashMap<>();

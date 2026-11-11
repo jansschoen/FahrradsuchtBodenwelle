@@ -112,4 +112,33 @@ public class BrowserExchangeTest {
         try(var loaded=BrowserProject.load(app,edited(file,p));FindingStore s=new FindingStore(app)){BrowserMerge plan=new BrowserMerge(BrowserSnapshot.edits(loaded.base),loaded.edits,BrowserSnapshot.currentEdits(s));BrowserDatabase.apply(app,loaded,plan.chosen(Map.of()),plan.fingerprint,backup);}
         app.getSharedPreferences("browser_projects",0).edit().remove("backup").commit();assertEquals(backup,BrowserProject.lastBackup(app));
     }
+    @Test public void descriptionImportKeepsTheWholePhoneBundleIncludingNewMembersPhotosAndItsIdentity()throws Exception {
+        long a,b;try(FindingStore s=new FindingStore(app)){a=add(s,52.52);b=add(s,52.52001);PhotoFiles.importStream(app,new ByteArrayInputStream(jpeg()),a);s.mergeBundles(List.of(-a,-b));}
+        File file=BrowserProject.create(app);JSONObject data=payload(file);for(String id:List.of(""+a,""+b))data.getJSONObject("edits").getJSONObject(id).put("note","Gemeinsam am Computer geprüft");
+        long newer,bundle;Finding raw;
+        try(FindingStore s=new FindingStore(app)){newer=add(s,52.52002);s.review(newer,"root_heave","Alte Notiz",false);PhotoFiles.importStream(app,new ByteArrayInputStream(jpeg()),newer);bundle=s.mergeBundles(List.of(s.get(a).bundleKey(),-newer));raw=s.get(newer);}
+        try(var loaded=BrowserProject.load(app,edited(file,data));FindingStore s=new FindingStore(app)){BrowserMerge plan=new BrowserMerge(BrowserSnapshot.edits(loaded.base),loaded.edits,BrowserSnapshot.currentEdits(s));assertEquals(1,plan.conflicts());BrowserDatabase.apply(app,loaded,plan.chosen(Map.of(plan.parts.get(0).key(),true)),plan.fingerprint);}
+        try(FindingStore s=new FindingStore(app)){assertEquals(1,s.bundles().size());assertEquals(bundle,s.get(a).bundleId());assertEquals(bundle,s.get(b).bundleId());assertEquals(bundle,s.get(newer).bundleId());assertEquals(3,s.bundles().get(0).observations().size());for(Finding f:s.all()){assertEquals("Gemeinsam am Computer geprüft",f.note());assertEquals(2,s.photos(f.id()).size());}assertEquals(raw.position(),s.get(newer).position());assertEquals(raw.timeMillis(),s.get(newer).timeMillis());assertEquals(raw.reviewed(),s.get(newer).reviewed());}
+        File next=BrowserProject.create(app);JSONObject round=payload(next);for(String id:BrowserMerge.keys(round.getJSONObject("edits")))round.getJSONObject("edits").getJSONObject(id).put("note","Zweite Bearbeitungsrunde");
+        try(var loaded=BrowserProject.load(app,edited(next,round))){apply(loaded,Map.of());}
+        try(FindingStore s=new FindingStore(app)){assertEquals(1,s.bundles().size());assertEquals(bundle,s.get(a).bundleId());assertEquals(3,s.observations(bundle).size());}
+    }
+    @Test public void deletingOnlyOneMemberKeepsTheConfirmedPlaceAndItsId()throws Exception {
+        long a,b,bundle;try(FindingStore store=new FindingStore(app)){a=add(store,52.52);b=add(store,52.52001);bundle=store.mergeBundles(List.of(-a,-b));}
+        File file=BrowserProject.create(app);JSONObject p=payload(file);p.getJSONObject("edits").put(""+a,JSONObject.NULL);
+        try(var loaded=BrowserProject.load(app,edited(file,p))){apply(loaded,Map.of());}
+        try(FindingStore store=new FindingStore(app)){assertNull(store.get(a));assertEquals(bundle,store.get(b).bundleId());assertEquals(1,store.placeCount());}
+    }
+    @Test public void localGroupNamesAreNotChangesWhenMembershipsMatch()throws Exception {
+        JSONObject row=new JSONObject("{category:'other',note:'',hazards:0,traffic:null,surface:null,heightMm:null,reviewed:false,district:'',photos:[],group:'b1'}"),base=new JSONObject(),phone=new JSONObject();
+        base.put("1",new JSONObject(row.toString()));base.put("2",new JSONObject(row.toString()));row.put("group","b17");phone.put("1",new JSONObject(row.toString()));phone.put("2",new JSONObject(row.toString()));
+        BrowserMerge unchanged=new BrowserMerge(base,phone,phone);assertTrue(unchanged.parts.isEmpty());
+        JSONObject browser=new JSONObject(base.toString());browser.getJSONObject("1").put("note","Neu");browser.getJSONObject("2").put("note","Neu");BrowserMerge plan=new BrowserMerge(base,browser,phone);assertEquals(0,plan.conflicts());JSONObject chosen=plan.chosen(Map.of());assertEquals("b17",chosen.getJSONObject("1").getString("group"));
+    }
+    @Test public void aNewBrowserMergeCannotSilentlyDetachAnUnexportedPhoneMember()throws Exception {
+        long a,b,c,bundle;try(FindingStore store=new FindingStore(app)){a=add(store,52.52);b=add(store,52.52001);}File file=BrowserProject.create(app);JSONObject p=payload(file);String group="g-"+UUID.randomUUID();for(long id:List.of(a,b))p.getJSONObject("edits").getJSONObject(""+id).put("group",group);
+        try(FindingStore store=new FindingStore(app)){c=add(store,52.52002);bundle=store.mergeBundles(List.of(-a,-c));}
+        try(var loaded=BrowserProject.load(app,edited(file,p));FindingStore store=new FindingStore(app)){BrowserMerge plan=new BrowserMerge(BrowserSnapshot.edits(loaded.base),loaded.edits,BrowserSnapshot.currentEdits(store));assertEquals(1,plan.conflicts());assertThrows(IOException.class,()->BrowserDatabase.apply(app,loaded,plan.chosen(Map.of(plan.parts.get(0).key(),true)),plan.fingerprint));assertEquals(bundle,store.get(a).bundleId());assertEquals(bundle,store.get(c).bundleId());assertEquals(3,store.count());}
+    }
+
 }

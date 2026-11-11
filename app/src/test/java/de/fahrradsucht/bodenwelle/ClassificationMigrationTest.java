@@ -99,7 +99,7 @@ public class ClassificationMigrationTest {
                 org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idleFor(java.time.Duration.ofSeconds(1));
                 org.osmdroid.views.overlay.Marker after = marker(map);
                 assertEquals(Intensity.evaluate(5.0, 48.0).color(), backgroundColor(after.getIcon()));
-                assertTrue(after.getTitle().contains("Geprüfte")); assertEquals(1, store.count());
+                assertTrue(after.getTitle().contains("geprüft")); assertTrue(after.getTitle().contains("Fundstelle #"+id)); assertEquals(1, store.count());
             }
         }
     }

@@ -26,15 +26,16 @@ public final class BundleConfirmation {
         boolean different=BundleDescription.differs(store,members);
         BundleMergeForm form = different?new BundleMergeForm(activity,store,members):null;
         String expected=BundleDescription.signature(store,members);
+        android.widget.LinearLayout content=new android.widget.LinearLayout(activity);content.setOrientation(android.widget.LinearLayout.VERTICAL);int padding=Math.round(20*activity.getResources().getDisplayMetrics().density);content.setPadding(padding,padding,padding,padding);
+        android.widget.TextView summary=new android.widget.TextView(activity);summary.setTextSize(15);
+        summary.setText(activity.getString(R.string.bundle_save_summary,FindingBundle.references(members),members.size(),Math.round(span),
+                activity.getString(different?R.string.bundle_save_different:R.string.bundle_save_matching)));
+        content.addView(summary);if(form!=null)content.addView(form.root);
         AlertDialog.Builder builder = new AlertDialog.Builder(activity).setTitle("Dieselbe Unebenheit?")
-                .setMessage("Messungen " + FindingBundle.references(members) + "\n\n" + members.size()
-                        + " Beobachtungen zusammenfassen? Größter Abstand der Messpunkte: " + Math.round(span)
-                        + " m. Prüfe Straßenseite und benachbarte Schäden. GPS kann ungenau sein."
-                        + (different?"\n\nDie Angaben unterscheiden sich. Prüfe unten das gemeinsame Ergebnis.":"\n\nDie gemeinsamen Angaben und Fotos stimmen überein und werden unverändert übernommen. Messwerte, Höhen und einzelne Freigaben bleiben erhalten."))
-                .setNegativeButton("Abbrechen", null).setPositiveButton("Bündeln & übernehmen", null);
-        if(form!=null){android.widget.ScrollView scroll=new android.widget.ScrollView(activity);scroll.addView(form.root);builder.setView(scroll);}
+                .setView(FormDialog.content(activity,content)).setNegativeButton("Abbrechen", null).setPositiveButton("Bündel speichern", null);
         AlertDialog dialog = builder.create();
         dialog.show();
+        FormDialog.prepare(dialog);dialog.getButton(AlertDialog.BUTTON_POSITIVE).setId(R.id.bundle_save);
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             try { store.mergeDescribedBundles(keys,form==null?SharedFindingDetails.from(members):form.value(),expected); dialog.dismiss(); changed.run(); }
             catch (IllegalArgumentException e) { Toast.makeText(activity, e.getMessage(), Toast.LENGTH_LONG).show(); }

@@ -36,7 +36,7 @@ public class BrowserRoundtripTest {
         Files.write(new File(fixture,"baseline.json").toPath(),project.getJSONObject("base").toString().getBytes(StandardCharsets.UTF_8));
         Files.write(new File(fixture,"identity.json").toPath(),new JSONObject().put("device",project.getString("device")).put("export",project.getString("export")).toString().getBytes(StandardCharsets.UTF_8));
     }
-    @Test public void importEditedFixture()throws Exception {
+    private void restorePhoneSnapshot()throws Exception {
         JSONObject identity=new JSONObject(new String(Files.readAllBytes(new File(fixture,"identity.json").toPath()),StandardCharsets.UTF_8));
         app.getSharedPreferences("browser_projects",0).edit().putString("device",identity.getString("device")).commit();
         Files.copy(new File(fixture,"baseline.json").toPath(),new File(BrowserProject.directory(app,"browser-baselines"),identity.getString("export")+".json").toPath());
@@ -46,6 +46,9 @@ public class BrowserRoundtripTest {
             s.getWritableDatabase().delete("browser_imports",null,null);
             JSONArray route=initial.base.getJSONArray("route");for(int i=0;i<route.length();i++){JSONObject p=route.getJSONObject(i);s.insertRoutePoint(new RoutePoint(p.getLong("time_ms"),p.getLong("elapsed_ms"),p.getDouble("latitude"),p.getDouble("longitude"),(float)p.getDouble("accuracy"),p.getInt("segment")));}
         }
+    }
+    @Test public void importEditedFixture()throws Exception {
+        restorePhoneSnapshot();
         Finding original;long fresh;try(FindingStore s=new FindingStore(app)){original=s.get(1);fresh=add(s,52.53,13.42,"other","Neu auf dem Handy",false);}
         try(var changed=BrowserProject.load(app,new FileInputStream(new File(fixture,"edited.html")));FindingStore s=new FindingStore(app)) {
             BrowserMerge plan=new BrowserMerge(BrowserSnapshot.edits(changed.base),changed.edits,BrowserSnapshot.currentEdits(s));assertEquals(0,plan.conflicts());
@@ -58,4 +61,23 @@ public class BrowserRoundtripTest {
         }
         Files.write(new File(fixture,"roundtrip-ok.txt").toPath(),"Android → lokales HTML → Chromium → gespeichertes HTML → Android: OK\n".getBytes(StandardCharsets.UTF_8));
     }
+    @Test public void importMapBundledFixture()throws Exception {
+        restorePhoneSnapshot();Finding raw;
+        try(FindingStore store=new FindingStore(app)){raw=store.get(2);}
+        try(var changed=BrowserProject.load(app,new FileInputStream(new File(fixture,"map-bundle-saved.html")));FindingStore store=new FindingStore(app)){
+            BrowserMerge plan=new BrowserMerge(BrowserSnapshot.edits(changed.base),changed.edits,BrowserSnapshot.currentEdits(store));assertEquals(0,plan.conflicts());BrowserDatabase.apply(app,changed,plan.chosen(Map.of()),plan.fingerprint);
+        }
+        long bundle;try(FindingStore store=new FindingStore(app)){
+            bundle=store.get(1).bundleId();assertTrue(bundle>0);assertEquals(bundle,store.get(2).bundleId());assertEquals(bundle,store.get(3).bundleId());assertEquals(4,store.count());assertEquals(2,store.placeCount());assertEquals(raw.position(),store.get(2).position());assertEquals(raw.peak(),store.get(2).peak());assertEquals(raw.timeMillis(),store.get(2).timeMillis());assertEquals(raw.reviewed(),store.get(2).reviewed());
+        }
+        // Actual native list and map after reopening, then activity recreation and another export.
+        try(var activity=Robolectric.buildActivity(MainActivity.class).setup()){
+            activity.get().findViewById(R.id.nav_findings).performClick();assertEquals(2,reviewButtons(activity.get().findViewById(android.R.id.content)));activity.recreate();assertEquals(2,reviewButtons(activity.get().findViewById(android.R.id.content)));
+        }
+        File again=BrowserProject.create(app);JSONObject project=data(again);for(String id:List.of("1","2","3"))assertEquals("b"+bundle,project.getJSONObject("edits").getJSONObject(id).getString("group"));
+        try(FindingStore store=new FindingStore(app)){assertEquals(bundle,store.get(1).bundleId());assertEquals(2,store.placeCount());}
+        Files.write(new File(fixture,"map-roundtrip-ok.txt").toPath(),"Kartenklicks → gespeichertes HTML → Android → Liste/Neustart → neuer Export: OK\n".getBytes(StandardCharsets.UTF_8));
+    }
+    private int reviewButtons(android.view.View view){int count=view instanceof android.widget.Button b&&b.getText().toString().equals("Prüfen & Fotos")?1:0;if(view instanceof android.view.ViewGroup group)for(int i=0;i<group.getChildCount();i++)count+=reviewButtons(group.getChildAt(i));return count;}
+
 }

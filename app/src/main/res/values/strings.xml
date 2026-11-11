@@ -29,7 +29,7 @@
     <string name="map_permission">Tippe auf „Mein Standort“, um den genauen Standort zu erlauben.</string>
     <string name="my_location">Mein Standort</string>
     <string name="show_route">Fahrtspur ansehen</string>
-    <string name="map_legend">Türkis: Fahrtspur · Orange: geschätzte Verbindung zwischen Anfang und Ende eines unebenen Abschnitts · Markierungen: # = Messungsnummer, × = Anzahl aller Messungen an dieser Stelle. Antippen öffnet auch überlappende Fundstellen. Anzeigegruppen ändern keine gespeicherten Bündelungen. Farben: Intensität von Grün bis Rot, Grau ohne Messung. Sensorbewertung vorläufig; keine Höhenmessung. · Grüner Haken: alle Messungen freigegeben. Grüner Strich: teilweise freigegeben. Dies ist kein Versandnachweis.</string>
+    <string name="map_legend">Türkis: Fahrtspur · Orange: geschätzte Verbindung zwischen Anfang und Ende eines unebenen Abschnitts · Markierungen: # = Fundstelle mit ihrer kleinsten Messungsnummer, × = Anzahl benachbarter Fundstellen. Ein bestätigtes Bündel ist eine Fundstelle; seine Einzelmessungen bleiben darin erhalten. Antippen öffnet auch überlappende Fundstellen. Anzeigegruppen ändern keine gespeicherten Bündelungen. Farben: Intensität von Grün bis Rot, Grau ohne Messung. Sensorbewertung vorläufig; keine Höhenmessung. · Grüner Haken: alle Messungen freigegeben. Grüner Strich: teilweise freigegeben. Dies ist kein Versandnachweis.</string>
     <string name="osm_attribution">© OpenStreetMap contributors · Lizenz ansehen</string>
     <string name="route_empty">Die Fahrtspur beginnt, sobald du eine Fahrt startest und GPS verfügbar ist.</string>
     <string name="route_running">Aktuelle Fahrtspur</string>
@@ -86,8 +86,12 @@
     <string name="browser_photo_page">Foto %1$d/%2$d</string>
     <string name="browser_photo_unreadable">Foto %1$d/%2$d · Bild nicht lesbar</string>
     <string name="bundle_compare_sources">Bisherige Angaben vergleichen (%1$d)</string>
+    <string name="bundle_selection_count">Auswahl bündeln (%1$d)</string>
     <plurals name="bundle_result_description">
         <item quantity="one">Ergebnis für %1$d Messung\n%2$s\n%3$s / %4$s\nGefährdungsmerkmale: %5$s\nBeschreibung: %6$s</item>
         <item quantity="other">Ergebnis für alle %1$d Messungen\n%2$s\n%3$s / %4$s\nGefährdungsmerkmale: %5$s\nBeschreibung: %6$s</item>
     </plurals>
+    <string name="bundle_save_summary">Messungen %1$s\n\nBeobachtungen: %2$d. Als dieselbe Fundstelle zusammenfassen? Größter Abstand der Messpunkte: %3$d m. Prüfe Straßenseite und benachbarte Schäden. GPS kann ungenau sein.\n\n%4$s</string>
+    <string name="bundle_save_different">Die Angaben unterscheiden sich. Prüfe unten das gemeinsame Ergebnis.</string>
+    <string name="bundle_save_matching">Die gemeinsamen Angaben und Fotos stimmen überein und werden unverändert übernommen. Messwerte, Höhen und einzelne Freigaben bleiben erhalten.</string>
 </resources>
