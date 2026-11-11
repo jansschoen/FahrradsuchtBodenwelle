@@ -145,3 +145,13 @@ Erzeuge eine Mail mit den gewünschten freigegebenen Beobachtungen. Wiederholung
 7. Dieselbe Bearbeitungsrunde erneut importieren: Die App muss eine frische Exportdatei verlangen. Für weitere Änderungen eine neue Datei vom Handy exportieren. Keine Deinstallation zwischen Export und Rückimport.
 
 [Ausführliche Anleitung und Grenzen](BROWSER-NACHBEARBEITUNG.md).
+
+## Bündelangaben und eindeutige Namen ab 0.16.0
+
+1. Zwei Stellen mit gleichen gemeinsamen Angaben und Fotos, aber verschiedenen tatsächlichen Höhen beziehungsweise Freigaben bündeln: Es soll bei der kurzen Bestätigung bleiben. Höhen und Freigaben bleiben einzeln.
+2. Zwei bereits bearbeitete Stellen mit unterschiedlichen Beschreibungen, Arten, Belägen oder Gefährdungsmerkmalen auswählen. Die ausführliche Bestätigung muss die bisherigen Angaben und das vollständige gemeinsame Ergebnis anbieten. Eine Quelle wählen und zunächst abbrechen: Keine Angabe darf verändert werden. Erneut öffnen und bewusst bestätigen; die gemeinsamen Felder müssen bei allen Mitgliedern gleich sein, Fotos vereinigt, Originalmesswerte erhalten.
+3. Im Browser eine gebündelte Stelle bearbeiten und **Änderungen übernehmen** wählen. Bei allen Mitgliedern prüfen. Danach die Beschreibung erneut ändern und ohne vorherigen Fokuswechsel direkt **Bearbeitete Datei speichern** wählen. Die neue Datei öffnen: Auch die letzte Eingabe muss enthalten sein. Auf dem Handy zurückimportieren und prüfen.
+4. Eine noch nicht übernommene Beschreibung eingeben und zu einer anderen Stelle wechseln. Die Eingabe soll im Arbeitsstand erhalten bleiben; **Rückgängig / Wiederholen** muss sie als einen gemeinsamen Schritt behandeln.
+5. Auf Handy und Computer jeweils zweimal unmittelbar hintereinander exportieren. Die vorgeschlagenen Dateinamen müssen Datum/Uhrzeit und verschiedene Kennungen enthalten. Den tatsächlich gespeicherten neuen Stand für den Rückimport auswählen.
+
+[Bedienung und Grenzen](BUENDEL-ANGABEN.md).

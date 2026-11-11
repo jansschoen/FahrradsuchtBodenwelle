@@ -23,24 +23,20 @@ public final class BundleConfirmation {
         }
         double span = 0;
         for (Finding a : members) for (Finding b : members) span = Math.max(span, BundleSuggestions.distance(a, b));
-        SharedFindingDetails shared = SharedFindingDetails.from(members);
-        SharedFieldsForm form = new SharedFieldsForm(activity, shared);
+        boolean different=BundleDescription.differs(store,members);
+        BundleMergeForm form = different?new BundleMergeForm(activity,store,members):null;
+        String expected=BundleDescription.signature(store,members);
         AlertDialog.Builder builder = new AlertDialog.Builder(activity).setTitle("Dieselbe Unebenheit?")
                 .setMessage("Messungen " + FindingBundle.references(members) + "\n\n" + members.size()
                         + " Beobachtungen zusammenfassen? Größter Abstand der Messpunkte: " + Math.round(span)
                         + " m. Prüfe Straßenseite und benachbarte Schäden. GPS kann ungenau sein."
-                        + "\n\nUnebenheitsart, Beschreibung, Fotos, Verkehrsfläche, Oberfläche und Gefährdungsmerkmale werden für alle Messungen übernommen. Manuelle Angaben haben Vorrang; Gefährdungsmerkmale werden vereinigt."
-                        + (shared.conflicting() ? " Abweichende manuelle Angaben bitte unten auswählen." : "")
-                        + " Messwerte und einzelne Freigaben bleiben erhalten. Die Bündelung lässt sich auflösen.")
-                .setNegativeButton("Abbrechen", null).setPositiveButton("Zusammenfassen", null);
-        if (shared.conflicting()) {
-            android.widget.ScrollView scroll=new android.widget.ScrollView(activity);
-            scroll.addView(form.root);builder.setView(scroll);
-        }
+                        + (different?"\n\nDie Angaben unterscheiden sich. Prüfe unten das gemeinsame Ergebnis.":"\n\nDie gemeinsamen Angaben und Fotos stimmen überein und werden unverändert übernommen. Messwerte, Höhen und einzelne Freigaben bleiben erhalten."))
+                .setNegativeButton("Abbrechen", null).setPositiveButton("Bündeln & übernehmen", null);
+        if(form!=null){android.widget.ScrollView scroll=new android.widget.ScrollView(activity);scroll.addView(form.root);builder.setView(scroll);}
         AlertDialog dialog = builder.create();
         dialog.show();
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-            try { store.mergeBundles(keys, form.traffic(),form.surface(),form.category()); dialog.dismiss(); changed.run(); }
+            try { store.mergeDescribedBundles(keys,form==null?SharedFindingDetails.from(members):form.value(),expected); dialog.dismiss(); changed.run(); }
             catch (IllegalArgumentException e) { Toast.makeText(activity, e.getMessage(), Toast.LENGTH_LONG).show(); }
         });
     }

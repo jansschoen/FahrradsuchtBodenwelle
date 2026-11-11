@@ -1,5 +1,7 @@
 # Wiederholte Beobachtungen und Fotos
 
+**Ab 0.16.0** zeigt die Bündelbestätigung bei unterschiedlichen gemeinsamen Angaben eine vollständige, bearbeitbare Vorschau und eine wählbare Quelle. Bei übereinstimmenden Angaben bleibt die Bestätigung kurz. Fotos werden immer vereinigt, Einzelwerte und Freigaben bleiben erhalten. Im Browser gibt es zusätzlich **Änderungen übernehmen**. [Vergleich, Speichern und eindeutige Dateinamen](BUENDEL-ANGABEN.md).
+
 ## Bündelung benutzen
 
 Unter **Fundstellen → Weitere Aktionen** öffnet **Mehrfachtreffer bündeln** die Vorschläge und die manuelle Auswahl. Prüfe, ob die Beobachtungen tatsächlich dieselbe Unebenheit betreffen, einschließlich Straßenseite und benachbarter Schäden. **Als dieselbe Fundstelle bestätigen** zeigt vor dem Zusammenfassen Anzahl und räumliche Ausdehnung. Eine Bündelung wird erst nach deiner Bestätigung gespeichert.

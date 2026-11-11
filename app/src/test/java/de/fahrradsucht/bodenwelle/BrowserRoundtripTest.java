@@ -54,6 +54,7 @@ public class BrowserRoundtripTest {
         try(FindingStore s=new FindingStore(app)) {
             assertEquals("Im Browser geprüft – sichere Rückfahrt 🌳",s.get(1).note());assertEquals("pothole",s.get(1).category());assertEquals(7.5,s.get(1).details().heightMm(),0);assertTrue(s.get(1).reviewed());assertEquals("02",s.reportDistrict(1));assertEquals(2,s.photos(1).size());
             assertEquals(s.get(2).bundleKey(),s.get(3).bundleKey());assertEquals("Gemeinsame Browserbeschreibung",s.get(3).note());assertNull(s.get(4));assertNotNull(s.get(fresh));assertEquals("Neu auf dem Handy",s.get(fresh).note());assertEquals(30,s.routeCount());assertEquals(original.position(),s.get(1).position());assertEquals(original.peak(),s.get(1).peak());assertEquals(original.timeMillis(),s.get(1).timeMillis());
+            for(long id:List.of(2L,3L)){assertEquals("asphalt",s.get(id).details().surface());assertEquals("cycleway",s.get(id).details().traffic());assertEquals(2,s.get(id).details().hazards());}
         }
         Files.write(new File(fixture,"roundtrip-ok.txt").toPath(),"Android → lokales HTML → Chromium → gespeichertes HTML → Android: OK\n".getBytes(StandardCharsets.UTF_8));
     }

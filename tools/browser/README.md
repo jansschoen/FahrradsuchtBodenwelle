@@ -35,6 +35,14 @@ The map regression runs the real WebGL renderer with a deliberately artificial s
 
 The cloud HTTPS proxy rejects the live OpenFreeMap endpoint at CONNECT with 403. Do not circumvent this restriction; a live test remains necessary on the user's computer. Provider URL and CSP are restricted to `tiles.openfreemap.org` and `assets.openfreemap.com`. No project data are added to map requests.
 
+## Bundle persistence and reconciliation (0.16.0)
+
+```sh
+python3 tools/browser/test-bundles.py /tmp/bodenwelle-browser-fixture --screenshots /tmp/bodenwelle-browser-fixture/screenshots
+```
+
+This regression verifies that matching shared properties skip the detailed comparison even when measured heights and consent differ; differing properties expose source presets and an editable final result. Cancellation retains all source data. It checks applying fields to every member, saving while the last textarea is still focused, reloading the actual download, navigation/undo/redo, legacy inconsistent groups and distinct dated UUID filenames on repeated downloads. Map requests are aborted; this is not a live provider test. Native merge review, stale comparisons and file picker names are tested by `BundleMergeReviewTest` and `BrowserExchangeUiTest`. The Android return phase also asserts shared road/surface/hazard edits from the actual browser file.
+
 Other exchange, migration, photo-metadata and native UI checks live in `BrowserExchangeTest`, `BrowserPhotoMetadataTest` and `BrowserExchangeUiTest`. Run the full Android suite/build/lint with:
 
 ```sh

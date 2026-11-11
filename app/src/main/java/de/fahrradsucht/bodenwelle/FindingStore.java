@@ -310,6 +310,13 @@ public final class FindingStore extends SQLiteOpenHelper {
     public long mergeBundles(List<Long> keys) { return mergeBundles(keys, null, null); }
     public long mergeBundles(List<Long> keys,String traffic,String surface){return mergeBundles(keys,traffic,surface,null);}
     public long mergeBundles(List<Long> keys,String traffic,String surface,String category) {
+        return mergeBundlesInternal(keys,traffic,surface,category,null,null);
+    }
+    public long mergeDescribedBundles(List<Long> keys,SharedFindingDetails description,String expected) {
+        if(expected==null||description==null)throw new IllegalArgumentException("Die Vergleichsgrundlage fehlt. Bitte die Bündelung erneut öffnen.");
+        return mergeBundlesInternal(keys,null,null,null,description,expected);
+    }
+    private long mergeBundlesInternal(List<Long> keys,String traffic,String surface,String category,SharedFindingDetails description,String expected) {
         java.util.Set<Long> chosen = new java.util.HashSet<>(keys);
         SQLiteDatabase db = getWritableDatabase(); db.beginTransaction();
         try {
@@ -317,7 +324,9 @@ public final class FindingStore extends SQLiteOpenHelper {
             java.util.Set<Long> present = new java.util.HashSet<>();
             for (Finding f : all()) if (chosen.contains(f.bundleKey())) { members.add(f); present.add(f.bundleKey()); }
             if (present.size() < 2 || !present.equals(chosen)) throw new IllegalArgumentException("Bitte mindestens zwei vorhandene Fundstellen auswählen.");
-            SharedFindingDetails shared = SharedFindingDetails.from(members).choose(traffic,surface,category);
+            if(expected!=null&&!expected.equals(BundleDescription.signature(this,members)))throw new IllegalArgumentException("Die ausgewählten Fundstellen wurden inzwischen geändert. Bitte die Bündelung erneut öffnen und vergleichen.");
+            SharedFindingDetails shared = description==null?SharedFindingDetails.from(members).choose(traffic,surface,category):description;
+            if(description!=null)BundleDescription.validate(description,members);
             long id = db.insertOrThrow("finding_bundles", "id", new ContentValues());
             ContentValues v = new ContentValues(); v.put("bundle_id", id);
             for (Finding f : members) db.update("findings", v, "id = ?", new String[]{Long.toString(f.id())});

@@ -34,6 +34,8 @@ public class BrowserExchangeUiTest {
         try(FindingStore s=new FindingStore(app)){finding(s);}
         try(var c=Robolectric.buildActivity(BrowserExchangeActivity.class).setup()) {
             c.get().findViewById(R.id.browser_export).performClick();waitFor(c.get());Intent picker=Shadows.shadowOf(c.get()).getNextStartedActivity();assertNotNull(picker);assertEquals(Intent.ACTION_CREATE_DOCUMENT,picker.getAction());assertEquals("text/html",picker.getType());
+            String name=picker.getStringExtra(Intent.EXTRA_TITLE);assertTrue(name.matches("Bodenwelle-Projekt-\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}-[a-f0-9-]{36}\\.html"));
+            c.get().findViewById(R.id.browser_export).performClick();waitFor(c.get());Intent second=Shadows.shadowOf(c.get()).getNextStartedActivity();assertNotEquals(name,second.getStringExtra(Intent.EXTRA_TITLE));
             File pending=ReflectionHelpers.getField(c.get(),"pendingFile");assertTrue(pending.isFile());try(var project=BrowserProject.load(app,new FileInputStream(pending))){assertEquals(1,project.edits.length());}
         }
     }

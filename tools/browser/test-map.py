@@ -68,6 +68,7 @@ with sync_playwright() as p:
     assert page.locator('#measurement-layer').is_visible()
     page.get_by_label('Beschreibung / Notiz',exact=True).fill('Bearbeitung trotz Kartenfehler')
     page.get_by_label('Beschreibung / Notiz',exact=True).press('Tab')
+    page.get_by_role('button',name='Änderungen übernehmen',exact=True).click()
     assert page.evaluate('BodenwelleEditor.project.edits["4"].note')=='Bearbeitung trotz Kartenfehler'
     blocked[0]=False
     page.locator('#network').uncheck();page.locator('#network').check()

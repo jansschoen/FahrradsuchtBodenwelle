@@ -33,9 +33,9 @@ public final class BrowserExchangeActivity extends Activity {
         text(content,"Alle gespeicherten Messungen, Fotos, Beschreibungen, Bündelungen und die letzte Fahrtspur werden mitgenommen. Der Browser braucht keine Installation oder Anmeldung. Nur der OpenFreeMap-Straßenhintergrund auf OSM-Basis benötigt Internet und WebGL-Grafikunterstützung. Die Datei enthält auch genaue Zeitpunkte, Standorte und private Notizen.",14);
         status=text(content,"Bereit. Während der Bearbeitung am Computer kannst du auf dem Handy weiter aufzeichnen.",15);status.setId(R.id.browser_status);
         buttons=new LinearLayout(this);buttons.setOrientation(LinearLayout.VERTICAL);content.addView(buttons);
-        button(buttons,"Projektdatei für den Browser speichern",R.id.browser_export,()->runTask(()->{File file=BrowserProject.create(this);handler.post(()->saveAs(file,"Bodenwelle-Projekt.html"));}));
+        button(buttons,"Projektdatei für den Browser speichern",R.id.browser_export,()->runTask(()->{File file=BrowserProject.create(this);handler.post(()->saveAs(file,BrowserProject.exportFilename("Projekt")));}));
         button(buttons,"Bearbeitete Projektdatei öffnen",R.id.browser_import,()->{if(RecordingService.running){message("Zum Rückimportieren zuerst die Fahrt beenden.");return;}startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*"),OPEN);});
-        button(buttons,"Letzte Importsicherung speichern",R.id.browser_backup,()->runTask(()->{File file=BrowserProject.lastBackup(this);if(file==null)throw new IOException("Es ist noch keine Importsicherung vorhanden.");handler.post(()->saveAs(file,"Bodenwelle-Sicherung.html"));}));
+        button(buttons,"Letzte Importsicherung speichern",R.id.browser_backup,()->runTask(()->{File file=BrowserProject.lastBackup(this);if(file==null)throw new IOException("Es ist noch keine Importsicherung vorhanden.");handler.post(()->saveAs(file,BrowserProject.exportFilename("Sicherung")));}));
         button(buttons,"Letzten Import rückgängig machen",R.id.browser_restore,this::confirmRestore);
         button(buttons,"Zurück",R.id.browser_back,this::finish);
         preview=new LinearLayout(this);preview.setOrientation(LinearLayout.VERTICAL);content.addView(preview);

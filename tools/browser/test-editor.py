@@ -60,11 +60,16 @@ with sync_playwright() as p:
     page.get_by_role('button',name='Auswahl bündeln',exact=True).click()
     dialog=page.get_by_role('dialog')
     dialog.get_by_label('Unebenheitsart',exact=True).select_option('pothole')
-    dialog.get_by_role('button',name='Zusammenfassen',exact=True).click()
+    dialog.get_by_role('button',name='Bündeln & übernehmen',exact=True).click()
     page.get_by_label('Beschreibung / Notiz',exact=True).fill('Gemeinsame Browserbeschreibung')
-    page.get_by_label('Beschreibung / Notiz',exact=True).press('Tab')
+    page.get_by_label('Verkehrsfläche',exact=True).select_option('cycleway')
+    page.get_by_label('Oberfläche',exact=True).select_option('asphalt')
+    page.locator('#inspector summary').filter(has_text='Zusätzliche Gefährdungsmerkmale').click()
+    page.get_by_label('Keine sichere Ausweichmöglichkeit',exact=True).check()
+    page.get_by_role('button',name='Änderungen übernehmen',exact=True).click()
     assert page.evaluate('BodenwelleEditor.project.edits["2"].group===BodenwelleEditor.project.edits["3"].group')
     assert page.evaluate('BodenwelleEditor.project.edits["2"].reviewed&&!BodenwelleEditor.project.edits["3"].reviewed')
+    assert page.evaluate('["2","3"].every(id=>{const e=BodenwelleEditor.project.edits[id];return e.note==="Gemeinsame Browserbeschreibung"&&e.surface==="asphalt"&&e.traffic==="cycleway"&&e.hazards===2})')
     # Delete, undo, redo. Deletion remains only a project change until Android confirmation.
     page.locator('#rows').get_by_text('#4',exact=True).click()
     page.get_by_role('button',name='Stelle löschen',exact=True).click()
@@ -100,6 +105,7 @@ with sync_playwright() as p:
     assert reopened.evaluate('BodenwelleEditor.project.edits["1"].note')=='Im Browser geprüft – sichere Rückfahrt 🌳'
     assert reopened.evaluate('BodenwelleEditor.project.edits["1"].photos.length')==2
     assert reopened.evaluate('BodenwelleEditor.project.edits["4"]===null')
+    assert reopened.evaluate('["2","3"].every(id=>{const e=BodenwelleEditor.project.edits[id];return e.note==="Gemeinsame Browserbeschreibung"&&e.surface==="asphalt"&&e.traffic==="cycleway"&&e.hazards===2})')
     assert reopened.evaluate('BodenwelleEditor.project.base')==original
     # The separately downloadable empty editor opens an existing project through its real picker.
     viewer=context.new_page();viewer.on('pageerror',lambda e:errors.append(str(e)))

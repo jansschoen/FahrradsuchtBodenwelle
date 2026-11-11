@@ -15,6 +15,11 @@ final class BrowserProject {
     static final long MAX_FILE=256L*1024*1024,MAX_PHOTOS=128L*1024*1024;
     private static final String START="<script id=\"bodenwelle-project\" type=\"application/json\">",END="</script>",TOKEN="__BODENWELLE_PROJECT_DATA__";
     private BrowserProject(){}
+    static String exportFilename(String kind) {
+        String stamp=java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss",java.util.Locale.ROOT)
+                .withZone(java.time.ZoneId.of("Europe/Berlin")).format(java.time.Instant.now());
+        return "Bodenwelle-"+kind+"-"+stamp+"-"+UUID.randomUUID()+".html";
+    }
     static File directory(Context c,String name)throws IOException{File f=new File(c.getNoBackupFilesDir(),name);if(!f.isDirectory()&&!f.mkdirs())throw new IOException("Der Projektspeicher konnte nicht angelegt werden.");return f;}
     static String device(Context c){var p=c.getSharedPreferences("browser_projects",0);String id=p.getString("device","");if(id.isEmpty()){id=UUID.randomUUID().toString();p.edit().putString("device",id).apply();}return id;}
     static File create(Context c)throws Exception {

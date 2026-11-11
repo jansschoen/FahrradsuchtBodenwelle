@@ -134,7 +134,7 @@ public final class FindingActions {
         AlertDialog dialog = new AlertDialog.Builder(activity).setTitle(place?"Gemeinsame Fundstelle bearbeiten":"Messung #"+f.id()+" prüfen").setView(scroll)
                 .setNegativeButton("Abbrechen", null)
                 .setNeutralButton("Löschen", (d,w)->{if(place)deleteObservation(edited);else confirmDelete(edited);})
-                .setPositiveButton("Speichern", null).create();
+                .setPositiveButton(place?"Für alle speichern":"Speichern", null).create();
         dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             try {
                 if(place)store.reviewPlace(edited.id(),form.category(),form.note.getText().toString().trim(),form.details(edited),form.releaseScope.getSelectedItemPosition());

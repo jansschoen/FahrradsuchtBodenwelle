@@ -45,6 +45,9 @@
     <item name="mail_open" type="id" />
     <item name="bundle_traffic_choice" type="id" />
     <item name="bundle_surface_choice" type="id" />
+    <item name="bundle_preset" type="id" />
+    <item name="bundle_note" type="id" />
+    <item name="bundle_result_preview" type="id" />
     <item name="report_preview" type="id" />
     <item name="report_status" type="id" />
     <item name="report_separate_photos" type="id" />

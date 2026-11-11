@@ -1,5 +1,7 @@
 # Fundstellen am Computer bearbeiten · ab 0.15.0
 
+**Neu in 0.16.0:** [Bündelangaben vergleichen und sicher speichern](BUENDEL-ANGABEN.md). Der Browser bietet **Änderungen übernehmen**, einen Vergleich nur bei abweichenden gemeinsamen Angaben und eindeutige Exportnamen.
+
 **Kartenkorrektur 0.15.1:** Zeigt eine bisherige Datei „403 – Access blocked“, öffne sie im [korrigierten Browsereditor](BROWSER-KARTENFEHLER.md). Dafür musst du weder neu aufzeichnen noch erneut vom Handy exportieren.
 
 Du brauchst eine einzige **HTML-Projektdatei**. Sie enthält den Browsereditor, alle gespeicherten Messungen, Beschreibungen, Bündelungen, Fotos und die letzte Fahrtspur. Eine Website, ein Benutzerkonto oder eine Installation auf dem Computer sind nicht nötig. Die Datei wird zwischen Handy und Computer übertragen; es gibt keine automatische Synchronisierung.
@@ -9,7 +11,7 @@ Du brauchst eine einzige **HTML-Projektdatei**. Sie enthält den Browsereditor, 
 1. Die APK als Update installieren, ohne die App vorher zu deinstallieren. Fahrt beenden und **Mehr → Daten verwalten → Am Computer bearbeiten / Rückimport** öffnen.
 2. **Projektdatei für den Browser speichern** wählen und die HTML-Datei beispielsweise über USB auf den Computer kopieren. Die Projektdatei enthält die vollständigen gespeicherten Daten, einschließlich nicht freigegebener Stellen.
 3. Die Datei mit einem aktuellen Desktopbrowser öffnen, etwa über Rechtsklick → **Öffnen mit**. Links stehen die Fundstellen, in der Mitte die Karte, rechts die Angaben zur ausgewählten Stelle. Falls der Computer HTML-Dateien standardmäßig im Texteditor öffnet, ausdrücklich den Browser auswählen.
-4. Angaben bearbeiten und oben **Bearbeitete Datei speichern** wählen. Auch Strg+S beziehungsweise Cmd+S führt diese Funktion aus. Der Browser bietet eine neue HTML-Datei als Download an; je nach Browsereinstellung erscheint eine Speicherauswahl oder die Datei landet im Downloadordner. Dort prüfen, ob sie tatsächlich gespeichert wurde. Die ursprüngliche Datei bleibt als Ausgangskopie erhalten.
+4. Angaben bearbeiten und mit **Änderungen übernehmen** für die Stelle beziehungsweise alle Bündelmitglieder übernehmen. **Bearbeitete Datei speichern** sichert anschließend den gesamten Arbeitsstand. Auch Strg+S beziehungsweise Cmd+S führt diese Funktion aus; gültige offene Formulareingaben werden dabei übernommen. Der Browser bietet eine neue HTML-Datei mit Exportdatum, Uhrzeit und eindeutiger Kennung als Download an. Je nach Browsereinstellung erscheint eine Speicherauswahl oder die Datei landet im Downloadordner. Dort prüfen, ob sie tatsächlich gespeichert wurde. Die ursprüngliche Datei bleibt als Ausgangskopie erhalten.
 5. Die neue Datei zurück auf das Handy übertragen. **Bearbeitete Projektdatei öffnen** wählen, die Vorschau prüfen und erst dann **Ausgewählte Änderungen übernehmen → Sichern und importieren** bestätigen.
 
 Nach einem erfolgreichen Rückimport für jede weitere Bearbeitungsrunde **eine neue Projektdatei vom Handy exportieren**. Ein Export wird in diesem Prototyp nur einmal übernommen. Die Rückgabe gehört zur ursprünglichen App-Installation; sie ist kein Umzugsformat auf ein anderes Handy. Deinstallation oder das Löschen der App-Daten entfernt auch die erforderlichen lokalen Exportgrundlagen.
@@ -59,7 +61,7 @@ Für den Rückimport liest Android ausschließlich den eingebetteten Datenblock 
 
 ## Prüfstand
 
-382 automatisierte Android-Prüfungen bestehen, einschließlich Export aller Datenfelder, Konflikten, neuen Handymessungen, gemeinsamen Fotos, Löschungen, Rücknahme, Metadatenbereinigung und Datenbankmigration auf Schema 9. Android-Build und Lint sind geprüft. Lint enthält keine Fehler; zwei ältere Hinweise betreffen die Annotation-Abhängigkeit und einen Kartenkonstruktor.
+390 automatisierte Android-Prüfungen bestehen, einschließlich Export aller Datenfelder, Konflikten, neuen Handymessungen, gemeinsamen Fotos, Löschungen, Rücknahme, Metadatenbereinigung und Datenbankmigration auf Schema 9. Android-Build und Lint sind geprüft. Lint enthält keine Fehler; zwei ältere Hinweise betreffen die Annotation-Abhängigkeit und einen Kartenkonstruktor.
 
 Zusätzlich wurde eine tatsächliche Android-Projektdatei in Chromium bearbeitet, mit neuem Foto und Bündelung gespeichert und die gespeicherte Datei erfolgreich in Android zurückimportiert. Messwerte, nachträgliche Handymessungen und Spur blieben erhalten. Die Browserprüfung enthält auch Dateiauswahl, Kartenbedienung, Suche, Lösch-Rücknahme und das erneute Öffnen der gespeicherten Daten.
 
