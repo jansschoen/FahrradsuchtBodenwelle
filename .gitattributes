@@ -1,0 +1,4 @@
+# Keep the verified third-party distribution unchanged; the HTML download is generated from it.
+app/src/main/assets/browser/vendor/maplibre-gl.js linguist-vendored -whitespace
+app/src/main/assets/browser/vendor/maplibre-gl.css linguist-vendored -whitespace
+downloads/Bodenwelle-Browser.html linguist-generated -whitespace

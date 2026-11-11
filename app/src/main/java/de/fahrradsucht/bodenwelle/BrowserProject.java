@@ -28,7 +28,7 @@ final class BrowserProject {
                 long bytes=0;JSONObject photos=base.getJSONObject("photos");if(photos.length()>1000)throw new IOException("Das Projekt enthält mehr als 1000 Fotos. Es wurde nichts weggelassen.");for(Iterator<String> it=photos.keys();it.hasNext();)bytes+=photos.getJSONObject(it.next()).getLong("bytes");
                 if(bytes>MAX_PHOTOS)throw new IOException("Das Projekt enthält mehr als 128 MB Fotos. Es wurde nichts weggelassen.");
                 JSONObject payload=new JSONObject().put("format","bodenwelle-project").put("version",1).put("device",device(c)).put("export",token).put("base",base).put("edits",BrowserSnapshot.edits(base));
-                String template;try(InputStream in=c.getAssets().open("browser/editor.html")){template=new String(readSmall(in,2*1024*1024),StandardCharsets.UTF_8);}
+                String template=template(c);
                 int split=template.indexOf(TOKEN);if(split<0)throw new IOException("Die Browseroberfläche fehlt.");
                 try(Writer w=new BufferedWriter(new OutputStreamWriter(new FileOutputStream(output),StandardCharsets.UTF_8))) {
                     w.write(template.substring(0,split));String data=BrowserJson.safeJson(payload);w.write(data.substring(0,data.length()-1));w.write(",\"blobs\":{");boolean first=true;
@@ -40,6 +40,17 @@ final class BrowserProject {
                 db.setTransactionSuccessful();return output;
             }finally{db.endTransaction();}
         }catch(Exception e){output.delete();throw e;}
+    }
+    static String template(Context c)throws IOException {
+        String html=asset(c,"browser/editor.html");
+        // Keep the exported file independent of CDNs and neighbouring files.
+        String script=asset(c,"browser/vendor/maplibre-gl.js").replace("</script", "<\\/script");
+        return html.replace("__BODENWELLE_MAP_LICENSE__",asset(c,"browser/vendor/LICENSE.txt").replace("</script", "<\\/script"))
+                .replace("__BODENWELLE_MAP_STYLE__",asset(c,"browser/vendor/maplibre-gl.css"))
+                .replace("__BODENWELLE_MAP_LIBRARY__",script);
+    }
+    private static String asset(Context c,String path)throws IOException {
+        try(InputStream in=c.getAssets().open(path)){return new String(readSmall(in,2*1024*1024),StandardCharsets.UTF_8);}
     }
     static byte[] readSmall(InputStream source,int limit)throws IOException{try(InputStream in=source;ByteArrayOutputStream out=new ByteArrayOutputStream()){byte[] b=new byte[8192];int n;while((n=in.read(b))!=-1){if(out.size()+n>limit)throw new IOException("Eine Datei ist zu groß.");out.write(b,0,n);}return out.toByteArray();}}
     static final class Loaded implements AutoCloseable {

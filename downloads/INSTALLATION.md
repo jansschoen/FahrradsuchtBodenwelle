@@ -1,35 +1,32 @@
-# Bodenwelle 0.15.0 – Android-Testversion
+# Bodenwelle 0.15.1 – Kartenkorrektur für den Browser
 
-[APK 0.15.0 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.15.0.apk). Als Update über die vorhandene App installieren, **nicht vorher deinstallieren**. App-ID und Signatur bleiben gleich; Messungen, Bündelungen, gemeinsame Fotos, Fahrtspur und Freigaben bleiben erhalten. Android 8.0 oder neuer wird benötigt.
+[APK 0.15.1 herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-0.15.1.apk). Als Update installieren, **nicht vorher deinstallieren**. Signatur, App-ID und Projektformat bleiben gleich. Android 8.0 oder neuer wird benötigt; die Straßenkarte im Browser benötigt WebGL-Grafikunterstützung.
 
-## Eine Datei für die Bearbeitung am Computer
+## Bereits exportierte Datei zeigt „403 – Access blocked“
 
-1. Fahrt beenden. **Mehr → Daten verwalten → Am Computer bearbeiten / Rückimport → Projektdatei für den Browser speichern** öffnen.
-2. Die gespeicherte HTML-Datei auf den Computer übertragen und dort im aktuellen Browser öffnen. Sie enthält bereits Editor, Messdaten, Fotos und letzte Fahrtspur. Es gibt keine Installation oder Anmeldung.
-3. Über Liste und Karte eine Stelle auswählen. Art, Beschreibung, Verkehrsfläche, Oberfläche, Gefährdungsmerkmale, Fotos, Bündelung, individuell gemessene Höhe, Freigabe und Bezirk lassen sich bearbeiten. Originalmesswerte sind schreibgeschützt.
-4. **Bearbeitete Datei speichern** wählen und den angebotenen Download im Downloadordner prüfen. Die neue HTML-Datei zurück auf das Handy kopieren und über **Bearbeitete Projektdatei öffnen** auswählen.
-5. Vorschau und gegebenenfalls Konflikte prüfen. Erst **Sichern und importieren** übernimmt Änderungen. Neue Handymessungen und die aktuelle Spur bleiben erhalten. Eine vollständige lokale Sicherung ermöglicht **Letzten Import rückgängig machen**.
+Die Meldung kommt vom OSM-Kartenserver. Lokale HTML-Dateien senden keine normale Webseitenadresse als Herkunft. Die bisherige direkte Anbindung an den OSM-Standardserver war dafür ungeeignet. 0.15.1 verwendet stattdessen OpenFreeMap mit OSM-Daten und eine lokal eingebettete Kartenbibliothek.
 
-Für jede weitere Bearbeitungsrunde nach erfolgreichem Rückimport eine **neue Datei vom Handy exportieren**. Die Rückgabe gehört zur ursprünglichen App-Installation; Deinstallation oder das Löschen der App-Daten entfernt die Exportgrundlage. Die Datei enthält genaue Zeiten, Standorte und private Angaben. Für das Bezirksamt weiterhin die gesonderte PDF-/Mail-Funktion verwenden.
+1. Falls im alten Browserfenster noch Änderungen offen sind, dort **Bearbeitete Datei speichern** wählen und den Download prüfen.
+2. Den [korrigierten Browsereditor 0.15.1 als ZIP herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-Browser-0.15.1.zip), entpacken und **Bodenwelle-Browser.html** im Browser öffnen.
+3. **Projektdatei öffnen** wählen und deine bisherige, zuletzt gespeicherte HTML-Datei auswählen. Ihre Messungen, Fotos, Bündel und gespeicherten Änderungen werden übernommen.
+4. Wie gewohnt bearbeiten und eine neue HTML-Datei speichern. Diese enthält jetzt auch den korrigierten Editor. Der Rückimport funktioniert weiterhin mit App 0.15.0 oder 0.15.1.
 
-[Ausführliche Anleitung einschließlich Größenlimits](../docs/BROWSER-NACHBEARBEITUNG.md) · [Bilder](../docs/screenshots/0.15.0/README.md) · [Beispiel mit erfundenen Daten als ZIP herunterladen](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-Browser-Beispiel.zip).
+Für diese bestehende Datei ist kein neuer Handyexport und kein App-Update nötig. Die APK 0.15.1 ergänzt den korrigierten Editor für künftige Exporte. Neue Projekte entstehen weiterhin unter **Mehr → Daten verwalten → Am Computer bearbeiten / Rückimport**.
 
-## Karte online und offline
+[Anleitung zur Kartenkorrektur](../docs/BROWSER-KARTENFEHLER.md) · [Vollständige Browseranleitung](../docs/BROWSER-NACHBEARBEITUNG.md) · [Beispiel mit erfundenen Daten](https://github.com/jansschoen/FahrradsuchtBodenwelle/raw/refs/heads/main/downloads/Bodenwelle-Browser-Beispiel.zip).
 
-Im Browser zeigt die Karte nummerierte Stellen, gemeinsame Bündel, Freigabehaken, GPS-Genauigkeitskreis und optional die letzte Fahrtspur. Klicks öffnen die Beschreibung, überlappende Punkte eine Auswahl. Suchen und Filtern wirken auch auf die Karte.
+## Daten und Karten
 
-Nur der OSM-Straßenhintergrund benötigt Internet; Messpunkte, Fotos, Spur und Bearbeitung bleiben offline verfügbar. Der Hintergrund lässt sich abschalten. Kartenabrufe übertragen den angefragten Ausschnitt und die IP-Adresse an den Anbieter, keine Beschreibungen, Fotos oder Sensorwerte. Eine vollständige Offline-Straßenkarte ist nicht enthalten.
+Messbeschreibungen, Fotos und Rohwerte bleiben lokal. Nur Kartenstil, Kartendaten, Symbole und Kartenbeschriftungszeichen werden bei OpenFreeMap geladen; der Anbieter sieht Ausschnitt und IP-Adresse. Es gibt keine Anmeldung und keinen API-Schlüssel. Bei fehlender Verbindung oder WebGL bleiben Messpunkte, Spur und Bearbeitung auf einem Raster verfügbar. Fehler werden als Hinweis angezeigt. Der Straßenkarten-Schalter ermöglicht einen erneuten Versuch.
+
+Neue Handymessungen und die aktuelle Spur bleiben beim Rückimport erhalten. Konflikte verlangen eine Auswahl; vor der bestätigten Übernahme entsteht eine lokale Sicherung. Für weitere Bearbeitungsrunden nach einem Rückimport frisch exportieren. Die Projektdatei gehört zur ursprünglichen App-Installation und enthält genaue Zeiten, Orte und private Angaben. Den Verwaltungsbericht weiterhin gesondert als PDF/Mail erzeugen.
 
 ## Prüfung und Grenzen
 
-382 Android-Prüfungen bestehen. Die neuen Prüfungen decken Export und Rückgabe aller Beschreibungsfelder, neue Handymessungen, Konfliktauswahl, Vorschauänderungen, Galerieübernahme, gemeinsame Fotos, Bündeländerungen, Löschen, Sicherung und Wiederherstellung einschließlich älterer ungeklärter Bündel ab. Rohdatenänderungen und fremde Exportdateien werden abgewiesen. Neue Fotos werden als JPEG ohne ursprüngliche EXIF-Orts-/Zeitangaben aufbereitet. Datenbankmigration auf Schema 9, Dateidialoge und der native Importablauf sind geprüft.
+382 automatisierte Android-Prüfungen bestehen. Build, Lint und APK-Signatur sind geprüft. Die Browserprüfung testet Bearbeiten, Fotos, Bündeln, Löschen, Speichern und tatsächlichen Android-Rückimport. Die ergänzende Kartenprüfung betreibt den echten WebGL-Renderer mit künstlichen Kartenantworten und prüft die Übereinstimmung von Karten- und Messpunkten, bisherige Projektdateien, HTTP 403, erneutes Laden und die Bedienung ohne WebGL.
 
-Zusätzlich wurde ein echter Androidexport in Chromium bearbeitet, mit einem neuen Foto gespeichert und erfolgreich zurückimportiert. Die Browserprüfung verwendet echte Bedienelemente, Dateiauswahl und Downloadereignisse. Die gespeicherte Datei wurde erneut geöffnet und in Android auf unveränderte Rohwerte, neue Handyaufzeichnungen und Fahrtspur geprüft.
+Die **Live-Verbindung zu OpenFreeMap ist in der Cloud durch den HTTPS-Proxy blockiert**. Die Cloud-Browserrichtlinie sperrt direkte `file://`-Navigation; derselbe HTML-Inhalt wurde deshalb als Testdokument gerendert. Die echte Verbindung und der direkte lokale Dateiaufruf müssen auf deinem Computer geprüft werden. Firefox, Safari und das reale Fairphone wurden nicht durch diese Browserprüfung abgedeckt.
 
-**Die Cloud-Browserrichtlinie blockiert das direkte Öffnen von `file://`.** Der Test hat denselben HTML-Inhalt als Testdokument gerendert. Der Doppelklick auf deinem Computer, Firefox, Safari und das reale Fairphone sind damit noch nicht geprüft. Die Browserprüfung blockiert OSM-Kacheln absichtlich; die Bilder zeigen entsprechend den Offline-Rasterhintergrund. Der reale Straßenhintergrund muss am Computer mit erreichbarem Kartenserver geprüft werden.
+Lint meldet keine Fehler und zwei bisherige Hinweise zur Annotation-Abhängigkeit und zum Kartenkonstruktor. Die öffentlichen Downloads werden bytegenau geprüft; ihre [SHA-256-Prüfsummen](SHA256SUMS) liegen daneben. Die bisherigen Fahr-, Foto-, Bündelungs-, PDF- und Mailfunktionen bleiben enthalten.
 
-Build und Lint bestehen; Lint meldet keine Fehler und zwei bisherige Hinweise zur Annotation-Abhängigkeit und zum Kartenkonstruktor. Die APK verwendet die bisherige Signatur. Die [Prüfsummen](SHA256SUMS) gehören zu den bereitgestellten Dateien.
-
-Die bisherigen Funktionen einschließlich Kartenprüfung nach Fahrtende, Park-/Privat-Hinweisen, Bündelung, Fotos, PDF und Mail sind weiterhin enthalten. [Anleitung für den Fahrtest](../docs/FAHRTEST.md).
-
-APK-Dateigröße: 4511462 Bytes. SHA-256: `06e6e605e3fe1a93fdcbc01daf1a47ff89a60248c323b21725780c9e407b7f2d`.
+APK-Dateigröße: 4613985 Bytes. SHA-256: `342cd9e99161bcf0beda1b81f0c2c68ea2b2ff578e8a0aed48add92a5320877a`.

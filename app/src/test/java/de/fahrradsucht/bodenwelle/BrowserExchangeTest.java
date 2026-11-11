@@ -27,7 +27,11 @@ public class BrowserExchangeTest {
     private void apply(BrowserProject.Loaded project,Map<String,Boolean> choices)throws Exception {try(FindingStore s=new FindingStore(app)){BrowserMerge plan=new BrowserMerge(BrowserSnapshot.edits(project.base),project.edits,BrowserSnapshot.currentEdits(s));BrowserDatabase.apply(app,project,plan.chosen(choices),plan.fingerprint);}}
     @Test public void fullFileContainsPhotosRouteAllDescriptionsAndReadOnlyEvidence()throws Exception {
         long id;try(FindingStore s=new FindingStore(app)){id=add(s,52.52);PhotoFiles.importStream(app,new ByteArrayInputStream(jpeg()),id);s.insertRoutePoint(new RoutePoint(1000,500,52.52,13.405,5,0));s.reportDistrict(id,"01");}
-        File file=BrowserProject.create(app);try(var project=BrowserProject.load(app,new FileInputStream(file))) {
+        File file=BrowserProject.create(app);
+        String document=new String(Files.readAllBytes(file.toPath()),StandardCharsets.UTF_8);
+        assertTrue(document.contains("https://tiles.openfreemap.org/styles/liberty"));assertTrue(document.contains("MapLibre contributors"));
+        assertFalse(document.contains("__BODENWELLE_MAP_"));assertFalse(document.contains("https://tile.openstreetmap.org/"));
+        try(var project=BrowserProject.load(app,new FileInputStream(file))) {
             assertEquals(1,project.base.getJSONObject("rows").length());assertEquals(1,project.blobs.size());assertEquals(1,project.base.getJSONArray("route").length());
             JSONObject raw=project.base.getJSONObject("rows").getJSONObject(""+id).getJSONObject("raw");assertEquals(48,raw.getDouble("peak"),0);assertEquals("01",project.edits.getJSONObject(""+id).getString("district"));
             assertTrue(project.base.getJSONObject("catalog").getJSONArray("bumps").length()>5);

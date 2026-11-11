@@ -30,7 +30,7 @@ public final class BrowserExchangeActivity extends Activity {
         if(Build.VERSION.SDK_INT>=30)content.setOnApplyWindowInsetsListener((v,insets)->{var b=insets.getInsets(WindowInsets.Type.systemBars());v.setPadding(dp(20)+b.left,dp(16)+b.top,dp(20)+b.right,dp(24)+b.bottom);return insets;});setContentView(scroll);
         text(content,"Am Computer bearbeiten",26);
         text(content,"1. Eine HTML-Projektdatei speichern und auf den Computer übertragen.\n2. Die Datei dort im Browser öffnen, bearbeiten und als neue Datei speichern.\n3. Die bearbeitete Datei hier zurückimportieren.",16);
-        text(content,"Alle gespeicherten Messungen, Fotos, Beschreibungen, Bündelungen und die letzte Fahrtspur werden mitgenommen. Der Browser braucht keine Installation oder Anmeldung. Nur der OSM-Straßenhintergrund benötigt Internet. Die Datei enthält auch genaue Zeitpunkte, Standorte und private Notizen.",14);
+        text(content,"Alle gespeicherten Messungen, Fotos, Beschreibungen, Bündelungen und die letzte Fahrtspur werden mitgenommen. Der Browser braucht keine Installation oder Anmeldung. Nur der OpenFreeMap-Straßenhintergrund auf OSM-Basis benötigt Internet und WebGL-Grafikunterstützung. Die Datei enthält auch genaue Zeitpunkte, Standorte und private Notizen.",14);
         status=text(content,"Bereit. Während der Bearbeitung am Computer kannst du auf dem Handy weiter aufzeichnen.",15);status.setId(R.id.browser_status);
         buttons=new LinearLayout(this);buttons.setOrientation(LinearLayout.VERTICAL);content.addView(buttons);
         button(buttons,"Projektdatei für den Browser speichern",R.id.browser_export,()->runTask(()->{File file=BrowserProject.create(this);handler.post(()->saveAs(file,"Bodenwelle-Projekt.html"));}));

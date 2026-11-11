@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Exercise the editor and save edited.html for Android; report file navigation separately."""
 from pathlib import Path
-import argparse, json, re
+import argparse, json, re, runpy
 from playwright.sync_api import sync_playwright
 
 parser=argparse.ArgumentParser()
@@ -16,13 +16,14 @@ with sync_playwright() as p:
     context.set_default_timeout(8000)
     requests=[];errors=[]
     context.on('request',lambda r:requests.append((r.url,r.method,r.post_data)))
-    context.route('https://tile.openstreetmap.org/**',lambda route:route.abort())
+    context.route('https://tiles.openfreemap.org/**',lambda route:route.abort())
+    context.route('https://assets.openfreemap.com/**',lambda route:route.abort())
     page=context.new_page();page.on('pageerror',lambda e:errors.append(str(e)))
     if args.render_content:page.set_content((root/'original.html').read_text(),wait_until='domcontentloaded')
     else:page.goto((root/'original.html').as_uri())
     page.wait_for_selector('#inspector h1')
     assert page.get_by_text('Beispieldaten · keine echte Schadensmeldung',exact=True).is_visible()
-    assert page.locator('#map canvas').is_visible()
+    assert page.locator('#measurement-layer').is_visible()
     assert page.locator('#rows .row').count()==4
     original=page.evaluate('structuredClone(BodenwelleEditor.project.base)')
     if args.screenshots:page.screenshot(path=str(args.screenshots/'browser-uebersicht.png'),full_page=True)
@@ -85,7 +86,7 @@ with sync_playwright() as p:
     # Return to the edited place and capture the actual app, not a design mockup.
     page.locator('#rows').get_by_text('#1',exact=True).click()
     page.evaluate('BodenwelleEditor.select("2",false)')
-    canvas=page.locator('#map canvas');box=canvas.bounding_box();canvas.click(position={'x':box['width']/2,'y':box['height']/2})
+    canvas=page.locator('#measurement-layer');box=canvas.bounding_box();canvas.click(position={'x':box['width']/2,'y':box['height']/2})
     assert page.locator('#inspector .refs').inner_text()=='#1'
     if args.screenshots:page.screenshot(path=str(args.screenshots/'browser-bearbeitung.png'),full_page=True)
     with page.expect_download() as offered:page.locator('#save').click()
@@ -102,8 +103,7 @@ with sync_playwright() as p:
     assert reopened.evaluate('BodenwelleEditor.project.base')==original
     # The separately downloadable empty editor opens an existing project through its real picker.
     viewer=context.new_page();viewer.on('pageerror',lambda e:errors.append(str(e)))
-    template=Path('app/src/main/assets/browser/editor.html').read_text()
-    empty=template.replace('__BODENWELLE_PROJECT_DATA__','null')
+    empty=runpy.run_path('tools/browser/build-editor.py')['document']()
     (root/'empty-editor.html').write_text(empty)
     if args.render_content:viewer.set_content(empty,wait_until='domcontentloaded')
     else:viewer.goto((root/'empty-editor.html').as_uri())
@@ -120,9 +120,9 @@ with sync_playwright() as p:
         viewer.screenshot(path=str(args.screenshots/'browser-fotos.png'),full_page=True)
     # Offline selection/map controls and local photo display still work.
     reopened.locator('#network').uncheck();reopened.locator('#zoom-in').click();reopened.locator('#fit').click()
-    assert reopened.locator('#map canvas').is_visible()
+    assert reopened.locator('#measurement-layer').is_visible()
     assert not errors, errors
     network=[r for r in requests if r[0].startswith(('http://','https://'))]
-    assert network and all(url.startswith('https://tile.openstreetmap.org/') and method=='GET' and data is None for url,method,data in network),network
-    print(json.dumps({'status':'OK','file_scheme_tested':not args.render_content,'edited_rows':4,'new_photo':True,'project_picker':True,'raw_evidence_unchanged':True,'only_osm_tile_requests':True,'browser_errors':errors},ensure_ascii=False))
+    assert network and all(url.startswith(('https://tiles.openfreemap.org/','https://assets.openfreemap.com/')) and method=='GET' and data is None for url,method,data in network),network
+    print(json.dumps({'status':'OK','file_scheme_tested':not args.render_content,'edited_rows':4,'new_photo':True,'project_picker':True,'raw_evidence_unchanged':True,'only_openfreemap_requests':True,'browser_errors':errors},ensure_ascii=False))
     browser.close()

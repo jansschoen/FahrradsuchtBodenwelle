@@ -1,5 +1,7 @@
 # Fundstellen am Computer bearbeiten · ab 0.15.0
 
+**Kartenkorrektur 0.15.1:** Zeigt eine bisherige Datei „403 – Access blocked“, öffne sie im [korrigierten Browsereditor](BROWSER-KARTENFEHLER.md). Dafür musst du weder neu aufzeichnen noch erneut vom Handy exportieren.
+
 Du brauchst eine einzige **HTML-Projektdatei**. Sie enthält den Browsereditor, alle gespeicherten Messungen, Beschreibungen, Bündelungen, Fotos und die letzte Fahrtspur. Eine Website, ein Benutzerkonto oder eine Installation auf dem Computer sind nicht nötig. Die Datei wird zwischen Handy und Computer übertragen; es gibt keine automatische Synchronisierung.
 
 ## Vom Handy zum Browser und zurück
@@ -16,13 +18,13 @@ Nach einem erfolgreichen Rückimport für jede weitere Bearbeitungsrunde **eine 
 
 ## Karte und Übersicht
 
-Die zoombare Karte verwendet **OpenStreetMap** als Straßenhintergrund. Ein Klick auf einen Punkt öffnet die zugehörigen Angaben. Nummern entsprechen den ursprünglichen Messungsnummern; **×** bezeichnet ein Bündel. Überlappende Punkte öffnen eine Auswahl. Ein grüner Haken zeigt eine vollständig freigegebene Fundstelle. Suchfeld und Statusfilter wirken auf Liste und Karte. Große Listen werden zunächst in Portionen von 200 Stellen angezeigt.
+Die zoombare Karte verwendet seit **0.15.1 OpenFreeMap mit OpenStreetMap-Daten**, dargestellt durch die eingebettete Bibliothek MapLibre GL JS. Ein Klick auf einen Punkt öffnet die zugehörigen Angaben. Nummern entsprechen den ursprünglichen Messungsnummern; **×** bezeichnet ein Bündel. Überlappende Punkte öffnen eine Auswahl. Ein grüner Haken zeigt eine vollständig freigegebene Fundstelle. Suchfeld und Statusfilter wirken auf Liste und Karte. Große Listen werden zunächst in Portionen von 200 Stellen angezeigt.
 
 Die letzte Fahrtspur lässt sich ein- und ausblenden. Bei einer ausgewählten Stelle erscheint der GPS-Genauigkeitskreis. **Alle Stellen** zeigt den gefilterten Überblick; **Auswahl** zentriert die ausgewählte Stelle. Verschieben und Zoomen ändern keine Koordinaten. Als Lagebasis dienen die gespeicherten Messpunkte, nicht der Rand des Genauigkeitskreises. Bei Bündeln wird der Mitgliedspunkt mit der besten angegebenen GPS-Genauigkeit dargestellt.
 
-Der OSM-Schalter steuert ausschließlich den Straßenhintergrund. Nur die im aktuellen Ausschnitt benötigten Kacheln werden abgerufen, ohne Gebietsdownload. Dabei erfährt der Anbieter Ausschnitt und IP-Adresse, aber keine Beschreibungen, Fotos oder Sensorwerte. Die OSM-Attribution bleibt sichtbar. Es gibt keine externen Skripte, Schriftarten, Analyse- oder Uploaddienste.
+Der Straßenkarten-Schalter steuert ausschließlich den Hintergrund. Nur der Kartenstil und die für den aktuellen Ausschnitt benötigten Kacheln, Symbole und Beschriftungszeichen werden von `tiles.openfreemap.org` beziehungsweise `assets.openfreemap.com` abgerufen, ohne Gebietsdownload. Dabei erfährt der Anbieter Ausschnitt und IP-Adresse, aber keine Beschreibungen, Fotos oder Sensorwerte. Die Quellenangaben bleiben sichtbar. Kartenbibliothek und CSS sind lokal eingebettet; es gibt keine externen Skripte, Analyse- oder Uploaddienste.
 
-**Ohne Internet bleiben Bearbeitung, Messpunkte, Fotos und Fahrtspur verfügbar.** Eine vollständige Offline-Straßenkarte ist nicht enthalten. Bei fehlenden Kacheln erscheinen ein Raster und ein Hinweis. Bereits im Browsercache vorhandene Kacheln können verfügbar sein. Die Abschaltung des Hintergrunds entfernt die sichtbaren Kacheln, löscht aber keinen Browsercache.
+**Ohne Internet bleiben Bearbeitung, Messpunkte, Fotos und Fahrtspur verfügbar.** Eine vollständige Offline-Straßenkarte ist nicht enthalten. Der Straßenhintergrund braucht WebGL-Grafikunterstützung im Browser. Bei fehlender Verbindung oder Grafikunterstützung erscheinen ein Raster und ein Hinweis. Bereits im Browsercache vorhandene Kartendaten können verfügbar sein. Die Abschaltung des Hintergrunds beendet die Kartenansicht, löscht aber keinen Browsercache.
 
 ## Was sich bearbeiten lässt
 
@@ -61,6 +63,6 @@ Für den Rückimport liest Android ausschließlich den eingebetteten Datenblock 
 
 Zusätzlich wurde eine tatsächliche Android-Projektdatei in Chromium bearbeitet, mit neuem Foto und Bündelung gespeichert und die gespeicherte Datei erfolgreich in Android zurückimportiert. Messwerte, nachträgliche Handymessungen und Spur blieben erhalten. Die Browserprüfung enthält auch Dateiauswahl, Kartenbedienung, Suche, Lösch-Rücknahme und das erneute Öffnen der gespeicherten Daten.
 
-**Die Cloud-Browserrichtlinie blockiert Navigation zu `file://`.** Deshalb wurde derselbe HTML-Inhalt im Browser-Test als Testdokument gerendert. Der Doppelklick auf die lokale Datei unter Windows/macOS/Linux ist damit noch nicht praktisch geprüft; ebenso wenig Firefox und Safari oder das reale Fairphone. Die Browserprüfung blockiert Kartenabrufe absichtlich, um den Offlinefall reproduzierbar zu testen. Die [Bilder](screenshots/0.15.0/README.md) zeigen deshalb den gekennzeichneten Kartenraster-Hintergrund, keine nachgewiesene Live-Kartenverbindung.
+**Die Cloud-Browserrichtlinie blockiert Navigation zu `file://`.** Deshalb wurde derselbe HTML-Inhalt im Browser-Test als Testdokument gerendert. Der Doppelklick auf die lokale Datei unter Windows/macOS/Linux ist damit noch nicht praktisch geprüft; ebenso wenig Firefox und Safari oder das reale Fairphone. Die Bearbeitungsprüfung blockiert Kartenabrufe absichtlich, um den Offlinefall reproduzierbar zu testen. Die separate Kartenprüfung verwendet den echten WebGL-Renderer mit künstlichen Kartenantworten und prüft Koordinaten, HTTP 403, erneutes Laden und fehlende Grafikunterstützung. Die Live-Verbindung zu OpenFreeMap ist durch den Cloud-Proxy gesperrt und muss auf dem Computer geprüft werden. Die [Bilder aus 0.15.0](screenshots/0.15.0/README.md) zeigen den damaligen gekennzeichneten Kartenraster-Hintergrund.
 
 Die reproduzierbaren Prüfkommandos stehen unter [tools/browser](../tools/browser/README.md).
